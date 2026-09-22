@@ -14,7 +14,7 @@ export default (): ExpoConfig => {
               : "ReadWiki",
 
         slug: "ReadWiki",
-        version: "1.4.0",
+        version: "1.5.0",
         orientation: "portrait",
 
         icon: "./assets/images/icon.png",
@@ -52,9 +52,11 @@ export default (): ExpoConfig => {
                 "expo-splash-screen",
                 {
                     backgroundColor: "#f2f3e4",
-                    android: {
+                    image: "./assets/images/splash-icon.png",
+                    imageWidth: 76,
+                    dark: {
                         image: "./assets/images/splash-icon.png",
-                        imageWidth: 76,
+                        backgroundColor: "#161614",
                     },
                 },
             ],

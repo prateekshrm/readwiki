@@ -1,4 +1,4 @@
-import Colors from "@/constants/Colors";
+import { useTheme } from "@/hooks/useTheme";
 import type { Span } from "@/services/articleParser";
 import { router } from "expo-router";
 import { StyleSheet, Text, TextStyle } from "react-native";
@@ -20,6 +20,8 @@ const openArticle = (title: string) => {
 // italic formatting and turning wiki links into tappable text that opens
 // the linked article in the app.
 const RichText = ({ spans, style }: RichTextProps) => {
+    const { colors } = useTheme();
+
     return (
         <Text style={style}>
             {spans.map((span, index) => {
@@ -32,7 +34,11 @@ const RichText = ({ spans, style }: RichTextProps) => {
                     return (
                         <Text
                             key={index}
-                            style={[styles.link, runStyle]}
+                            style={[
+                                styles.link,
+                                { color: colors.link },
+                                runStyle,
+                            ]}
                             onPress={() => openArticle(span.link as string)}
                         >
                             {span.text}
@@ -54,7 +60,6 @@ export default RichText;
 
 const styles = StyleSheet.create({
     link: {
-        color: Colors.link,
         fontFamily: "DMSans-SemiBold",
         textDecorationLine: "underline",
     },

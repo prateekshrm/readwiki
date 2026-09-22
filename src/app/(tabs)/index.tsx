@@ -7,19 +7,23 @@ import NewsCard from "@/components/NewsCard";
 import NoInternetView from "@/components/NoInternetView";
 import OnThisDayEvent from "@/components/OnThisDayEvent";
 import SectionButton from "@/components/SectionButton";
-import Colors from "@/constants/Colors";
+import { ThemeColors } from "@/constants/Colors";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
+import { useTheme } from "@/hooks/useTheme";
 import { getFeaturedData } from "@/services/wikipedia";
 import { stripHtml } from "@/utils/html";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Home = () => {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
+
     const [featuredArticle, setFeaturedArticle] = useState<any>(null);
     const [trendingArticles, setTrendingArticles] = useState<any>([]);
     const [imageOfTheDay, setImageOfTheDay] = useState<any>([]);
@@ -137,7 +141,7 @@ const Home = () => {
                             <RemixIcon
                                 name="star-fill"
                                 size={13}
-                                color={Colors.textInverse}
+                                color="#FFFFFF"
                                 fallback={null}
                             />
                             <Text style={styles.featuredCardBadgeText}>
@@ -388,192 +392,193 @@ const Home = () => {
 
 export default Home;
 
-const styles = StyleSheet.create({
-    container: {
-        position: "relative",
-        flex: 1,
-        gap: 32,
-        backgroundColor: Colors.background,
-    },
+const createStyles = (colors: ThemeColors) =>
+    StyleSheet.create({
+        container: {
+            position: "relative",
+            flex: 1,
+            gap: 32,
+            backgroundColor: colors.background,
+        },
 
-    content: {
-        paddingBottom: 16,
-    },
+        content: {
+            paddingBottom: 16,
+        },
 
-    loaderContainer: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: Colors.background,
-    },
+        loaderContainer: {
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: colors.background,
+        },
 
-    loadingText: {
-        marginTop: 12,
-        color: Colors.textSecondary,
-        fontSize: 14,
-        fontFamily: "DMSans-Medium",
-    },
+        loadingText: {
+            marginTop: 12,
+            color: colors.textSecondary,
+            fontSize: 14,
+            fontFamily: "DMSans-Medium",
+        },
 
-    sectionContainer: {
-        display: "flex",
-        flexDirection: "column",
-        gap: 32,
-    },
+        sectionContainer: {
+            display: "flex",
+            flexDirection: "column",
+            gap: 32,
+        },
 
-    featuredCard: {
-        height: 560,
-        overflow: "hidden",
-        backgroundColor: Colors.surface,
-        position: "relative",
-    },
+        featuredCard: {
+            height: 560,
+            overflow: "hidden",
+            backgroundColor: colors.surface,
+            position: "relative",
+        },
 
-    featuredCardImage: {
-        ...StyleSheet.absoluteFill,
-    },
+        featuredCardImage: {
+            ...StyleSheet.absoluteFill,
+        },
 
-    featuredCardTopGradient: {
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        height: "25%",
-    },
+        featuredCardTopGradient: {
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "25%",
+        },
 
-    featuredCardOverlay: {
-        ...StyleSheet.absoluteFill,
-    },
+        featuredCardOverlay: {
+            ...StyleSheet.absoluteFill,
+        },
 
-    featuredCardContent: {
-        flex: 1,
-        justifyContent: "flex-end",
-        gap: 10,
-        padding: 16,
-        paddingBottom: 32,
-    },
+        featuredCardContent: {
+            flex: 1,
+            justifyContent: "flex-end",
+            gap: 10,
+            padding: 16,
+            paddingBottom: 32,
+        },
 
-    featuredCardBadge: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-        alignSelf: "flex-start",
-        backgroundColor: "rgba(255,255,255,0.18)",
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.3)",
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 999,
-    },
+        featuredCardBadge: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            alignSelf: "flex-start",
+            backgroundColor: "rgba(255,255,255,0.18)",
+            borderWidth: 1,
+            borderColor: "rgba(255,255,255,0.3)",
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 999,
+        },
 
-    featuredCardBadgeText: {
-        textTransform: "uppercase",
-        fontSize: 12,
-        letterSpacing: 1,
-        fontFamily: "DMSans-Bold",
-        color: Colors.textInverse,
-    },
+        featuredCardBadgeText: {
+            textTransform: "uppercase",
+            fontSize: 12,
+            letterSpacing: 1,
+            fontFamily: "DMSans-Bold",
+            color: "#FFFFFF",
+        },
 
-    featuredCardTitle: {
-        fontSize: 32,
-        lineHeight: 38,
-        letterSpacing: -0.5,
-        fontFamily: "Fraunces-Medium",
-        color: Colors.textInverse,
-    },
+        featuredCardTitle: {
+            fontSize: 32,
+            lineHeight: 38,
+            letterSpacing: -0.5,
+            fontFamily: "Fraunces-Medium",
+            color: "#FFFFFF",
+        },
 
-    featuredCardDescription: {
-        fontSize: 14,
-        lineHeight: 21,
-        fontFamily: "DMSans-Medium",
-        marginBottom: 8,
-        color: "rgba(255,255,255,0.85)",
-    },
+        featuredCardDescription: {
+            fontSize: 14,
+            lineHeight: 21,
+            fontFamily: "DMSans-Medium",
+            marginBottom: 8,
+            color: "rgba(255,255,255,0.85)",
+        },
 
-    featuredCardButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 4,
-        backgroundColor: Colors.surface,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 999,
-        alignSelf: "flex-start",
-    },
+        featuredCardButton: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 4,
+            backgroundColor: colors.surface,
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 999,
+            alignSelf: "flex-start",
+        },
 
-    featuredCardButtonText: {
-        fontSize: 16,
-        fontFamily: "DMSans-SemiBold",
-        color: Colors.text,
-    },
+        featuredCardButtonText: {
+            fontSize: 16,
+            fontFamily: "DMSans-SemiBold",
+            color: colors.text,
+        },
 
-    imageCard: {
-        borderRadius: 16,
-        overflow: "hidden",
-        backgroundColor: Colors.surface,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        marginTop: 12,
-        marginHorizontal: 16,
-        height: 300,
-    },
+        imageCard: {
+            borderRadius: 16,
+            overflow: "hidden",
+            backgroundColor: colors.surface,
+            borderWidth: 1,
+            borderColor: colors.border,
+            marginTop: 12,
+            marginHorizontal: 16,
+            height: 300,
+        },
 
-    cardPressed: {
-        filter: "brightness(0.90)",
-    },
+        cardPressed: {
+            opacity: 0.9,
+        },
 
-    imageCardImage: {
-        width: "100%",
-        height: "100%",
-        ...StyleSheet.absoluteFill,
-    },
+        imageCardImage: {
+            width: "100%",
+            height: "100%",
+            ...StyleSheet.absoluteFill,
+        },
 
-    imageCardContent: {
-        flex: 1,
-        justifyContent: "flex-end",
-        padding: 16,
-        gap: 10,
-    },
+        imageCardContent: {
+            flex: 1,
+            justifyContent: "flex-end",
+            padding: 16,
+            gap: 10,
+        },
 
-    imageCardCaption: {
-        fontSize: 18,
-        lineHeight: 24,
-        color: Colors.textInverse,
-        fontFamily: "Fraunces-Medium",
-    },
+        imageCardCaption: {
+            fontSize: 18,
+            lineHeight: 24,
+            color: "#FFFFFF",
+            fontFamily: "Fraunces-Medium",
+        },
 
-    imageCardByline: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-    },
+        imageCardByline: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+        },
 
-    imageCardAuthor: {
-        flex: 1,
-        fontSize: 13,
-        fontFamily: "DMSans-Medium",
-        color: "rgba(255,255,255,0.85)",
-    },
+        imageCardAuthor: {
+            flex: 1,
+            fontSize: 13,
+            fontFamily: "DMSans-Medium",
+            color: "rgba(255,255,255,0.85)",
+        },
 
-    section: {
-        // padding: 16,
-    },
+        section: {
+            // padding: 16,
+        },
 
-    sectionTitle: {
-        fontSize: 28,
-        color: Colors.text,
-        fontFamily: "Fraunces-Medium",
-        paddingHorizontal: 16,
-        marginTop: 16,
-        marginBottom: 8,
-    },
+        sectionTitle: {
+            fontSize: 28,
+            color: colors.text,
+            fontFamily: "Fraunces-Medium",
+            paddingHorizontal: 16,
+            marginTop: 24,
+            marginBottom: 12,
+        },
 
-    sectionContent: {
-        // gap: 10,
-    },
-    overlayGradient: {
-        height: "50%",
-        position: "absolute",
-        left: 0,
-        right: 0,
-        bottom: 0,
-    },
-});
+        sectionContent: {
+            // gap: 10,
+        },
+        overlayGradient: {
+            height: "50%",
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+        },
+    });

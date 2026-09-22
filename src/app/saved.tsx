@@ -1,13 +1,14 @@
 import ArticleCard from "@/components/ArticleCard";
 import { useScreenScroll } from "@/components/HeaderScroll";
-import Colors from "@/constants/Colors";
+import { ThemeColors } from "@/constants/Colors";
+import useTheme from "@/hooks/useTheme";
 import {
     clearSavedArticles,
     removeArticle,
     useSavedArticles,
 } from "@/services/savedArticles";
 import { router, useNavigation } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import RemixIcon from "react-native-remix-icon";
@@ -15,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ClearButton = () => {
     const savedArticles = useSavedArticles();
+    const { colors } = useTheme();
 
     if (savedArticles.length === 0) return null;
 
@@ -22,6 +24,7 @@ const ClearButton = () => {
         <Pressable
             style={({ pressed }) => [
                 styles.headerButton,
+                { backgroundColor: colors.backgroundMuted },
                 pressed && styles.headerButtonPressed,
             ]}
             onPress={() =>
@@ -38,7 +41,7 @@ const ClearButton = () => {
             <RemixIcon
                 name="bookmark-2-line"
                 size={20}
-                color={Colors.text}
+                color={colors.text}
                 fallback={null}
             />
         </Pressable>
@@ -50,6 +53,8 @@ const Saved = () => {
     const insets = useSafeAreaInsets();
     const onScroll = useScreenScroll();
     const navigation = useNavigation();
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
 
     useEffect(() => {
         navigation.setOptions({
@@ -63,7 +68,7 @@ const Saved = () => {
                 <RemixIcon
                     name="bookmark-line"
                     size={48}
-                    color={Colors.textMuted}
+                    color={colors.textMuted}
                     fallback={null}
                 />
                 <Text style={styles.emptyTitle}>No saved articles</Text>
@@ -108,48 +113,49 @@ const Saved = () => {
 export default Saved;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.background,
-    },
-
-    listContent: {
-        paddingTop: 100,
-    },
-
-    empty: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: 40,
-        backgroundColor: Colors.background,
-    },
-
-    emptyTitle: {
-        marginTop: 16,
-        fontSize: 20,
-        fontFamily: "Fraunces-Medium",
-        color: Colors.text,
-    },
-
-    emptySubtitle: {
-        marginTop: 8,
-        textAlign: "center",
-        fontSize: 14,
-        lineHeight: 22,
-        fontFamily: "DMSans-Regular",
-        color: Colors.textMuted,
-    },
-
     headerButton: {
         paddingVertical: 6,
         paddingHorizontal: 12,
         borderRadius: 100,
-        backgroundColor: Colors.backgroundMuted,
     },
-
     headerButtonPressed: {
         filter: "brightness(0.9)",
         transform: [{ scale: 0.98 }],
     },
 });
+
+const createStyles = (colors: ThemeColors) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
+
+        listContent: {
+            paddingTop: 100,
+        },
+
+        empty: {
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 40,
+            backgroundColor: colors.background,
+        },
+
+        emptyTitle: {
+            marginTop: 16,
+            fontSize: 20,
+            fontFamily: "Fraunces-Medium",
+            color: colors.text,
+        },
+
+        emptySubtitle: {
+            marginTop: 8,
+            textAlign: "center",
+            fontSize: 14,
+            lineHeight: 22,
+            fontFamily: "DMSans-Regular",
+            color: colors.textMuted,
+        },
+    });

@@ -1,16 +1,19 @@
 import { useScreenScroll } from "@/components/HeaderScroll";
 import Loader from "@/components/Loader";
 import OnThisDayEvent from "@/components/OnThisDayEvent";
-import Colors from "@/constants/Colors";
+import { ThemeColors } from "@/constants/Colors";
+import useTheme from "@/hooks/useTheme";
 import { getFeaturedData } from "@/services/wikipedia";
 import { router } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const OnThisDay = () => {
     const insets = useSafeAreaInsets();
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
 
     const [loading, setLoading] = useState(true);
     const [onThisDayArticles, setOnThisDayArticles] = useState<any[]>([]);
@@ -86,18 +89,19 @@ const OnThisDay = () => {
 
 export default OnThisDay;
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.background,
-    },
-    loaderContainer: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: Colors.background,
-    },
-    listContent: {
-        paddingTop: 100,
-    },
-});
+const createStyles = (colors: ThemeColors) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
+        loaderContainer: {
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: colors.background,
+        },
+        listContent: {
+            paddingTop: 100,
+        },
+    });

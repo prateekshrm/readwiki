@@ -3,8 +3,9 @@ import Loader from "@/components/Loader";
 import NoInternetView from "@/components/NoInternetView";
 import RichText from "@/components/RichText";
 import TableView from "@/components/TableView";
-import Colors from "@/constants/Colors";
+import { ThemeColors } from "@/constants/Colors";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
+import { useTheme } from "@/hooks/useTheme";
 import { addToHistory } from "@/services/articleHistory";
 import { parseArticle, type Block } from "@/services/articleParser";
 import { usePreferences } from "@/services/preferences";
@@ -12,8 +13,15 @@ import { toggleSavedArticle, useIsSaved } from "@/services/savedArticles";
 import { getArticleSummary, getFullArticle } from "@/services/wikipedia";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { Platform, Pressable, Share, StyleSheet, Text, View } from "react-native";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+    Platform,
+    Pressable,
+    Share,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 import Animated from "react-native-reanimated";
 import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -63,12 +71,14 @@ const shareArticle = async (item: any) => {
 
 const HeaderRight = ({ meta }: { meta: ArticleMeta }) => {
     const saved = useIsSaved(meta.title);
+    const { colors } = useTheme();
 
     return (
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Pressable
                 style={({ pressed }) => [
                     styles.headerRightButton,
+                    { backgroundColor: colors.backgroundMuted },
                     pressed && styles.headerRightButtonPressed,
                 ]}
                 onPress={() =>
@@ -82,13 +92,14 @@ const HeaderRight = ({ meta }: { meta: ArticleMeta }) => {
                 <RemixIcon
                     name={saved ? "bookmark-fill" : "bookmark-line"}
                     size={20}
-                    color={Colors.text}
+                    color={colors.text}
                     fallback={null}
                 />
             </Pressable>
             <Pressable
                 style={({ pressed }) => [
                     styles.headerRightButton,
+                    { backgroundColor: colors.backgroundMuted },
                     pressed && styles.headerRightButtonPressed,
                 ]}
                 onPress={() => shareArticle(meta)}
@@ -96,7 +107,7 @@ const HeaderRight = ({ meta }: { meta: ArticleMeta }) => {
                 <RemixIcon
                     name={"share-line"}
                     size={20}
-                    color={Colors.text}
+                    color={colors.text}
                     fallback={null}
                 />
             </Pressable>
@@ -107,96 +118,101 @@ const HeaderRight = ({ meta }: { meta: ArticleMeta }) => {
 type ArticleBlockItemProps = {
     block: Block;
     fontScale: number;
+    styles: ReturnType<typeof createStyles>;
 };
 
-const ArticleBlockItem = memo(({ block, fontScale }: ArticleBlockItemProps) => {
-    switch (block.type) {
-        case "heading":
-            return (
-                <Text
-                    style={[
-                        block.level === 2
-                            ? styles.heading2
-                            : styles.heading3,
-                        {
-                            fontSize:
-                                (block.level === 2 ? 32 : 28) * fontScale,
-                        },
-                    ]}
-                >
-                    {block.text}
-                </Text>
-            );
+const ArticleBlockItem = memo(
+    ({ block, fontScale, styles }: ArticleBlockItemProps) => {
+        switch (block.type) {
+            case "heading":
+                return (
+                    <Text
+                        style={[
+                            block.level === 2
+                                ? styles.heading2
+                                : styles.heading3,
+                            {
+                                fontSize:
+                                    (block.level === 2 ? 32 : 28) * fontScale,
+                            },
+                        ]}
+                    >
+                        {block.text}
+                    </Text>
+                );
 
-        case "paragraph":
-            return (
-                <RichText
-                    spans={block.spans}
-                    style={[
-                        styles.paragraph,
-                        {
-                            fontSize: 17 * fontScale,
-                            lineHeight: 28 * fontScale,
-                        },
-                    ]}
-                />
-            );
+            case "paragraph":
+                return (
+                    <RichText
+                        spans={block.spans}
+                        style={[
+                            styles.paragraph,
+                            {
+                                fontSize: 17 * fontScale,
+                                lineHeight: 28 * fontScale,
+                            },
+                        ]}
+                    />
+                );
 
-        case "list":
-            return (
-                <View style={styles.list}>
-                    {block.items.map((item, index) => (
-                        <View key={index} style={styles.listItem}>
-                            <Text style={styles.bullet}>
-                                {block.ordered ? `${index + 1}.` : "•"}
-                            </Text>
-                            <RichText
-                                spans={item}
-                                style={[
-                                    styles.paragraph,
-                                    {
-                                        flex: 1,
-                                        marginBottom: 0,
-                                        fontSize: 17 * fontScale,
-                                        lineHeight: 28 * fontScale,
-                                    },
-                                ]}
+            case "list":
+                return (
+                    <View style={styles.list}>
+                        {block.items.map((item, index) => (
+                            <View key={index} style={styles.listItem}>
+                                <Text style={styles.bullet}>
+                                    {block.ordered ? `${index + 1}.` : "•"}
+                                </Text>
+                                <RichText
+                                    spans={item}
+                                    style={[
+                                        styles.paragraph,
+                                        {
+                                            flex: 1,
+                                            marginBottom: 0,
+                                            fontSize: 17 * fontScale,
+                                            lineHeight: 28 * fontScale,
+                                        },
+                                    ]}
+                                />
+                            </View>
+                        ))}
+                    </View>
+                );
+
+            case "image": {
+                const ratio =
+                    block.width && block.height
+                        ? block.width / block.height
+                        : 3 / 2;
+
+                return (
+                    <View style={styles.figure}>
+                        <Pressable onPress={() => openImage(block.src)}>
+                            <Image
+                                source={block.src}
+                                style={[styles.image, { aspectRatio: ratio }]}
+                                contentFit="cover"
+                                transition={200}
                             />
-                        </View>
-                    ))}
-                </View>
-            );
+                        </Pressable>
+                        {!!block.caption && (
+                            <Text style={styles.caption}>{block.caption}</Text>
+                        )}
+                    </View>
+                );
+            }
 
-        case "image": {
-            const ratio =
-                block.width && block.height
-                    ? block.width / block.height
-                    : 3 / 2;
+            case "table":
+                return <TableView block={block} fontScale={fontScale} />;
 
-            return (
-                <View style={styles.figure}>
-                    <Pressable onPress={() => openImage(block.src)}>
-                        <Image
-                            source={block.src}
-                            style={[styles.image, { aspectRatio: ratio }]}
-                            contentFit="cover"
-                            transition={200}
-                        />
-                    </Pressable>
-                    {!!block.caption && (
-                        <Text style={styles.caption}>{block.caption}</Text>
-                    )}
-                </View>
-            );
+            default:
+                return null;
         }
+    },
+);
 
-        case "table":
-            return <TableView block={block} fontScale={fontScale} />;
-
-        default:
-            return null;
-    }
-});
+ArticleBlockItem.displayName = "ArticleBlockItem";
 
 const Article = () => {
     const { article } = useLocalSearchParams<{ article: string }>();
@@ -204,6 +220,8 @@ const Article = () => {
     const preferences = usePreferences();
     const insets = useSafeAreaInsets();
     const onScroll = useScreenScroll();
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
 
     const [blocks, setBlocks] = useState<Block[]>([]);
     const [meta, setMeta] = useState<ArticleMeta | null>(null);
@@ -216,9 +234,13 @@ const Article = () => {
 
     const renderItem = useCallback(
         ({ item }: { item: Block }) => (
-            <ArticleBlockItem block={item} fontScale={fontScale} />
+            <ArticleBlockItem
+                block={item}
+                fontScale={fontScale}
+                styles={styles}
+            />
         ),
-        [fontScale],
+        [fontScale, styles],
     );
 
     const keyExtractor = useCallback(
@@ -382,118 +404,10 @@ const Article = () => {
 export default Article;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.background,
-    },
-
-    loader: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: Colors.background,
-    },
-
-    content: {
-        paddingBottom: 48,
-    },
-
-    header: {
-        marginBottom: 8,
-    },
-
-    hero: {
-        width: "100%",
-        backgroundColor: Colors.backgroundMuted,
-    },
-
-    title: {
-        fontSize: 34,
-        lineHeight: 40,
-        fontFamily: "Fraunces-Medium",
-        color: Colors.text,
-        paddingHorizontal: 16,
-        marginTop: 20,
-    },
-
-    description: {
-        fontSize: 16,
-        fontFamily: "DMSans-Medium",
-        color: Colors.textMuted,
-        paddingHorizontal: 16,
-        marginTop: 8,
-    },
-
-    divider: {
-        height: 1,
-        backgroundColor: Colors.border,
-        marginTop: 20,
-        marginHorizontal: 16,
-    },
-
-    heading2: {
-        fontFamily: "Fraunces-Medium",
-        color: Colors.text,
-        marginTop: 28,
-        marginBottom: 12,
-        paddingHorizontal: 16,
-    },
-
-    heading3: {
-        fontFamily: "Fraunces-Medium",
-        color: Colors.text,
-        marginTop: 20,
-        marginBottom: 10,
-        paddingHorizontal: 16,
-    },
-
-    paragraph: {
-        fontFamily: "DMSans-Regular",
-        color: Colors.text,
-        marginBottom: 16,
-        paddingHorizontal: 16,
-    },
-
-    list: {
-        paddingHorizontal: 16,
-        marginBottom: 16,
-        gap: 8,
-    },
-
-    listItem: {
-        flexDirection: "row",
-        gap: 10,
-    },
-
-    bullet: {
-        fontFamily: "DMSans-SemiBold",
-        color: Colors.textSecondary,
-        fontSize: 17,
-        lineHeight: 28,
-    },
-
-    figure: {
-        marginVertical: 12,
-    },
-
-    image: {
-        width: "100%",
-        backgroundColor: Colors.backgroundMuted,
-    },
-
-    caption: {
-        fontSize: 13,
-        fontFamily: "DMSans-Regular",
-        color: Colors.textMuted,
-        paddingHorizontal: 16,
-        marginTop: 8,
-    },
-
     headerRightButton: {
         paddingVertical: 6,
         paddingHorizontal: 12,
         borderRadius: 100,
-        backgroundColor: Colors.backgroundMuted,
     },
 
     headerRightButtonPressed: {
@@ -501,3 +415,113 @@ const styles = StyleSheet.create({
         transform: [{ scale: 0.98 }],
     },
 });
+
+const createStyles = (colors: ThemeColors) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
+
+        loader: {
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: colors.background,
+        },
+
+        content: {
+            paddingBottom: 48,
+        },
+
+        header: {
+            marginBottom: 8,
+        },
+
+        hero: {
+            width: "100%",
+            backgroundColor: colors.backgroundMuted,
+        },
+
+        title: {
+            fontSize: 34,
+            lineHeight: 40,
+            fontFamily: "Fraunces-Medium",
+            color: colors.text,
+            paddingHorizontal: 16,
+            marginTop: 20,
+        },
+
+        description: {
+            fontSize: 16,
+            fontFamily: "DMSans-Medium",
+            color: colors.textMuted,
+            paddingHorizontal: 16,
+            marginTop: 8,
+        },
+
+        divider: {
+            height: 1,
+            backgroundColor: colors.border,
+            marginTop: 20,
+            marginHorizontal: 16,
+        },
+
+        heading2: {
+            fontFamily: "Fraunces-Medium",
+            color: colors.text,
+            marginTop: 28,
+            marginBottom: 12,
+            paddingHorizontal: 16,
+        },
+
+        heading3: {
+            fontFamily: "Fraunces-Medium",
+            color: colors.text,
+            marginTop: 20,
+            marginBottom: 10,
+            paddingHorizontal: 16,
+        },
+
+        paragraph: {
+            fontFamily: "DMSans-Regular",
+            color: colors.text,
+            marginBottom: 16,
+            paddingHorizontal: 16,
+        },
+
+        list: {
+            paddingHorizontal: 16,
+            marginBottom: 16,
+            gap: 8,
+        },
+
+        listItem: {
+            flexDirection: "row",
+            gap: 10,
+        },
+
+        bullet: {
+            fontFamily: "DMSans-SemiBold",
+            color: colors.textSecondary,
+            fontSize: 17,
+            lineHeight: 28,
+        },
+
+        figure: {
+            marginVertical: 12,
+        },
+
+        image: {
+            width: "100%",
+            backgroundColor: colors.backgroundMuted,
+        },
+
+        caption: {
+            fontSize: 13,
+            fontFamily: "DMSans-Regular",
+            color: colors.textMuted,
+            paddingHorizontal: 16,
+            marginTop: 8,
+        },
+    });

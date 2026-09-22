@@ -1,7 +1,8 @@
 import ArticleCard from "@/components/ArticleCard";
 import { useScreenScroll } from "@/components/HeaderScroll";
 import SectionButton from "@/components/SectionButton";
-import Colors from "@/constants/Colors";
+import { ThemeColors } from "@/constants/Colors";
+import { useTheme } from "@/hooks/useTheme";
 import {
     formatTimeAgo,
     removeFromHistory,
@@ -9,12 +10,15 @@ import {
 } from "@/services/articleHistory";
 import { removeArticle, useSavedArticles } from "@/services/savedArticles";
 import { router } from "expo-router";
+import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Library = () => {
+    const { colors, isDark } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const history = useHistory();
     const savedArticles = useSavedArticles();
     const onScroll = useScreenScroll();
@@ -32,7 +36,7 @@ const Library = () => {
                 <RemixIcon
                     name="book-shelf-line"
                     size={48}
-                    color={Colors.textMuted}
+                    color={colors.textMuted}
                     fallback={null}
                 />
                 <Text style={styles.emptyTitle}>Your library is empty</Text>
@@ -61,7 +65,7 @@ const Library = () => {
                         <RemixIcon
                             name="history-line"
                             size={24}
-                            color={Colors.text}
+                            color={colors.text}
                             fallback={null}
                         />
                         <Text style={styles.sectionTitle}>History</Text>
@@ -85,7 +89,9 @@ const Library = () => {
                                         removeFromHistory(item.title)
                                     }
                                     removeIcon="delete-bin-line"
-                                    removeIconColor={Colors.textMuted}
+                                    removeIconColor={
+                                        isDark ? "#FFFFFF" : colors.textMuted
+                                    }
                                 />
                             ))}
                         </View>
@@ -94,7 +100,7 @@ const Library = () => {
                             <RemixIcon
                                 name="history-line"
                                 size={28}
-                                color={Colors.textMuted}
+                                color={colors.textMuted}
                                 fallback={null}
                             />
                             <Text style={styles.sectionEmptyText}>
@@ -117,7 +123,7 @@ const Library = () => {
                         <RemixIcon
                             name="bookmark-line"
                             size={24}
-                            color={Colors.text}
+                            color={colors.text}
                             fallback={null}
                         />
                         <Text style={styles.sectionTitle}>Saved</Text>
@@ -145,7 +151,7 @@ const Library = () => {
                             <RemixIcon
                                 name="bookmark-line"
                                 size={28}
-                                color={Colors.textMuted}
+                                color={colors.textMuted}
                                 fallback={null}
                             />
                             <Text style={styles.sectionEmptyText}>
@@ -168,77 +174,78 @@ const Library = () => {
 
 export default Library;
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.background,
-    },
+const createStyles = (colors: ThemeColors) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
 
-    content: {
-        paddingTop: 100,
-    },
+        content: {
+            paddingTop: 100,
+        },
 
-    // ── Full-screen empty state ──
-    empty: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: 40,
-        backgroundColor: Colors.background,
-    },
+        // ── Full-screen empty state ──
+        empty: {
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 40,
+            backgroundColor: colors.background,
+        },
 
-    emptyTitle: {
-        marginTop: 16,
-        fontSize: 20,
-        fontFamily: "Fraunces-Medium",
-        color: Colors.text,
-    },
+        emptyTitle: {
+            marginTop: 16,
+            fontSize: 20,
+            fontFamily: "Fraunces-Medium",
+            color: colors.text,
+        },
 
-    emptySubtitle: {
-        marginTop: 8,
-        textAlign: "center",
-        fontSize: 14,
-        lineHeight: 22,
-        fontFamily: "DMSans-Regular",
-        color: Colors.textMuted,
-    },
+        emptySubtitle: {
+            marginTop: 8,
+            textAlign: "center",
+            fontSize: 14,
+            lineHeight: 22,
+            fontFamily: "DMSans-Regular",
+            color: colors.textMuted,
+        },
 
-    // ── Section layout (mirrors home screen trending section) ──
-    section: {
-        marginBottom: 32,
-    },
+        // ── Section layout (mirrors home screen trending section) ──
+        section: {
+            marginBottom: 32,
+        },
 
-    sectionHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        paddingHorizontal: 16,
-        marginTop: 16,
-        marginBottom: 8,
-    },
+        sectionHeader: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            paddingHorizontal: 16,
+            marginTop: 16,
+            marginBottom: 8,
+        },
 
-    sectionTitle: {
-        fontSize: 24,
-        color: Colors.text,
-        fontFamily: "Fraunces-Medium",
-    },
+        sectionTitle: {
+            fontSize: 24,
+            color: colors.text,
+            fontFamily: "Fraunces-Medium",
+        },
 
-    sectionContent: {
-        // ArticleCard handles its own padding
-    },
+        sectionContent: {
+            // ArticleCard handles its own padding
+        },
 
-    // ── Inline empty state (one section empty, other has data) ──
-    sectionEmpty: {
-        alignItems: "center",
-        justifyContent: "center",
-        paddingVertical: 32,
-        paddingHorizontal: 24,
-        gap: 8,
-    },
+        // ── Inline empty state (one section empty, other has data) ──
+        sectionEmpty: {
+            alignItems: "center",
+            justifyContent: "center",
+            paddingVertical: 32,
+            paddingHorizontal: 24,
+            gap: 8,
+        },
 
-    sectionEmptyText: {
-        fontSize: 14,
-        fontFamily: "DMSans-Medium",
-        color: Colors.textMuted,
-    },
-});
+        sectionEmptyText: {
+            fontSize: 14,
+            fontFamily: "DMSans-Medium",
+            color: colors.textMuted,
+        },
+    });

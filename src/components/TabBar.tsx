@@ -1,4 +1,4 @@
-import Colors from "@/constants/Colors";
+import { useTheme } from "@/hooks/useTheme";
 import { LinearGradient } from "expo-linear-gradient";
 import type { BottomTabBarProps } from "expo-router/js-tabs";
 import { useEffect } from "react";
@@ -20,6 +20,7 @@ export default function TabBar({
     navigation,
 }: BottomTabBarProps) {
     const insets = useSafeAreaInsets();
+    const { colors } = useTheme();
 
     const tabWidth =
         (Dimensions.get("window").width -
@@ -34,7 +35,7 @@ export default function TabBar({
             duration: 400,
             easing: Easing.bezier(0.22, 1, 0.36, 1),
         });
-    }, [state.index, tabWidth]);
+    }, [state.index, tabWidth, translateX]);
 
     const indicatorStyle = useAnimatedStyle(() => ({
         transform: [
@@ -63,12 +64,20 @@ export default function TabBar({
                 ]}
             />
 
-            <View style={styles.container}>
+            <View
+                style={[
+                    styles.container,
+                    {
+                        backgroundColor: colors.surface,
+                    },
+                ]}
+            >
                 <Animated.View
                     style={[
                         styles.indicator,
                         {
                             width: tabWidth,
+                            backgroundColor: colors.primary,
                         },
                         indicatorStyle,
                     ]}
@@ -83,8 +92,8 @@ export default function TabBar({
                             ? options.tabBarIcon({
                                   focused: isFocused,
                                   color: isFocused
-                                      ? Colors.textInverse
-                                      : Colors.textMuted,
+                                      ? colors.textInverse
+                                      : colors.textMuted,
                                   size: 24,
                               })
                             : null;
@@ -113,8 +122,8 @@ export default function TabBar({
                                         styles.tabLabel,
                                         {
                                             color: isFocused
-                                                ? Colors.textInverse
-                                                : Colors.textMuted,
+                                                ? colors.textInverse
+                                                : colors.textMuted,
                                         },
                                     ]}
                                 >
@@ -148,7 +157,6 @@ const styles = StyleSheet.create({
 
     container: {
         flexDirection: "row",
-        backgroundColor: Colors.surface,
         borderRadius: 999,
         padding: CONTAINER_PADDING,
         marginHorizontal: HORIZONTAL_MARGIN,
@@ -162,7 +170,6 @@ const styles = StyleSheet.create({
         bottom: CONTAINER_PADDING,
         left: CONTAINER_PADDING,
         borderRadius: 999,
-        backgroundColor: Colors.primary,
     },
 
     tab: {

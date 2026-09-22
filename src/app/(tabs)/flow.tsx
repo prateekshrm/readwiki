@@ -1,7 +1,6 @@
-import NoInternetView from "@/components/NoInternetView";
 import { useSolidHeader } from "@/components/HeaderScroll";
 import Loader from "@/components/Loader";
-import Colors from "@/constants/Colors";
+import NoInternetView from "@/components/NoInternetView";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { toggleSavedArticle, useIsSaved } from "@/services/savedArticles";
 import { getRandomArticles } from "@/services/wikipedia";
@@ -59,7 +58,7 @@ const CircleButton = ({
         <RemixIcon
             name={icon as any}
             size={22}
-            color={Colors.textInverse}
+            color="#F8F9FA"
             fallback={null}
         />
     </Pressable>
@@ -272,7 +271,7 @@ const Flow = () => {
                                 <RemixIcon
                                     name="arrow-right-s-line"
                                     size={18}
-                                    color={Colors.text}
+                                    color="#111827"
                                     fallback={null}
                                 />
                             </Pressable>
@@ -366,7 +365,7 @@ export default Flow;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.background,
+        backgroundColor: "#000",
     },
 
     loading: {
@@ -446,11 +445,11 @@ const styles = StyleSheet.create({
         fontSize: 11,
         letterSpacing: 1,
         fontFamily: "DMSans-Bold",
-        color: Colors.textInverse,
+        color: "#F8F9FA",
     },
 
     title: {
-        color: Colors.textInverse,
+        color: "#F8F9FA",
         fontSize: 28,
         letterSpacing: -0.5,
         fontFamily: "Fraunces-Medium",
@@ -476,9 +475,9 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         gap: 6,
-        backgroundColor: Colors.surface,
         paddingVertical: 14,
         borderRadius: 999,
+        backgroundColor: "#FFFFFF",
     },
 
     readButtonPressed: {
@@ -489,7 +488,7 @@ const styles = StyleSheet.create({
     readButtonText: {
         fontFamily: "DMSans-SemiBold",
         fontSize: 15,
-        color: Colors.text,
+        color: "#111827",
     },
 
     circle: {

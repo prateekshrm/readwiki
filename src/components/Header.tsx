@@ -1,5 +1,5 @@
 import { useHeaderProgress } from "@/components/HeaderScroll";
-import Colors from "@/constants/Colors";
+import { useTheme } from "@/hooks/useTheme";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { ReactNode, useState } from "react";
@@ -22,8 +22,9 @@ interface HeaderProps {
 const Header = ({ title, canGoBack = false, rightComponent }: HeaderProps) => {
     const insets = useSafeAreaInsets();
     const progress = useHeaderProgress();
+    const { colors, isDark } = useTheme();
 
-    // Dark status bar icons while the header is black (top); light once scrolled.
+    // Dark status bar icons while the header is light (top); light once scrolled over dark gradient.
     const [scrolled, setScrolled] = useState(false);
     useAnimatedReaction(
         () => progress.value > 0.5,
@@ -39,12 +40,12 @@ const Header = ({ title, canGoBack = false, rightComponent }: HeaderProps) => {
         opacity: progress.value,
     }));
 
-    // Title crossfades black → white.
+    // Title crossfades to white on scroll.
     const titleStyle = useAnimatedStyle(() => ({
         color: interpolateColor(
             progress.value,
             [0, 1],
-            [Colors.text, Colors.textInverse],
+            [colors.text, isDark ? "#FFFFFF" : colors.textInverse],
         ),
     }));
 
@@ -54,7 +55,15 @@ const Header = ({ title, canGoBack = false, rightComponent }: HeaderProps) => {
                 paddingTop: insets.top + 8,
             }}
         >
-            <StatusBar barStyle={scrolled ? "light-content" : "dark-content"} />
+            <StatusBar
+                barStyle={
+                    isDark
+                        ? "light-content"
+                        : scrolled
+                          ? "light-content"
+                          : "dark-content"
+                }
+            />
 
             <Animated.View
                 style={[
@@ -75,6 +84,7 @@ const Header = ({ title, canGoBack = false, rightComponent }: HeaderProps) => {
                         <Pressable
                             style={({ pressed }) => [
                                 styles.pill,
+                                { backgroundColor: colors.backgroundMuted },
                                 pressed && styles.pillPressed,
                             ]}
                             onPress={() => router.back()}
@@ -82,7 +92,7 @@ const Header = ({ title, canGoBack = false, rightComponent }: HeaderProps) => {
                             <RemixIcon
                                 name="arrow-left-s-line"
                                 size={20}
-                                color={Colors.text}
+                                color={colors.text}
                                 fallback={null}
                             />
                         </Pressable>
@@ -128,7 +138,6 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         paddingHorizontal: 12,
         borderRadius: 100,
-        backgroundColor: Colors.backgroundMuted,
     },
 
     pillPressed: { filter: "brightness(0.9)", transform: [{ scale: 0.98 }] },

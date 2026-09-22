@@ -1,8 +1,10 @@
 import { useScreenScroll } from "@/components/HeaderScroll";
-import Colors from "@/constants/Colors";
+import { ThemeColors } from "@/constants/Colors";
+import useTheme from "@/hooks/useTheme";
 import * as Application from "expo-application";
 import { Image } from "expo-image";
 import * as Linking from "expo-linking";
+import { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import RemixIcon from "react-native-remix-icon";
@@ -17,6 +19,8 @@ const AUTHOR_BIO = "Sofware Developer";
 export default function About() {
     const insets = useSafeAreaInsets();
     const onScroll = useScreenScroll();
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
 
     return (
         <Animated.ScrollView
@@ -53,7 +57,7 @@ export default function About() {
                     <RemixIcon
                         name="github-fill"
                         size={16}
-                        color={Colors.text}
+                        color={colors.text}
                     />
                     <Text style={styles.linkChipText}>GitHub</Text>
                 </Pressable>
@@ -78,7 +82,7 @@ export default function About() {
                         <RemixIcon
                             name="global-line"
                             size={16}
-                            color={Colors.accent}
+                            color={colors.accent}
                         />
 
                         <Text style={styles.authorLinkText}>
@@ -93,7 +97,7 @@ export default function About() {
                         <RemixIcon
                             name="github-fill"
                             size={16}
-                            color={Colors.accent}
+                            color={colors.accent}
                         />
 
                         <Text style={styles.authorLinkText}>@prateekshrm</Text>
@@ -126,7 +130,7 @@ export default function About() {
                 <RemixIcon
                     name="arrow-right-s-line"
                     size={22}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                     fallback={null}
                 />
             </Pressable>
@@ -156,7 +160,7 @@ export default function About() {
                 <RemixIcon
                     name="arrow-right-s-line"
                     size={22}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                     fallback={null}
                 />
             </Pressable>
@@ -171,7 +175,7 @@ export default function About() {
                     <RemixIcon
                         name="copyright-line"
                         size={20}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                         fallback={null}
                     />
                     <Text style={styles.copyrightText}>
@@ -183,156 +187,157 @@ export default function About() {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.background,
-    },
-    content: {
-        padding: 20,
-        paddingTop: 120,
-        paddingBottom: 32,
-        gap: 12,
-    },
-    header: {
-        alignItems: "center",
-        marginBottom: 16,
-    },
-    icon: {
-        width: 88,
-        height: 88,
-        marginBottom: 14,
-    },
-    appName: {
-        fontSize: 28,
-        color: Colors.text,
-        textAlign: "center",
-        marginBottom: 4,
-    },
-    appNameRegular: {
-        fontFamily: "Fraunces-Medium",
-    },
-    appNameItalic: {
-        fontFamily: "Fraunces-MediumItalic",
-    },
-    version: {
-        fontFamily: "DMSans-Medium",
-        color: Colors.textSecondary,
-    },
-    linkChip: {
-        marginTop: 16,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-        backgroundColor: Colors.backgroundMuted,
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: 999,
-    },
-    linkChipText: {
-        fontFamily: "DMSans-Medium",
-        color: Colors.text,
-    },
-    sectionTitle: {
-        fontSize: 14,
-        fontFamily: "DMSans-SemiBold",
-        color: Colors.textSecondary,
-        textTransform: "uppercase",
-        letterSpacing: 0.5,
-        marginTop: 8,
-        marginLeft: 4,
-    },
-    card: {
-        flexDirection: "row",
-        backgroundColor: Colors.surface,
-        borderRadius: 16,
-        padding: 16,
-    },
-    avatar: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        marginRight: 16,
-    },
-    cardContent: {
-        flex: 1,
-    },
-    name: {
-        fontSize: 18,
-        fontFamily: "DMSans-Bold",
-        color: Colors.text,
-    },
-    bio: {
-        marginTop: 2,
-        color: Colors.textSecondary,
-        fontFamily: "DMSans-Regular",
-    },
-    authorLink: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-        marginTop: 8,
-        alignSelf: "flex-start",
-    },
-    authorLinkText: {
-        color: Colors.accent,
-        fontFamily: "DMSans-Medium",
-    },
-    item: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: 16,
-        borderRadius: 16,
-        backgroundColor: Colors.surface,
-    },
-    left: {
-        flexDirection: "row",
-        alignItems: "center",
-        flex: 1,
-    },
-    iconContainer: {
-        width: 42,
-        height: 42,
-        borderRadius: 21,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: Colors.backgroundMuted,
-        marginRight: 14,
-    },
-    itemTextWrap: {
-        flex: 1,
-    },
-    title: {
-        fontSize: 16,
-        fontFamily: "DMSans-SemiBold",
-        color: Colors.text,
-    },
-    subtitle: {
-        marginTop: 2,
-        fontSize: 13,
-        fontFamily: "DMSans-Regular",
-        color: Colors.textSecondary,
-    },
-    footer: {
-        marginTop: 16,
-        alignItems: "center",
-    },
-    footerText: {
-        textAlign: "center",
-        lineHeight: 22,
-        color: Colors.textSecondary,
-        fontFamily: "DMSans-Regular",
-    },
-    copyright: {
-        marginTop: 16,
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 8,
-    },
-    copyrightText: {
-        fontFamily: "DMSans-Medium",
-        color: Colors.textSecondary,
-    },
-});
+const createStyles = (colors: ThemeColors) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
+        content: {
+            padding: 20,
+            paddingTop: 120,
+            paddingBottom: 32,
+            gap: 12,
+        },
+        header: {
+            alignItems: "center",
+            marginBottom: 16,
+        },
+        icon: {
+            width: 88,
+            height: 88,
+            marginBottom: 14,
+        },
+        appName: {
+            fontSize: 28,
+            color: colors.text,
+            textAlign: "center",
+            marginBottom: 4,
+        },
+        appNameRegular: {
+            fontFamily: "Fraunces-Medium",
+        },
+        appNameItalic: {
+            fontFamily: "Fraunces-MediumItalic",
+        },
+        version: {
+            fontFamily: "DMSans-Medium",
+            color: colors.textSecondary,
+        },
+        linkChip: {
+            marginTop: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            backgroundColor: colors.backgroundMuted,
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+            borderRadius: 999,
+        },
+        linkChipText: {
+            fontFamily: "DMSans-Medium",
+            color: colors.text,
+        },
+        sectionTitle: {
+            fontSize: 14,
+            fontFamily: "DMSans-SemiBold",
+            color: colors.textSecondary,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            marginTop: 8,
+            marginLeft: 4,
+        },
+        card: {
+            flexDirection: "row",
+            backgroundColor: colors.surface,
+            borderRadius: 16,
+            padding: 16,
+        },
+        avatar: {
+            width: 64,
+            height: 64,
+            borderRadius: 32,
+            marginRight: 16,
+        },
+        cardContent: {
+            flex: 1,
+        },
+        name: {
+            fontSize: 18,
+            fontFamily: "DMSans-Bold",
+            color: colors.text,
+        },
+        bio: {
+            marginTop: 2,
+            color: colors.textSecondary,
+            fontFamily: "DMSans-Regular",
+        },
+        authorLink: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            marginTop: 8,
+            alignSelf: "flex-start",
+        },
+        authorLinkText: {
+            color: colors.accent,
+            fontFamily: "DMSans-Medium",
+        },
+        item: {
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: 16,
+            borderRadius: 16,
+            backgroundColor: colors.surface,
+        },
+        left: {
+            flexDirection: "row",
+            alignItems: "center",
+            flex: 1,
+        },
+        iconContainer: {
+            width: 42,
+            height: 42,
+            borderRadius: 21,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: colors.backgroundMuted,
+            marginRight: 14,
+        },
+        itemTextWrap: {
+            flex: 1,
+        },
+        title: {
+            fontSize: 16,
+            fontFamily: "DMSans-SemiBold",
+            color: colors.text,
+        },
+        subtitle: {
+            marginTop: 2,
+            fontSize: 13,
+            fontFamily: "DMSans-Regular",
+            color: colors.textSecondary,
+        },
+        footer: {
+            marginTop: 16,
+            alignItems: "center",
+        },
+        footerText: {
+            textAlign: "center",
+            lineHeight: 22,
+            color: colors.textSecondary,
+            fontFamily: "DMSans-Regular",
+        },
+        copyright: {
+            marginTop: 16,
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 8,
+        },
+        copyrightText: {
+            fontFamily: "DMSans-Medium",
+            color: colors.textSecondary,
+        },
+    });

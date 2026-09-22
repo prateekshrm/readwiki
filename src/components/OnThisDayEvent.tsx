@@ -1,5 +1,7 @@
-import Colors from "@/constants/Colors";
+import { ThemeColors } from "@/constants/Colors";
+import { useTheme } from "@/hooks/useTheme";
 import { Image } from "expo-image";
+import { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import RemixIcon from "react-native-remix-icon";
 
@@ -36,6 +38,9 @@ export default function OnThisDayEvent({
     onPressPage,
     onPress,
 }: OnThisDayEventProps) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
+
     const pageList: OnThisDayPage[] =
         pages && pages.length > 0
             ? pages
@@ -105,7 +110,7 @@ export default function OnThisDayEvent({
                                             <RemixIcon
                                                 name="file-list-2-line"
                                                 size={18}
-                                                color={Colors.textMuted}
+                                                color={colors.textMuted}
                                                 fallback={null}
                                             />
                                         </View>
@@ -121,7 +126,7 @@ export default function OnThisDayEvent({
                                     <RemixIcon
                                         name="arrow-right-s-line"
                                         size={18}
-                                        color={Colors.textSecondary}
+                                        color={colors.textSecondary}
                                         fallback={null}
                                     />
                                 </Pressable>
@@ -136,94 +141,95 @@ export default function OnThisDayEvent({
 
 const DOT_SIZE = 12;
 
-const styles = StyleSheet.create({
-    row: {
-        flexDirection: "row",
-        paddingHorizontal: 16,
-    },
+const createStyles = (colors: ThemeColors) =>
+    StyleSheet.create({
+        row: {
+            flexDirection: "row",
+            paddingHorizontal: 16,
+        },
 
-    timeline: {
-        width: 24,
-        alignItems: "center",
-    },
+        timeline: {
+            width: 24,
+            alignItems: "center",
+        },
 
-    lineTop: {
-        width: 2,
-        height: 8,
-        backgroundColor: Colors.border,
-    },
+        lineTop: {
+            width: 2,
+            height: 8,
+            backgroundColor: colors.border,
+        },
 
-    dot: {
-        width: DOT_SIZE,
-        height: DOT_SIZE,
-        borderRadius: DOT_SIZE / 2,
-        backgroundColor: Colors.primary,
-    },
+        dot: {
+            width: DOT_SIZE,
+            height: DOT_SIZE,
+            borderRadius: DOT_SIZE / 2,
+            backgroundColor: colors.primary,
+        },
 
-    lineBottom: {
-        flex: 1,
-        width: 2,
-        backgroundColor: Colors.border,
-    },
+        lineBottom: {
+            flex: 1,
+            width: 2,
+            backgroundColor: colors.border,
+        },
 
-    content: {
-        flex: 1,
-        paddingLeft: 12,
-    },
+        content: {
+            flex: 1,
+            paddingLeft: 12,
+        },
 
-    year: {
-        fontSize: 20,
-        color: Colors.text,
-        fontFamily: "Fraunces-Medium",
-        lineHeight: 22,
-    },
+        year: {
+            fontSize: 20,
+            color: colors.text,
+            fontFamily: "Fraunces-Medium",
+            lineHeight: 22,
+        },
 
-    text: {
-        marginTop: 4,
-        color: Colors.textSecondary,
-        fontSize: 15,
-        lineHeight: 22,
-        fontFamily: "DMSans-Medium",
-    },
+        text: {
+            marginTop: 4,
+            color: colors.textSecondary,
+            fontSize: 15,
+            lineHeight: 22,
+            fontFamily: "DMSans-Medium",
+        },
 
-    pagesContainer: {
-        marginTop: 12,
-        gap: 8,
-    },
+        pagesContainer: {
+            marginTop: 12,
+            gap: 8,
+        },
 
-    articleChip: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
-        padding: 8,
-        paddingRight: 12,
-        borderRadius: 12,
-        backgroundColor: Colors.surface,
-    },
+        articleChip: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+            padding: 8,
+            paddingRight: 12,
+            borderRadius: 12,
+            backgroundColor: colors.surface,
+        },
 
-    articleChipPressed: {
-        filter: "brightness(0.95)",
-    },
+        articleChipPressed: {
+            opacity: 0.8,
+        },
 
-    thumbnail: {
-        width: 36,
-        height: 36,
-        borderRadius: 8,
-    },
+        thumbnail: {
+            width: 36,
+            height: 36,
+            borderRadius: 8,
+        },
 
-    thumbnailFallback: {
-        width: 36,
-        height: 36,
-        borderRadius: 8,
-        backgroundColor: Colors.backgroundMuted,
-        alignItems: "center",
-        justifyContent: "center",
-    },
+        thumbnailFallback: {
+            width: 36,
+            height: 36,
+            borderRadius: 8,
+            backgroundColor: colors.backgroundMuted,
+            alignItems: "center",
+            justifyContent: "center",
+        },
 
-    articleTitle: {
-        flex: 1,
-        color: Colors.text,
-        fontSize: 14,
-        fontFamily: "DMSans-SemiBold",
-    },
-});
+        articleTitle: {
+            flex: 1,
+            color: colors.text,
+            fontSize: 14,
+            fontFamily: "DMSans-SemiBold",
+        },
+    });

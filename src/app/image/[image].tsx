@@ -1,17 +1,11 @@
 import { useSolidHeader } from "@/components/HeaderScroll";
 import Loader from "@/components/Loader";
-import Colors from "@/constants/Colors";
+import useTheme from "@/hooks/useTheme";
 import { Image as ExpoImage } from "expo-image";
 import * as Linking from "expo-linking";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-    Pressable,
-    Share,
-    StatusBar,
-    StyleSheet,
-    View,
-} from "react-native";
+import { Pressable, Share, StatusBar, StyleSheet, View } from "react-native";
 import {
     Gesture,
     GestureDetector,
@@ -26,6 +20,8 @@ import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const HeaderRight = ({ image }: { image?: string }) => {
+    const { colors } = useTheme();
+
     const openInBrowser = async () => {
         if (!image) return;
         try {
@@ -52,6 +48,7 @@ const HeaderRight = ({ image }: { image?: string }) => {
             <Pressable
                 style={({ pressed }) => [
                     styles.headerRightButton,
+                    { backgroundColor: colors.backgroundMuted },
                     pressed && styles.headerRightButtonPressed,
                 ]}
                 onPress={openInBrowser}
@@ -59,13 +56,14 @@ const HeaderRight = ({ image }: { image?: string }) => {
                 <RemixIcon
                     name="external-link-line"
                     size={20}
-                    color={Colors.text}
+                    color={colors.text}
                     fallback={null}
                 />
             </Pressable>
             <Pressable
                 style={({ pressed }) => [
                     styles.headerRightButton,
+                    { backgroundColor: colors.backgroundMuted },
                     pressed && styles.headerRightButtonPressed,
                 ]}
                 onPress={shareImage}
@@ -73,7 +71,7 @@ const HeaderRight = ({ image }: { image?: string }) => {
                 <RemixIcon
                     name="share-line"
                     size={20}
-                    color={Colors.text}
+                    color={colors.text}
                     fallback={null}
                 />
             </Pressable>
@@ -87,6 +85,7 @@ const ImageScreen = () => {
     }>();
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
+    const { colors } = useTheme();
     const [isLoading, setIsLoading] = useState(true);
 
     // Full-screen dark viewer, so keep the header's back button white.
@@ -160,7 +159,7 @@ const ImageScreen = () => {
     const composedGesture = Gesture.Simultaneous(
         pinchGesture,
         panGesture,
-        doubleTapGesture
+        doubleTapGesture,
     );
 
     const imageAnimatedStyle = useAnimatedStyle(() => ({
@@ -229,7 +228,10 @@ const ImageScreen = () => {
             <View
                 style={[
                     styles.controlsContainer,
-                    { bottom: Math.max(insets.bottom + 16, 24) },
+                    {
+                        backgroundColor: colors.surface,
+                        bottom: Math.max(insets.bottom + 16, 24),
+                    },
                 ]}
             >
                 <Pressable
@@ -242,7 +244,7 @@ const ImageScreen = () => {
                     <RemixIcon
                         name="zoom-out-line"
                         size={22}
-                        color={Colors.text}
+                        color={colors.text}
                         fallback={null}
                     />
                 </Pressable>
@@ -257,7 +259,7 @@ const ImageScreen = () => {
                     <RemixIcon
                         name="restart-line"
                         size={20}
-                        color={Colors.text}
+                        color={colors.text}
                         fallback={null}
                     />
                 </Pressable>
@@ -272,7 +274,7 @@ const ImageScreen = () => {
                     <RemixIcon
                         name="zoom-in-line"
                         size={22}
-                        color={Colors.text}
+                        color={colors.text}
                         fallback={null}
                     />
                 </Pressable>
@@ -328,7 +330,6 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         paddingHorizontal: 12,
         borderRadius: 100,
-        backgroundColor: Colors.backgroundMuted,
     },
 
     headerRightButtonPressed: {
@@ -341,7 +342,6 @@ const styles = StyleSheet.create({
         alignSelf: "center",
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: Colors.background,
         borderRadius: 999,
         paddingHorizontal: 12,
         paddingVertical: 6,
@@ -360,4 +360,3 @@ const styles = StyleSheet.create({
         transform: [{ scale: 0.92 }],
     },
 });
-

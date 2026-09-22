@@ -1,5 +1,7 @@
-import Colors from "@/constants/Colors";
+import { ThemeColors } from "@/constants/Colors";
+import { useTheme } from "@/hooks/useTheme";
 import { Image } from "expo-image";
+import { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import RemixIcon from "react-native-remix-icon";
 
@@ -18,6 +20,9 @@ export default function NewsCard({
     image,
     onPress,
 }: NewsCardProps) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
+
     return (
         <Pressable
             style={({ pressed }) => [
@@ -37,7 +42,7 @@ export default function NewsCard({
                     <RemixIcon
                         name="newspaper-line"
                         size={24}
-                        color={Colors.textMuted}
+                        color={colors.textMuted}
                         fallback={null}
                     />
                 </View>
@@ -53,7 +58,7 @@ export default function NewsCard({
                         <RemixIcon
                             name="corner-down-right-line"
                             size={14}
-                            color={Colors.textSecondary}
+                            color={colors.textSecondary}
                             fallback={null}
                         />
                         <Text style={styles.title} numberOfLines={1}>
@@ -66,58 +71,59 @@ export default function NewsCard({
     );
 }
 
-const styles = StyleSheet.create({
-    card: {
-        position: "relative",
-        flexDirection: "row",
-        gap: 12,
-        backgroundColor: Colors.background,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-    },
+const createStyles = (colors: ThemeColors) =>
+    StyleSheet.create({
+        card: {
+            position: "relative",
+            flexDirection: "row",
+            gap: 12,
+            backgroundColor: colors.background,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+        },
 
-    cardPressed: {
-        filter: "brightness(0.95)",
-    },
+        cardPressed: {
+            opacity: 0.8,
+        },
 
-    thumbnail: {
-        width: 72,
-        height: 72,
-        borderRadius: 8,
-    },
+        thumbnail: {
+            width: 72,
+            height: 72,
+            borderRadius: 8,
+        },
 
-    thumbnailFallback: {
-        width: 72,
-        height: 72,
-        borderRadius: 8,
-        backgroundColor: Colors.backgroundMuted,
-        alignItems: "center",
-        justifyContent: "center",
-    },
+        thumbnailFallback: {
+            width: 72,
+            height: 72,
+            borderRadius: 8,
+            backgroundColor: colors.backgroundMuted,
+            alignItems: "center",
+            justifyContent: "center",
+        },
 
-    content: {
-        flex: 1,
-        justifyContent: "center",
-    },
+        content: {
+            flex: 1,
+            justifyContent: "center",
+        },
 
-    story: {
-        color: Colors.text,
-        fontSize: 15,
-        lineHeight: 21,
-        fontFamily: "DMSans-SemiBold",
-    },
+        story: {
+            color: colors.text,
+            fontSize: 15,
+            lineHeight: 21,
+            fontFamily: "DMSans-SemiBold",
+        },
 
-    byline: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 4,
-        marginTop: 6,
-    },
+        byline: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 4,
+            marginTop: 6,
+        },
 
-    title: {
-        flex: 1,
-        color: Colors.textSecondary,
-        fontSize: 13,
-        fontFamily: "DMSans-Medium",
-    },
-});
+        title: {
+            flex: 1,
+            color: colors.textSecondary,
+            fontSize: 13,
+            fontFamily: "DMSans-Medium",
+        },
+    });

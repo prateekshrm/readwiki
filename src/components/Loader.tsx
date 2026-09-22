@@ -1,12 +1,14 @@
-import Colors from "@/constants/Colors";
+import { useTheme } from "@/hooks/useTheme";
 import { ContainedLoadingIndicator, Host } from "@expo/ui/jetpack-compose";
 import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
 
 const Loader = () => {
+    const { colors } = useTheme();
+
     if (Platform.OS === "ios") {
         return (
             <View style={styles.container}>
-                <ActivityIndicator size="large" color={Colors.primary} />
+                <ActivityIndicator size="large" color={colors.primary} />
             </View>
         );
     }
@@ -14,8 +16,8 @@ const Loader = () => {
         <View style={styles.container}>
             <Host matchContents style={styles.host}>
                 <ContainedLoadingIndicator
-                    containerColor={Colors.primary}
-                    color={Colors.background}
+                    containerColor={colors.primary}
+                    color={colors.background}
                 />
             </Host>
         </View>

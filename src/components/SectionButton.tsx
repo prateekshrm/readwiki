@@ -1,4 +1,4 @@
-import Colors from "@/constants/Colors";
+import { useTheme } from "@/hooks/useTheme";
 import { StyleSheet, View } from "react-native";
 import Button from "./Button";
 
@@ -17,9 +17,11 @@ const SectionButton = ({
     iconPosition = "right",
     variant = "secondary",
 }: SectionButtonProps) => {
+    const { colors } = useTheme();
+
     return (
         <View style={styles.container}>
-            <View style={styles.line} />
+            <View style={[styles.line, { backgroundColor: colors.border }]} />
             <Button
                 text={text}
                 iconName={iconName}
@@ -45,6 +47,5 @@ const styles = StyleSheet.create({
         flex: 1,
         height: 2,
         borderRadius: 100,
-        backgroundColor: Colors.border,
     },
 });

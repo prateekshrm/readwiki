@@ -1,5 +1,7 @@
+import { ThemeMode } from "@/constants/Colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSyncExternalStore } from "react";
+import { Appearance } from "react-native";
 
 export type NotificationPreference = "granted" | "denied" | null;
 
@@ -14,6 +16,8 @@ export type Preferences = {
     openLinksInApp: boolean;
     // User notification permission status. Defaults to null until asked on first launch.
     notificationPermission: NotificationPreference;
+    // Theme mode: "system" | "light" | "dark". Defaults to "system".
+    theme: ThemeMode;
 };
 
 const STORAGE_KEY = "preferences";
@@ -23,6 +27,7 @@ const DEFAULTS: Preferences = {
     fontScale: 1,
     openLinksInApp: true,
     notificationPermission: null,
+    theme: "system",
 };
 
 // Available reading sizes shown in Settings.
@@ -43,6 +48,10 @@ const emit = () => {
     listeners.forEach((listener) => listener());
 };
 
+const syncAppearance = (theme: ThemeMode) => {
+    Appearance.setColorScheme(theme === "system" ? "unspecified" : theme);
+};
+
 // Load preferences from AsyncStorage on startup.
 const loadPreferences = async () => {
     try {
@@ -51,6 +60,7 @@ const loadPreferences = async () => {
             const stored = JSON.parse(raw) as Partial<Preferences>;
             preferences = { ...DEFAULTS, ...stored };
         }
+        syncAppearance(preferences.theme);
     } catch (error) {
         console.log("Failed to load preferences:", error);
     } finally {
@@ -62,6 +72,8 @@ const loadPreferences = async () => {
 // Fire-and-forget load on module init.
 loadPreferences();
 
+export const isPreferencesLoaded = () => loaded;
+
 export const getPreferences = () => preferences;
 
 export const setPreference = <K extends keyof Preferences>(
@@ -69,6 +81,9 @@ export const setPreference = <K extends keyof Preferences>(
     value: Preferences[K],
 ) => {
     preferences = { ...preferences, [key]: value };
+    if (key === "theme") {
+        syncAppearance(value as ThemeMode);
+    }
     emit();
     // Persist in the background — no need to await.
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(preferences)).catch(

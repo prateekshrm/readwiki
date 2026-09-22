@@ -1,5 +1,6 @@
 import RichText from "@/components/RichText";
-import Colors from "@/constants/Colors";
+import { ThemeColors } from "@/constants/Colors";
+import { useTheme } from "@/hooks/useTheme";
 import type { TableBlock } from "@/services/articleParser";
 import { memo, useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -18,25 +19,31 @@ const computeInitialWidths = (
     block: TableBlock,
     fontScale: number,
 ): number[] => {
-    const widths: number[] = new Array(block.numCols).fill(MIN_COL_WIDTH);
+    const widths: number[] = [];
 
     for (const logicalRow of block.blocks) {
         let colIdx = 0;
         for (const col of logicalRow.columns) {
+            while (widths[colIdx] === undefined) {
+                widths.push(MIN_COL_WIDTH);
+            }
             if (col.colspan === 1) {
                 for (const subCell of col.subCells) {
-                    const text = subCell.cell.spans.map((s) => s.text).join("");
-                    // Estimate text width based on char count
-                    const charCount = text.length;
-                    const estimatedWidth = Math.max(
-                        MIN_COL_WIDTH,
-                        Math.min(
-                            MAX_COL_WIDTH,
-                            Math.ceil(charCount * 8 * fontScale + 24),
-                        ),
-                    );
-                    if (estimatedWidth > widths[colIdx]) {
-                        widths[colIdx] = estimatedWidth;
+                    const text = subCell.cell.spans
+                        .map((s: { text: string }) => s.text)
+                        .join("");
+                    if (text.length > 0) {
+                        const charCount = text.length;
+                        const estimatedWidth = Math.max(
+                            MIN_COL_WIDTH,
+                            Math.min(
+                                MAX_COL_WIDTH,
+                                Math.ceil(charCount * 8 * fontScale + 24),
+                            ),
+                        );
+                        if (estimatedWidth > widths[colIdx]) {
+                            widths[colIdx] = estimatedWidth;
+                        }
                     }
                 }
             }
@@ -48,6 +55,9 @@ const computeInitialWidths = (
 };
 
 const TableView = ({ block, fontScale = 1 }: TableViewProps) => {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
+
     const columnWidths = useMemo(
         () => computeInitialWidths(block, fontScale),
         [block, fontScale],
@@ -83,7 +93,8 @@ const TableView = ({ block, fontScale = 1 }: TableViewProps) => {
                                     let colWidth = 0;
                                     for (let k = 0; k < col.colspan; k++) {
                                         colWidth +=
-                                            columnWidths[startCol + k] || MIN_COL_WIDTH;
+                                            columnWidths[startCol + k] ||
+                                            MIN_COL_WIDTH;
                                     }
 
                                     const isLastColumn =
@@ -103,7 +114,10 @@ const TableView = ({ block, fontScale = 1 }: TableViewProps) => {
                                                 key={colIndex}
                                                 style={[
                                                     styles.cell,
-                                                    { width: colWidth, maxWidth: colWidth },
+                                                    {
+                                                        width: colWidth,
+                                                        maxWidth: colWidth,
+                                                    },
                                                     cell.isHeader
                                                         ? styles.headerCell
                                                         : styles.dataCell,
@@ -142,7 +156,10 @@ const TableView = ({ block, fontScale = 1 }: TableViewProps) => {
                                             key={colIndex}
                                             style={[
                                                 styles.columnStack,
-                                                { width: colWidth, maxWidth: colWidth },
+                                                {
+                                                    width: colWidth,
+                                                    maxWidth: colWidth,
+                                                },
                                                 !isLastColumn &&
                                                     styles.columnDivider,
                                             ]}
@@ -211,70 +228,70 @@ const TableView = ({ block, fontScale = 1 }: TableViewProps) => {
 
 export default memo(TableView);
 
-const styles = StyleSheet.create({
-    outerContainer: {
-        marginVertical: 12,
-        paddingHorizontal: 16,
-    },
-    caption: {
-        fontFamily: "DMSans-Medium",
-        fontSize: 13,
-        color: Colors.textMuted,
-        marginBottom: 6,
-    },
-    scrollContent: {},
-    table: {
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 8,
-        overflow: "hidden",
-        backgroundColor: Colors.surface,
-    },
-    logicalRow: {
-        flexDirection: "row",
-        alignItems: "stretch",
-    },
-    columnStack: {
-        flexDirection: "column",
-        alignItems: "stretch",
-    },
-    cell: {
-        paddingHorizontal: 10,
-        paddingVertical: 8,
-        justifyContent: "center",
-    },
-    cellInner: {
-        alignSelf: "flex-start",
-        width: "100%",
-    },
-    headerCell: {
-        backgroundColor: Colors.surfaceMuted,
-    },
-    dataCell: {
-        backgroundColor: Colors.surface,
-    },
-    cellText: {
-        lineHeight: 20,
-    },
-    headerText: {
-        fontFamily: "DMSans-Bold",
-        color: Colors.text,
-    },
-    dataText: {
-        fontFamily: "DMSans-Regular",
-        color: Colors.text,
-    },
-    rowDivider: {
-        borderTopWidth: 1,
-        borderTopColor: Colors.border,
-    },
-    columnDivider: {
-        borderRightWidth: 1,
-        borderRightColor: Colors.border,
-    },
-    subRowDivider: {
-        borderTopWidth: 1,
-        borderTopColor: Colors.divider,
-    },
-});
-
+const createStyles = (colors: ThemeColors) =>
+    StyleSheet.create({
+        outerContainer: {
+            marginVertical: 12,
+            paddingHorizontal: 16,
+        },
+        caption: {
+            fontFamily: "DMSans-Medium",
+            fontSize: 13,
+            color: colors.textMuted,
+            marginBottom: 6,
+        },
+        scrollContent: {},
+        table: {
+            borderWidth: 1,
+            borderColor: colors.border,
+            borderRadius: 8,
+            overflow: "hidden",
+            backgroundColor: colors.surface,
+        },
+        logicalRow: {
+            flexDirection: "row",
+            alignItems: "stretch",
+        },
+        columnStack: {
+            flexDirection: "column",
+            alignItems: "stretch",
+        },
+        cell: {
+            paddingHorizontal: 10,
+            paddingVertical: 8,
+            justifyContent: "center",
+        },
+        cellInner: {
+            alignSelf: "flex-start",
+            width: "100%",
+        },
+        headerCell: {
+            backgroundColor: colors.surfaceMuted,
+        },
+        dataCell: {
+            backgroundColor: colors.surface,
+        },
+        cellText: {
+            lineHeight: 20,
+        },
+        headerText: {
+            fontFamily: "DMSans-Bold",
+            color: colors.text,
+        },
+        dataText: {
+            fontFamily: "DMSans-Regular",
+            color: colors.text,
+        },
+        rowDivider: {
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+        },
+        columnDivider: {
+            borderRightWidth: 1,
+            borderRightColor: colors.border,
+        },
+        subRowDivider: {
+            borderTopWidth: 1,
+            borderTopColor: colors.divider,
+        },
+    });

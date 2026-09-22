@@ -1,4 +1,3 @@
-import Colors from "@/constants/Colors";
 import { completeOnboarding } from "@/services/preferences";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -120,7 +119,7 @@ const styles = StyleSheet.create({
     },
     appName: {
         fontSize: 32,
-        color: Colors.textInverse,
+        color: "#F8F9FA",
         textAlign: "center",
         marginBottom: 24,
     },
@@ -143,7 +142,7 @@ const styles = StyleSheet.create({
         width: "100%",
         height: 56,
         borderRadius: 999,
-        backgroundColor: Colors.background,
+        backgroundColor: "#FFFFFF",
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",

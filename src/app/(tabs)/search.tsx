@@ -1,10 +1,11 @@
 import ArticleCard from "@/components/ArticleCard";
 import { useStaticHeader } from "@/components/HeaderScroll";
 import Loader from "@/components/Loader";
-import Colors from "@/constants/Colors";
+import { ThemeColors } from "@/constants/Colors";
+import { useTheme } from "@/hooks/useTheme";
 import { searchArticles } from "@/services/wikipedia";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     FlatList,
     Pressable,
@@ -17,6 +18,12 @@ import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Search = () => {
+    const { colors, isDark } = useTheme();
+    const styles = useMemo(
+        () => createStyles(colors, isDark),
+        [colors, isDark],
+    );
+
     const [query, setQuery] = useState("");
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -84,7 +91,7 @@ const Search = () => {
                     <RemixIcon
                         name="search-2-line"
                         size={20}
-                        color={Colors.textMuted}
+                        color={colors.textMuted}
                         style={styles.leftIcon}
                         fallback={null}
                     />
@@ -93,8 +100,8 @@ const Search = () => {
                         value={query}
                         onChangeText={setQuery}
                         placeholder="Search articles..."
-                        placeholderTextColor={Colors.textMuted}
-                        style={styles.searchInput}
+                        placeholderTextColor={colors.textMuted}
+                        style={[styles.searchInput, { color: colors.text }]}
                         returnKeyType="search"
                         ref={inputRef}
                     />
@@ -107,7 +114,7 @@ const Search = () => {
                             <RemixIcon
                                 name="close-line"
                                 size={20}
-                                color={Colors.textMuted}
+                                color={colors.textMuted}
                                 fallback={null}
                             />
                         </Pressable>
@@ -159,69 +166,70 @@ const Search = () => {
 
 export default Search;
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.background,
-        paddingTop: 100,
-    },
-
-    searchContainer: {
-        paddingHorizontal: 16,
-        paddingBottom: 16,
-    },
-
-    inputWrapper: {
-        position: "relative",
-        justifyContent: "center",
-    },
-
-    searchInput: {
-        backgroundColor: Colors.surface,
-        borderRadius: 100,
-        paddingLeft: 44,
-        paddingRight: 44,
-        fontSize: 16,
-        shadowColor: Colors.primary,
-        shadowOffset: {
-            width: 0,
-            height: 2,
+const createStyles = (colors: ThemeColors, isDark: boolean) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
         },
-        shadowOpacity: 0.05,
-        shadowRadius: 6,
-        elevation: 2,
-        fontFamily: "DMSans-Medium",
-    },
 
-    leftIcon: {
-        position: "absolute",
-        left: 12,
-        zIndex: 1,
-    },
+        searchContainer: {
+            paddingTop: 100,
+            paddingHorizontal: 16,
+            marginBottom: 16,
+        },
 
-    clearButton: {
-        position: "absolute",
-        right: 12,
-        zIndex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-    },
+        inputWrapper: {
+            position: "relative",
+            justifyContent: "center",
+        },
 
-    loaderContainer: {
-        flex: 1,
-        alignItems: "center",
-    },
+        searchInput: {
+            backgroundColor: colors.surface,
+            borderRadius: 100,
+            paddingLeft: 44,
+            paddingRight: 44,
+            fontSize: 16,
+            shadowColor: isDark ? "transparent" : colors.primary,
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: isDark ? 0 : 0.05,
+            shadowRadius: isDark ? 0 : 6,
+            elevation: isDark ? 0 : 2,
+            fontFamily: "DMSans-Medium",
+        },
 
-    listContent: {
-        flexGrow: 1,
-    },
+        leftIcon: {
+            position: "absolute",
+            left: 12,
+            zIndex: 1,
+        },
 
-    emptyText: {
-        alignSelf: "center",
-        textAlign: "center",
-        paddingHorizontal: 16,
-        fontSize: 16,
-        color: Colors.textMuted,
-        fontFamily: "DMSans-Medium",
-    },
-});
+        clearButton: {
+            position: "absolute",
+            right: 12,
+            zIndex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+        },
+
+        loaderContainer: {
+            flex: 1,
+            alignItems: "center",
+        },
+
+        listContent: {
+            flexGrow: 1,
+        },
+
+        emptyText: {
+            alignSelf: "center",
+            textAlign: "center",
+            paddingHorizontal: 16,
+            fontSize: 16,
+            color: colors.textMuted,
+            fontFamily: "DMSans-Medium",
+        },
+    });

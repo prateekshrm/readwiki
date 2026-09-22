@@ -1,6 +1,7 @@
 import ArticleCard from "@/components/ArticleCard";
 import { useScreenScroll } from "@/components/HeaderScroll";
-import Colors from "@/constants/Colors";
+import { ThemeColors } from "@/constants/Colors";
+import useTheme from "@/hooks/useTheme";
 import {
     clearHistory,
     formatTimeAgo,
@@ -8,7 +9,7 @@ import {
     useHistory,
 } from "@/services/articleHistory";
 import { router, useNavigation } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import RemixIcon from "react-native-remix-icon";
@@ -16,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ClearButton = () => {
     const history = useHistory();
+    const { colors, isDark } = useTheme();
 
     if (history.length === 0) return null;
 
@@ -23,6 +25,7 @@ const ClearButton = () => {
         <Pressable
             style={({ pressed }) => [
                 styles.headerButton,
+                { backgroundColor: colors.backgroundMuted },
                 pressed && styles.headerButtonPressed,
             ]}
             onPress={() =>
@@ -43,7 +46,7 @@ const ClearButton = () => {
             <RemixIcon
                 name="delete-bin-line"
                 size={20}
-                color={Colors.text}
+                color={isDark ? "#FFFFFF" : colors.text}
                 fallback={null}
             />
         </Pressable>
@@ -55,6 +58,8 @@ const History = () => {
     const insets = useSafeAreaInsets();
     const onScroll = useScreenScroll();
     const navigation = useNavigation();
+    const { colors, isDark } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
 
     useEffect(() => {
         navigation.setOptions({
@@ -68,7 +73,7 @@ const History = () => {
                 <RemixIcon
                     name="history-line"
                     size={48}
-                    color={Colors.textMuted}
+                    color={colors.textMuted}
                     fallback={null}
                 />
                 <Text style={styles.emptyTitle}>No reading history</Text>
@@ -104,7 +109,7 @@ const History = () => {
                         }
                         onRemove={() => removeFromHistory(item.title)}
                         removeIcon="delete-bin-line"
-                        removeIconColor={Colors.textMuted}
+                        removeIconColor={isDark ? "#FFFFFF" : colors.textMuted}
                     />
                 )}
             />
@@ -115,48 +120,49 @@ const History = () => {
 export default History;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.background,
-    },
-
-    listContent: {
-        paddingTop: 100,
-    },
-
-    empty: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: 40,
-        backgroundColor: Colors.background,
-    },
-
-    emptyTitle: {
-        marginTop: 16,
-        fontSize: 20,
-        fontFamily: "Fraunces-Medium",
-        color: Colors.text,
-    },
-
-    emptySubtitle: {
-        marginTop: 8,
-        textAlign: "center",
-        fontSize: 14,
-        lineHeight: 22,
-        fontFamily: "DMSans-Regular",
-        color: Colors.textMuted,
-    },
-
     headerButton: {
         paddingVertical: 6,
         paddingHorizontal: 12,
         borderRadius: 100,
-        backgroundColor: Colors.backgroundMuted,
     },
-
     headerButtonPressed: {
         filter: "brightness(0.9)",
         transform: [{ scale: 0.98 }],
     },
 });
+
+const createStyles = (colors: ThemeColors) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
+
+        listContent: {
+            paddingTop: 100,
+        },
+
+        empty: {
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 40,
+            backgroundColor: colors.background,
+        },
+
+        emptyTitle: {
+            marginTop: 16,
+            fontSize: 20,
+            fontFamily: "Fraunces-Medium",
+            color: colors.text,
+        },
+
+        emptySubtitle: {
+            marginTop: 8,
+            textAlign: "center",
+            fontSize: 14,
+            lineHeight: 22,
+            fontFamily: "DMSans-Regular",
+            color: colors.textMuted,
+        },
+    });

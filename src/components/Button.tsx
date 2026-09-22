@@ -1,4 +1,4 @@
-import Colors from "@/constants/Colors";
+import { useTheme } from "@/hooks/useTheme";
 import { Pressable, StyleSheet, Text } from "react-native";
 import RemixIcon from "react-native-remix-icon";
 
@@ -22,16 +22,12 @@ const Button = ({
     mode = "dark",
     onPress,
 }: ButtonProps) => {
+    const { colors } = useTheme();
     const isPrimary = variant === "primary";
-    const isLight = mode === "light";
 
-    const backgroundColor = isPrimary
-        ? isLight
-            ? Colors.surface
-            : Colors.primary
-        : Colors.backgroundMuted;
-
-    const textColor = isPrimary && !isLight ? Colors.textInverse : Colors.text;
+    // Primary buttons are used on dark surfaces (e.g. featured hero cards), so they are always white.
+    const backgroundColor = isPrimary ? "#FFFFFF" : colors.backgroundMuted;
+    const textColor = isPrimary ? "#111827" : colors.text;
 
     return (
         <Pressable

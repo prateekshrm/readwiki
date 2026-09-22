@@ -1,5 +1,7 @@
 import { useScreenScroll } from "@/components/HeaderScroll";
-import Colors from "@/constants/Colors";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { ThemeColors } from "@/constants/Colors";
+import { useTheme } from "@/hooks/useTheme";
 import {
     getNotificationPermissionStatus,
     scheduleTomorrowFeaturedNotification,
@@ -12,7 +14,7 @@ import {
 } from "@/services/preferences";
 import { clearSavedArticles, useSavedArticles } from "@/services/savedArticles";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
     Alert,
     AppState,
@@ -29,9 +31,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const Settings = () => {
     const insets = useSafeAreaInsets();
 
+    const { colors, colorScheme } = useTheme();
     const preferences = usePreferences();
     const savedArticles = useSavedArticles();
     const onScroll = useScreenScroll();
+    const styles = useMemo(() => createStyles(colors), [colors]);
 
     const [permissionStatus, setPermissionStatus] = useState<
         "granted" | "denied" | "undetermined" | "unsupported" | "loading"
@@ -54,7 +58,9 @@ const Settings = () => {
     };
 
     useEffect(() => {
-        void checkPermission();
+        const timer = setTimeout(() => {
+            void checkPermission();
+        }, 0);
 
         const subscription = AppState.addEventListener(
             "change",
@@ -66,6 +72,7 @@ const Settings = () => {
         );
 
         return () => {
+            clearTimeout(timer);
             subscription.remove();
         };
     }, []);
@@ -151,6 +158,35 @@ const Settings = () => {
             onScroll={onScroll}
             scrollEventThrottle={16}
         >
+            {/* Appearance */}
+            <Text style={styles.sectionTitle}>Appearance</Text>
+
+            <View style={styles.themeCard}>
+                <View style={styles.left}>
+                    <View style={styles.iconContainer}>
+                        <RemixIcon
+                            name="palette-line"
+                            size={22}
+                            color={colors.accent}
+                            fallback={null}
+                        />
+                    </View>
+
+                    <View style={styles.itemTextWrap}>
+                        <Text style={styles.title}>Theme</Text>
+                        <Text style={styles.subtitle}>
+                            {preferences.theme === "system"
+                                ? `System (${colorScheme === "dark" ? "Dark" : "Light"})`
+                                : preferences.theme === "dark"
+                                  ? "Dark"
+                                  : "Light"}
+                        </Text>
+                    </View>
+                </View>
+
+                <ThemeSwitcher />
+            </View>
+
             {/* Reading text size */}
             <Text style={styles.sectionTitle}>Reading</Text>
 
@@ -191,7 +227,7 @@ const Settings = () => {
                     style={{
                         paddingTop: 6,
                         borderTopWidth: 1,
-                        borderTopColor: Colors.backgroundMuted,
+                        borderTopColor: colors.backgroundMuted,
                     }}
                 >
                     <Text
@@ -236,14 +272,14 @@ const Settings = () => {
                             <RemixIcon
                                 name="notification-4-line"
                                 size={22}
-                                color={Colors.accent}
+                                color={colors.accent}
                                 fallback={null}
                             />
                         ) : permissionStatus !== "unsupported" ? (
                             <RemixIcon
                                 name="notification-off-line"
                                 size={22}
-                                color={Colors.accent}
+                                color={colors.accent}
                                 fallback={null}
                             />
                         ) : null}
@@ -263,14 +299,14 @@ const Settings = () => {
                     <RemixIcon
                         name="checkbox-circle-fill"
                         size={22}
-                        color={Colors.accent}
+                        color={colors.accent}
                         fallback={null}
                     />
                 ) : permissionStatus !== "unsupported" ? (
                     <RemixIcon
                         name="arrow-right-s-line"
                         size={22}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                         fallback={null}
                     />
                 ) : null}
@@ -290,7 +326,7 @@ const Settings = () => {
                         <RemixIcon
                             name="notification-badge-line"
                             size={22}
-                            color={Colors.accent}
+                            color={colors.accent}
                             fallback={null}
                         />
                     </View>
@@ -315,7 +351,7 @@ const Settings = () => {
                         <RemixIcon
                             name="delete-bin-line"
                             size={22}
-                            color={Colors.accent}
+                            color={colors.accent}
                             fallback={null}
                         />
                     </View>
@@ -341,7 +377,7 @@ const Settings = () => {
                         <RemixIcon
                             name="compass-3-line"
                             size={22}
-                            color={Colors.accent}
+                            color={colors.accent}
                             fallback={null}
                         />
                     </View>
@@ -357,7 +393,7 @@ const Settings = () => {
                 <RemixIcon
                     name="arrow-right-s-line"
                     size={22}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                     fallback={null}
                 />
             </Pressable>
@@ -371,7 +407,7 @@ const Settings = () => {
                         <RemixIcon
                             name="information-line"
                             size={22}
-                            color={Colors.accent}
+                            color={colors.accent}
                             fallback={null}
                         />
                     </View>
@@ -387,7 +423,7 @@ const Settings = () => {
                 <RemixIcon
                     name="arrow-right-s-line"
                     size={22}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                     fallback={null}
                 />
             </Pressable>
@@ -397,100 +433,111 @@ const Settings = () => {
 
 export default Settings;
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.background,
-    },
-    content: {
-        padding: 16,
-        paddingTop: 120,
-        gap: 12,
-    },
-    sectionTitle: {
-        fontSize: 14,
-        fontFamily: "DMSans-SemiBold",
-        color: Colors.textSecondary,
-        textTransform: "uppercase",
-        letterSpacing: 0.5,
-        marginTop: 8,
-        marginLeft: 4,
-    },
-    card: {
-        padding: 16,
-        borderRadius: 16,
-        backgroundColor: Colors.surface,
-    },
-    headingPreview: {
-        fontFamily: "Fraunces-Medium",
-        color: Colors.text,
-        marginBottom: 8,
-    },
-    paragraphPreview: {
-        fontFamily: "DMSans-Regular",
-        color: Colors.text,
-    },
-    chips: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        gap: 8,
-        marginVertical: 14,
-    },
-    chip: {
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 999,
-        backgroundColor: Colors.backgroundMuted,
-    },
-    chipActive: {
-        backgroundColor: Colors.primary,
-        borderColor: Colors.primary,
-    },
-    chipText: {
-        fontSize: 14,
-        fontFamily: "DMSans-Medium",
-        color: Colors.text,
-    },
-    chipTextActive: {
-        color: Colors.textInverse,
-    },
-    item: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: 16,
-        borderRadius: 16,
-        backgroundColor: Colors.surface,
-    },
-    disabledItem: {
-        opacity: 0.6,
-    },
-    left: {
-        flexDirection: "row",
-        alignItems: "center",
-        flex: 1,
-    },
-    iconContainer: {
-        width: 42,
-        height: 42,
-        borderRadius: 21,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: Colors.backgroundMuted,
-        marginRight: 14,
-    },
-    itemTextWrap: {
-        flex: 1,
-    },
-    title: {
-        fontSize: 16,
-        fontFamily: "DMSans-SemiBold",
-        color: Colors.text,
-    },
-    subtitle: {
-        marginTop: 2,
-        fontSize: 13,
-        fontFamily: "DMSans-Regular",
-        color: Colors.textSecondary,
-    },
-});
+const createStyles = (colors: ThemeColors) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
+        content: {
+            padding: 16,
+            paddingTop: 120,
+            gap: 12,
+        },
+        sectionTitle: {
+            fontSize: 14,
+            fontFamily: "DMSans-SemiBold",
+            color: colors.textSecondary,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            marginTop: 8,
+            marginLeft: 4,
+        },
+        card: {
+            padding: 16,
+            borderRadius: 16,
+            backgroundColor: colors.surface,
+        },
+        themeCard: {
+            padding: 16,
+            borderRadius: 16,
+            backgroundColor: colors.surface,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8,
+        },
+        headingPreview: {
+            fontFamily: "Fraunces-Medium",
+            color: colors.text,
+            marginBottom: 8,
+        },
+        paragraphPreview: {
+            fontFamily: "DMSans-Regular",
+            color: colors.text,
+        },
+        chips: {
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 8,
+            marginVertical: 14,
+        },
+        chip: {
+            paddingVertical: 6,
+            paddingHorizontal: 12,
+            borderRadius: 999,
+            backgroundColor: colors.backgroundMuted,
+        },
+        chipActive: {
+            backgroundColor: colors.primary,
+            borderColor: colors.primary,
+        },
+        chipText: {
+            fontSize: 14,
+            fontFamily: "DMSans-Medium",
+            color: colors.text,
+        },
+        chipTextActive: {
+            color: colors.textInverse,
+        },
+        item: {
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: 16,
+            borderRadius: 16,
+            backgroundColor: colors.surface,
+        },
+        disabledItem: {
+            opacity: 0.6,
+        },
+        left: {
+            flexDirection: "row",
+            alignItems: "center",
+            flex: 1,
+        },
+        iconContainer: {
+            width: 42,
+            height: 42,
+            borderRadius: 21,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: colors.backgroundMuted,
+            marginRight: 14,
+        },
+        itemTextWrap: {
+            flex: 1,
+        },
+        title: {
+            fontSize: 16,
+            fontFamily: "DMSans-SemiBold",
+            color: colors.text,
+        },
+        subtitle: {
+            marginTop: 2,
+            fontSize: 13,
+            fontFamily: "DMSans-Regular",
+            color: colors.textSecondary,
+        },
+    });
+

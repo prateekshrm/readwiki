@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import { HeaderScrollProvider } from "@/components/HeaderScroll";
 import useNetworkAlert from "@/hooks/useNetworkAlert";
+import { useTheme } from "@/hooks/useTheme";
 import {
     initializeNotifications,
     registerNotificationResponseListener,
@@ -24,6 +25,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
     useNetworkAlert();
+    const { colors } = useTheme();
     const preferences = usePreferences();
     const rootNavigationState = useRootNavigationState();
     const isNavigationReady = Boolean(rootNavigationState?.key);
@@ -72,6 +74,7 @@ export default function RootLayout() {
             <Stack
                 screenOptions={{
                     headerTransparent: true,
+                    contentStyle: { backgroundColor: colors.background },
                     header: ({ options, navigation }) => (
                         <Header
                             title={options.title ?? ""}

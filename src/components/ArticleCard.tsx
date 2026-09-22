@@ -1,5 +1,7 @@
-import Colors from "@/constants/Colors";
+import { ThemeColors } from "@/constants/Colors";
+import { useTheme } from "@/hooks/useTheme";
 import { Image } from "expo-image";
+import { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import RemixIcon, { type IconName } from "react-native-remix-icon";
 
@@ -25,6 +27,9 @@ export default function ArticleCard({
     removeIcon = "bookmark-fill",
     removeIconColor,
 }: ArticleCardProps) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
+
     return (
         <Pressable
             style={({ pressed }) => [
@@ -44,7 +49,7 @@ export default function ArticleCard({
                     <RemixIcon
                         name="file-list-2-line"
                         size={24}
-                        color={Colors.textMuted}
+                        color={colors.textMuted}
                         fallback={null}
                     />
                 </View>
@@ -73,7 +78,7 @@ export default function ArticleCard({
                         <RemixIcon
                             name={removeIcon}
                             size={20}
-                            color={Colors.text}
+                            color={removeIconColor ?? colors.text}
                             fallback={null}
                         />
                     </Pressable>
@@ -83,71 +88,72 @@ export default function ArticleCard({
     );
 }
 
-const styles = StyleSheet.create({
-    card: {
-        position: "relative",
-        flexDirection: "row",
-        gap: 12,
-        backgroundColor: Colors.background,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-    },
+const createStyles = (colors: ThemeColors) =>
+    StyleSheet.create({
+        card: {
+            position: "relative",
+            flexDirection: "row",
+            gap: 12,
+            backgroundColor: colors.background,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+        },
 
-    cardPressed: {
-        filter: "brightness(0.95)",
-    },
+        cardPressed: {
+            opacity: 0.8,
+        },
 
-    thumbnail: {
-        width: 72,
-        height: 72,
-        borderRadius: 8,
-    },
+        thumbnail: {
+            width: 72,
+            height: 72,
+            borderRadius: 8,
+        },
 
-    fallbackImageIcon: {
-        width: 72,
-        height: 72,
-        borderRadius: 8,
-        backgroundColor: Colors.backgroundMuted,
-        alignItems: "center",
-        justifyContent: "center",
-    },
+        fallbackImageIcon: {
+            width: 72,
+            height: 72,
+            borderRadius: 8,
+            backgroundColor: colors.backgroundMuted,
+            alignItems: "center",
+            justifyContent: "center",
+        },
 
-    content: {
-        flex: 1,
-    },
+        content: {
+            flex: 1,
+        },
 
-    tag: {
-        fontSize: 12,
-        color: Colors.textSecondary,
-        backgroundColor: Colors.backgroundMuted,
-        fontFamily: "DMSans-SemiBold",
-        paddingVertical: 2,
-        paddingHorizontal: 8,
-        borderRadius: 12,
-        alignSelf: "flex-start",
-        marginBottom: 4,
-    },
+        tag: {
+            fontSize: 12,
+            color: colors.textSecondary,
+            backgroundColor: colors.backgroundMuted,
+            fontFamily: "DMSans-SemiBold",
+            paddingVertical: 2,
+            paddingHorizontal: 8,
+            borderRadius: 12,
+            alignSelf: "flex-start",
+            marginBottom: 4,
+        },
 
-    title: {
-        color: Colors.text,
-        fontSize: 18,
-        fontFamily: "DMSans-SemiBold",
-    },
+        title: {
+            color: colors.text,
+            fontSize: 18,
+            fontFamily: "DMSans-SemiBold",
+        },
 
-    subtitle: {
-        marginTop: 4,
-        color: Colors.textMuted,
-        fontSize: 13,
-        fontFamily: "DMSans-Medium",
-    },
+        subtitle: {
+            marginTop: 4,
+            color: colors.textMuted,
+            fontSize: 13,
+            fontFamily: "DMSans-Medium",
+        },
 
-    pill: {
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 100,
-        backgroundColor: Colors.backgroundMuted,
-        margin: "auto",
-    },
+        pill: {
+            paddingVertical: 6,
+            paddingHorizontal: 12,
+            borderRadius: 100,
+            backgroundColor: colors.backgroundMuted,
+            margin: "auto",
+        },
 
-    pillPressed: { filter: "brightness(0.9)", transform: [{ scale: 0.98 }] },
-});
+        pillPressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
+    });

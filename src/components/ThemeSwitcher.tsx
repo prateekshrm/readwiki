@@ -70,7 +70,7 @@ export function ThemeSwitcher() {
                         width: INDICATOR_SIZE,
                         height: INDICATOR_SIZE,
                         borderRadius: INDICATOR_SIZE / 2,
-                        backgroundColor: isDark ? "#FFFFFF" : "#000000",
+                        backgroundColor: colors.primary,
                     },
                     indicatorStyle,
                 ]}

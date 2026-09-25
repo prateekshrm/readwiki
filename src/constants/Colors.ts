@@ -49,7 +49,7 @@ const light = {
 } as const;
 
 const dark = {
-    primary: "#F2F2EC", // warm off-white for active indicators / filled buttons
+    primary: "#f2f3e4", // warm off-white for active indicators / filled buttons
     secondary: "#A39E93", // soft warm gray
     accent: "#C98A75", // soft muted warm terracotta
 

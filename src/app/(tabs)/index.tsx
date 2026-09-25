@@ -73,6 +73,15 @@ const Home = () => {
     // in its scrolled state (white logo + gradient + light status bar) always.
     useSolidHeader();
 
+    const hasData = Boolean(
+        featuredArticle ||
+        trendingArticles.length > 0 ||
+        imageOfTheDay ||
+        news.length > 0 ||
+        onThisDayArticles.length > 0 ||
+        facts.length > 0,
+    );
+
     if (loading) {
         return (
             <View style={styles.container}>
@@ -83,10 +92,26 @@ const Home = () => {
         );
     }
 
-    if (!featuredArticle) {
+    if (!hasData) {
+        if (!isConnected) {
+            return (
+                <View style={styles.container}>
+                    <NoInternetView
+                        onRetry={() => {
+                            setLoading(true);
+                            loadData();
+                        }}
+                    />
+                </View>
+            );
+        }
+
         return (
             <View style={styles.container}>
                 <NoInternetView
+                    iconName="refresh-line"
+                    title="Couldn't Load Feed"
+                    description="Something went wrong while fetching the latest content. Please try again."
                     onRetry={() => {
                         setLoading(true);
                         loadData();
@@ -101,6 +126,7 @@ const Home = () => {
             <ScrollView
                 contentContainerStyle={[
                     styles.sectionContainer,
+                    !featuredArticle && { paddingTop: insets.top + 60 },
                     {
                         paddingBottom: insets.bottom + 80,
                     },
@@ -108,83 +134,85 @@ const Home = () => {
                 showsVerticalScrollIndicator={false}
                 scrollEventThrottle={16}
             >
-                <View style={styles.featuredCard}>
-                    <Image
-                        source={
-                            featuredArticle?.thumbnail?.source
-                                ? featuredArticle.thumbnail.source
-                                : require("../../../assets/fallback.jpg")
-                        }
-                        style={styles.featuredCardImage}
-                        contentFit="cover"
-                        blurRadius={
-                            featuredArticle?.thumbnail?.source ? 0 : 100
-                        }
-                    />
-                    <LinearGradient
-                        colors={["rgba(0,0,0,0.45)", "transparent"]}
-                        style={styles.featuredCardTopGradient}
-                    />
+                {featuredArticle && (
+                    <View style={styles.featuredCard}>
+                        <Image
+                            source={
+                                featuredArticle?.thumbnail?.source
+                                    ? featuredArticle.thumbnail.source
+                                    : require("../../../assets/fallback.jpg")
+                            }
+                            style={styles.featuredCardImage}
+                            contentFit="cover"
+                            blurRadius={
+                                featuredArticle?.thumbnail?.source ? 0 : 100
+                            }
+                        />
+                        <LinearGradient
+                            colors={["rgba(0,0,0,0.45)", "transparent"]}
+                            style={styles.featuredCardTopGradient}
+                        />
 
-                    <LinearGradient
-                        colors={[
-                            "transparent",
-                            "rgba(0,0,0,0.4)",
-                            "rgba(0,0,0,0.9)",
-                        ]}
-                        locations={[0, 0.5, 1]}
-                        style={styles.featuredCardOverlay}
-                    />
+                        <LinearGradient
+                            colors={[
+                                "transparent",
+                                "rgba(0,0,0,0.4)",
+                                "rgba(0,0,0,0.9)",
+                            ]}
+                            locations={[0, 0.5, 1]}
+                            style={styles.featuredCardOverlay}
+                        />
 
-                    <View style={styles.featuredCardContent}>
-                        <View style={styles.featuredCardBadge}>
-                            <RemixIcon
-                                name="star-fill"
-                                size={13}
-                                color="#FFFFFF"
-                                fallback={null}
-                            />
-                            <Text style={styles.featuredCardBadgeText}>
-                                Featured Article
-                            </Text>
-                        </View>
+                        <View style={styles.featuredCardContent}>
+                            <View style={styles.featuredCardBadge}>
+                                <RemixIcon
+                                    name="star-fill"
+                                    size={13}
+                                    color="#FFFFFF"
+                                    fallback={null}
+                                />
+                                <Text style={styles.featuredCardBadgeText}>
+                                    Featured Article
+                                </Text>
+                            </View>
 
-                        <Text
-                            style={styles.featuredCardTitle}
-                            numberOfLines={2}
-                        >
-                            {featuredArticle?.normalizedtitle ??
-                                featuredArticle?.titles.normalized}
-                        </Text>
-
-                        {!!featuredArticle?.extract && (
                             <Text
-                                style={styles.featuredCardDescription}
-                                numberOfLines={4}
+                                style={styles.featuredCardTitle}
+                                numberOfLines={2}
                             >
-                                {featuredArticle.extract == ""
-                                    ? featuredArticle.description
-                                    : featuredArticle.extract}
+                                {featuredArticle?.normalizedtitle ??
+                                    featuredArticle?.titles.normalized}
                             </Text>
-                        )}
-                        <View style={{ alignItems: "flex-start" }}>
-                            <Button
-                                text="Read More"
-                                iconName="arrow-right-s-line"
-                                variant="primary"
-                                mode="light"
-                                onPress={() =>
-                                    router.push({
-                                        pathname: "/article/[article]",
-                                        params: {
-                                            article: featuredArticle?.title,
-                                        },
-                                    })
-                                }
-                            />
+
+                            {!!featuredArticle?.extract && (
+                                <Text
+                                    style={styles.featuredCardDescription}
+                                    numberOfLines={4}
+                                >
+                                    {featuredArticle.extract == ""
+                                        ? featuredArticle.description
+                                        : featuredArticle.extract}
+                                </Text>
+                            )}
+                            <View style={{ alignItems: "flex-start" }}>
+                                <Button
+                                    text="Read More"
+                                    iconName="arrow-right-s-line"
+                                    variant="primary"
+                                    mode="light"
+                                    onPress={() =>
+                                        router.push({
+                                            pathname: "/article/[article]",
+                                            params: {
+                                                article: featuredArticle?.title,
+                                            },
+                                        })
+                                    }
+                                />
+                            </View>
                         </View>
                     </View>
-                </View>
+                )}
                 {trendingArticles.length > 0 && (
                     <View style={styles.section}>
                         <View>

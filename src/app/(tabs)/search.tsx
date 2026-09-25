@@ -2,6 +2,7 @@ import ArticleCard from "@/components/ArticleCard";
 import { useStaticHeader } from "@/components/HeaderScroll";
 import Loader from "@/components/Loader";
 import { ThemeColors } from "@/constants/Colors";
+import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { useTheme } from "@/hooks/useTheme";
 import { searchArticles } from "@/services/wikipedia";
 import { router, useFocusEffect } from "expo-router";
@@ -24,6 +25,7 @@ const Search = () => {
         [colors, isDark],
     );
 
+    const isConnected = useNetworkStatus();
     const [query, setQuery] = useState("");
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -140,7 +142,11 @@ const Search = () => {
                     keyboardShouldPersistTaps="handled"
                     ListEmptyComponent={
                         <Text style={styles.emptyText}>
-                            Search for any Wikipedia article
+                            {!isConnected
+                                ? "No internet connection. Please connect to the internet to search articles."
+                                : query.trim()
+                                  ? `No articles found for "${query.trim()}"`
+                                  : "Search for any Wikipedia article"}
                         </Text>
                     }
                     renderItem={({ item }) => (

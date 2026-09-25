@@ -10,12 +10,14 @@ interface NoInternetViewProps {
     onRetry: () => void;
     title?: string;
     description?: string;
+    iconName?: string;
 }
 
 export default function NoInternetView({
     onRetry,
     title = "No Internet Connection",
     description = "Please check your Wi-Fi or mobile data connection and try again.",
+    iconName = "wifi-off-line",
 }: NoInternetViewProps) {
     const insets = useSafeAreaInsets();
     const { colors } = useTheme();
@@ -34,7 +36,7 @@ export default function NoInternetView({
             <View style={styles.card}>
                 <View style={styles.iconContainer}>
                     <RemixIcon
-                        name="wifi-off-line"
+                        name={iconName as any}
                         size={38}
                         color={colors.accent}
                         fallback={null}

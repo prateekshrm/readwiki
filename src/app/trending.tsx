@@ -1,11 +1,13 @@
 import ArticleCard from "@/components/ArticleCard";
 import { useScreenScroll } from "@/components/HeaderScroll";
 import Loader from "@/components/Loader";
+import NoInternetView from "@/components/NoInternetView";
 import { ThemeColors } from "@/constants/Colors";
+import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { useTheme } from "@/hooks/useTheme";
 import { getFeaturedData } from "@/services/wikipedia";
 import { router } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,10 +21,13 @@ const Trending = () => {
     const [trendingArticles, setTrendingArticles] = useState<any[]>([]);
     const onScroll = useScreenScroll();
 
+    const isConnected = useNetworkStatus();
+    const prevConnectedRef = useRef<boolean | null>(null);
+
     const loadData = useCallback(async () => {
         try {
             const data = await getFeaturedData();
-            setTrendingArticles(data.mostread?.articles || []);
+            setTrendingArticles(data?.mostread?.articles || []);
         } catch (error) {
             console.error(error);
         } finally {
@@ -34,10 +39,48 @@ const Trending = () => {
         loadData();
     }, [loadData]);
 
+    // Refetch when internet arrives
+    useEffect(() => {
+        if (prevConnectedRef.current === false && isConnected === true) {
+            setLoading(true);
+            loadData();
+        }
+        prevConnectedRef.current = isConnected;
+    }, [isConnected, loadData]);
+
     if (loading) {
         return (
             <View style={styles.loaderContainer}>
                 <Loader />
+            </View>
+        );
+    }
+
+    if (trendingArticles.length === 0) {
+        if (!isConnected) {
+            return (
+                <View style={styles.container}>
+                    <NoInternetView
+                        onRetry={() => {
+                            setLoading(true);
+                            loadData();
+                        }}
+                    />
+                </View>
+            );
+        }
+
+        return (
+            <View style={styles.container}>
+                <NoInternetView
+                    iconName="refresh-line"
+                    title="No Articles Available"
+                    description="Could not load trending articles. Please try again."
+                    onRetry={() => {
+                        setLoading(true);
+                        loadData();
+                    }}
+                />
             </View>
         );
     }

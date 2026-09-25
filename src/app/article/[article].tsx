@@ -347,9 +347,25 @@ const Article = () => {
     }
 
     if (!meta && blocks.length === 0) {
+        if (!isConnected) {
+            return (
+                <View style={styles.container}>
+                    <NoInternetView
+                        onRetry={() => {
+                            setLoading(true);
+                            loadArticle();
+                        }}
+                    />
+                </View>
+            );
+        }
+
         return (
             <View style={styles.container}>
                 <NoInternetView
+                    iconName="file-warning-line"
+                    title="Article Unavailable"
+                    description="We couldn't load this article. Please check the title or try again later."
                     onRetry={() => {
                         setLoading(true);
                         loadArticle();

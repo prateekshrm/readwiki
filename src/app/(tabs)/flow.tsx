@@ -309,9 +309,25 @@ const Flow = () => {
     }
 
     if (!articles || articles.length === 0) {
+        if (!isConnected) {
+            return (
+                <View style={styles.container}>
+                    <NoInternetView
+                        onRetry={() => {
+                            setLoading(true);
+                            loadInitial();
+                        }}
+                    />
+                </View>
+            );
+        }
+
         return (
             <View style={styles.container}>
                 <NoInternetView
+                    iconName="refresh-line"
+                    title="Couldn't Load Articles"
+                    description="Something went wrong while fetching articles. Please try again."
                     onRetry={() => {
                         setLoading(true);
                         loadInitial();

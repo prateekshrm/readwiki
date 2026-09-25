@@ -2,7 +2,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { LinearGradient } from "expo-linear-gradient";
 import type { BottomTabBarProps } from "expo-router/js-tabs";
 import { useEffect } from "react";
-import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import Animated, {
     Easing,
     useAnimatedStyle,
@@ -22,13 +22,15 @@ export default function TabBar({
     const insets = useSafeAreaInsets();
     const { colors } = useTheme();
 
+    const { width: windowWidth } = useWindowDimensions();
+
     const tabWidth =
-        (Dimensions.get("window").width -
+        (windowWidth -
             HORIZONTAL_MARGIN * 2 -
             CONTAINER_PADDING * 2) /
-        state.routes.length;
+        (state.routes.length || 1);
 
-    const translateX = useSharedValue(0);
+    const translateX = useSharedValue(state.index * tabWidth);
 
     useEffect(() => {
         translateX.value = withTiming(state.index * tabWidth, {

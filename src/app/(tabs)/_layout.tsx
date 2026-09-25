@@ -3,11 +3,15 @@ import TabBar from "@/components/TabBar";
 import { Tabs } from "expo-router";
 import RemixIcon from "react-native-remix-icon";
 
+import type { BottomTabBarProps } from "expo-router/js-tabs";
+
+const renderTabBar = (props: BottomTabBarProps) => <TabBar {...props} />;
+
 export default function RootLayout() {
     const TAB_ICON_SIZE = 18;
     return (
         <Tabs
-            tabBar={(props) => <TabBar {...props} />}
+            tabBar={renderTabBar}
             screenOptions={{
                 headerTransparent: true,
                 header: ({ options }) => (

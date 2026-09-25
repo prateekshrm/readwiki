@@ -229,7 +229,7 @@ const ImageScreen = () => {
                 style={[
                     styles.controlsContainer,
                     {
-                        backgroundColor: colors.surface,
+                        backgroundColor: colors.backgroundMuted,
                         bottom: Math.max(insets.bottom + 16, 24),
                     },
                 ]}

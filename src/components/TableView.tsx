@@ -8,6 +8,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 type TableViewProps = {
     block: TableBlock;
     fontScale?: number;
+    onLinkPress?: (title: string) => void;
 };
 
 const MIN_COL_WIDTH = 60;
@@ -54,7 +55,11 @@ const computeInitialWidths = (
     return widths;
 };
 
-const TableView = ({ block, fontScale = 1 }: TableViewProps) => {
+const TableView = ({
+    block,
+    fontScale = 1,
+    onLinkPress,
+}: TableViewProps) => {
     const { colors } = useTheme();
     const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -128,6 +133,7 @@ const TableView = ({ block, fontScale = 1 }: TableViewProps) => {
                                                 <View style={styles.cellInner}>
                                                     <RichText
                                                         spans={cell.spans}
+                                                        onLinkPress={onLinkPress}
                                                         style={[
                                                             styles.cellText,
                                                             cell.isHeader
@@ -191,6 +197,9 @@ const TableView = ({ block, fontScale = 1 }: TableViewProps) => {
                                                                 <RichText
                                                                     spans={
                                                                         cell.spans
+                                                                    }
+                                                                    onLinkPress={
+                                                                        onLinkPress
                                                                     }
                                                                     style={[
                                                                         styles.cellText,

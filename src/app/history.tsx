@@ -109,7 +109,6 @@ const History = () => {
                         }
                         onRemove={() => removeFromHistory(item.title)}
                         removeIcon="delete-bin-line"
-                        removeIconColor={isDark ? "#FFFFFF" : colors.textMuted}
                     />
                 )}
             />

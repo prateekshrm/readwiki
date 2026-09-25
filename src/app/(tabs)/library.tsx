@@ -89,9 +89,6 @@ const Library = () => {
                                         removeFromHistory(item.title)
                                     }
                                     removeIcon="delete-bin-line"
-                                    removeIconColor={
-                                        isDark ? "#FFFFFF" : colors.textMuted
-                                    }
                                 />
                             ))}
                         </View>

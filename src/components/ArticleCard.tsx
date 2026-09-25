@@ -14,7 +14,6 @@ type ArticleCardProps = {
     // When provided, an action button is shown on the right (used in Saved/History to quickly remove an article).
     onRemove?: () => void;
     removeIcon?: IconName;
-    removeIconColor?: string;
 };
 
 export default function ArticleCard({
@@ -25,7 +24,6 @@ export default function ArticleCard({
     onPress,
     onRemove,
     removeIcon = "bookmark-fill",
-    removeIconColor,
 }: ArticleCardProps) {
     const { colors } = useTheme();
     const styles = useMemo(() => createStyles(colors), [colors]);
@@ -78,7 +76,7 @@ export default function ArticleCard({
                         <RemixIcon
                             name={removeIcon}
                             size={20}
-                            color={removeIconColor ?? colors.text}
+                            color={colors.text}
                             fallback={null}
                         />
                     </Pressable>
@@ -107,6 +105,7 @@ const createStyles = (colors: ThemeColors) =>
             width: 72,
             height: 72,
             borderRadius: 8,
+            backgroundColor: colors.backgroundMuted,
         },
 
         fallbackImageIcon: {

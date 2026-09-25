@@ -1,3 +1,4 @@
+import ArticlePreviewSheet from "@/components/ArticlePreviewSheet";
 import { useScreenScroll } from "@/components/HeaderScroll";
 import Loader from "@/components/Loader";
 import NoInternetView from "@/components/NoInternetView";
@@ -119,10 +120,11 @@ type ArticleBlockItemProps = {
     block: Block;
     fontScale: number;
     styles: ReturnType<typeof createStyles>;
+    onLinkPress: (title: string) => void;
 };
 
 const ArticleBlockItem = memo(
-    ({ block, fontScale, styles }: ArticleBlockItemProps) => {
+    ({ block, fontScale, styles, onLinkPress }: ArticleBlockItemProps) => {
         switch (block.type) {
             case "heading":
                 return (
@@ -145,6 +147,7 @@ const ArticleBlockItem = memo(
                 return (
                     <RichText
                         spans={block.spans}
+                        onLinkPress={onLinkPress}
                         style={[
                             styles.paragraph,
                             {
@@ -165,6 +168,7 @@ const ArticleBlockItem = memo(
                                 </Text>
                                 <RichText
                                     spans={item}
+                                    onLinkPress={onLinkPress}
                                     style={[
                                         styles.paragraph,
                                         {
@@ -204,7 +208,13 @@ const ArticleBlockItem = memo(
             }
 
             case "table":
-                return <TableView block={block} fontScale={fontScale} />;
+                return (
+                    <TableView
+                        block={block}
+                        fontScale={fontScale}
+                        onLinkPress={onLinkPress}
+                    />
+                );
 
             default:
                 return null;
@@ -232,15 +242,26 @@ const Article = () => {
 
     const fontScale = preferences.fontScale;
 
+    const [previewTitle, setPreviewTitle] = useState<string | null>(null);
+
+    const handleLinkPress = useCallback((title: string) => {
+        setPreviewTitle(title);
+    }, []);
+
+    const handleDismissPreview = useCallback(() => {
+        setPreviewTitle(null);
+    }, []);
+
     const renderItem = useCallback(
         ({ item }: { item: Block }) => (
             <ArticleBlockItem
                 block={item}
                 fontScale={fontScale}
                 styles={styles}
+                onLinkPress={handleLinkPress}
             />
         ),
-        [fontScale, styles],
+        [fontScale, styles, handleLinkPress],
     );
 
     const keyExtractor = useCallback(
@@ -396,6 +417,10 @@ const Article = () => {
                         </View>
                     ) : null
                 }
+            />
+            <ArticlePreviewSheet
+                title={previewTitle}
+                onDismiss={handleDismissPreview}
             />
         </View>
     );

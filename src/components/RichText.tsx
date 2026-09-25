@@ -6,6 +6,7 @@ import { StyleSheet, Text, TextStyle } from "react-native";
 type RichTextProps = {
     spans: Span[];
     style?: TextStyle | TextStyle[];
+    onLinkPress?: (title: string) => void;
 };
 
 // Opens a linked Wikipedia article inside the app.
@@ -19,7 +20,7 @@ const openArticle = (title: string) => {
 // Renders an array of inline runs as a single <Text>, keeping bold /
 // italic formatting and turning wiki links into tappable text that opens
 // the linked article in the app.
-const RichText = ({ spans, style }: RichTextProps) => {
+const RichText = ({ spans, style, onLinkPress }: RichTextProps) => {
     const { colors } = useTheme();
 
     return (
@@ -39,7 +40,13 @@ const RichText = ({ spans, style }: RichTextProps) => {
                                 { color: colors.link },
                                 runStyle,
                             ]}
-                            onPress={() => openArticle(span.link as string)}
+                            onPress={() => {
+                                if (onLinkPress) {
+                                    onLinkPress(span.link as string);
+                                } else {
+                                    openArticle(span.link as string);
+                                }
+                            }}
                         >
                             {span.text}
                         </Text>

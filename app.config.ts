@@ -77,6 +77,7 @@ export default (): ExpoConfig => {
                     },
                 },
             ],
+            "expo-localization",
         ],
 
         experiments: {

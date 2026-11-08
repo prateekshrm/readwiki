@@ -17,7 +17,8 @@ const CONTAINER_PADDING = 4;
 export default function TabBar({
     state,
     descriptors,
-    navigation,
+    emitter,
+    navigateToTab,
 }: BottomTabBarProps) {
     const insets = useSafeAreaInsets();
     const { colors } = useTheme();
@@ -101,14 +102,14 @@ export default function TabBar({
                             : null;
 
                     const onPress = () => {
-                        const event = navigation.emit({
+                        const event = emitter.emit({
                             type: "tabPress",
                             target: route.key,
                             canPreventDefault: true,
                         });
 
                         if (!isFocused && !event.defaultPrevented) {
-                            navigation.navigate(route.name);
+                            navigateToTab(route.key);
                         }
                     };
 

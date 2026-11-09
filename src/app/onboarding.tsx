@@ -27,11 +27,7 @@ const Onboarding = () => {
 
     return (
         <View style={styles.container}>
-            <StatusBar
-                barStyle="light-content"
-                translucent
-                backgroundColor="transparent"
-            />
+            <StatusBar barStyle="light-content" />
 
             <Image
                 source={require("@/assets/onboarding.png")}

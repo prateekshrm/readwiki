@@ -370,7 +370,7 @@ const Flow = () => {
                         <View style={styles.overlay} />
                         <Loader />
                     </View>
-                ) : null
+                ) : undefined
             }
         />
     );

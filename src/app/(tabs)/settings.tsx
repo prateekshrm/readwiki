@@ -20,6 +20,7 @@ import {
     AppState,
     Linking,
     Pressable,
+    Share,
     StyleSheet,
     Text,
     View,
@@ -143,6 +144,39 @@ const Settings = () => {
             return "Notifications enabled. Tap to manage in settings";
         }
         return "Notifications disabled. Tap to manage in settings";
+    };
+
+    const APP_URL =
+        "https://play.google.com/store/apps/details?id=com.pratksharma.readwiki";
+
+    const handleRateApp = () => {
+        void Linking.openURL(APP_URL);
+    };
+
+    const handleShareApp = async () => {
+        try {
+            await Share.share({
+                message: `Discover ReadWiki – explore interesting articles and learn something new every day!\n\nDownload ReadWiki: ${APP_URL}`,
+            });
+        } catch (error) {
+            console.error("Failed to share app:", error);
+        }
+    };
+
+    const handleContactSupport = (type: "problem" | "feedback") => {
+        const subject =
+            type === "problem"
+                ? "ReadWiki - Report a Problem"
+                : "ReadWiki - Feedback";
+
+        const url = `mailto:hello.pratk@gmail.com?subject=${encodeURIComponent(subject)}`;
+
+        void Linking.openURL(url).catch(() => {
+            Alert.alert(
+                "Unable to open email",
+                "Please email us at hello.pratk@gmail.com",
+            );
+        });
     };
 
     return (
@@ -365,6 +399,95 @@ const Settings = () => {
                 </View>
             </Pressable>
 
+            {/* Support */}
+            <Text style={styles.sectionTitle}>Support</Text>
+
+            <Pressable style={styles.item} onPress={handleRateApp}>
+                <View style={styles.left}>
+                    <View style={styles.iconContainer}>
+                        <RemixIcon
+                            name="star-smile-line"
+                            size={22}
+                            color={colors.accent}
+                            fallback={null}
+                        />
+                    </View>
+
+                    <View style={styles.itemTextWrap}>
+                        <Text style={styles.title}>Rate ReadWiki</Text>
+                        <Text style={styles.subtitle}>
+                            Enjoying the app? Leave us a rating
+                        </Text>
+                    </View>
+                </View>
+            </Pressable>
+
+            <Pressable style={styles.item} onPress={handleShareApp}>
+                <View style={styles.left}>
+                    <View style={styles.iconContainer}>
+                        <RemixIcon
+                            name="share-line"
+                            size={22}
+                            color={colors.accent}
+                            fallback={null}
+                        />
+                    </View>
+
+                    <View style={styles.itemTextWrap}>
+                        <Text style={styles.title}>Share the app</Text>
+                        <Text style={styles.subtitle}>
+                            Tell your friends about ReadWiki
+                        </Text>
+                    </View>
+                </View>
+            </Pressable>
+
+            <Pressable
+                style={styles.item}
+                onPress={() => handleContactSupport("problem")}
+            >
+                <View style={styles.left}>
+                    <View style={styles.iconContainer}>
+                        <RemixIcon
+                            name="bug-line"
+                            size={22}
+                            color={colors.accent}
+                            fallback={null}
+                        />
+                    </View>
+
+                    <View style={styles.itemTextWrap}>
+                        <Text style={styles.title}>Report a problem</Text>
+                        <Text style={styles.subtitle}>
+                            Let us know if something isn't working
+                        </Text>
+                    </View>
+                </View>
+            </Pressable>
+
+            <Pressable
+                style={styles.item}
+                onPress={() => handleContactSupport("feedback")}
+            >
+                <View style={styles.left}>
+                    <View style={styles.iconContainer}>
+                        <RemixIcon
+                            name="feedback-line"
+                            size={22}
+                            color={colors.accent}
+                            fallback={null}
+                        />
+                    </View>
+
+                    <View style={styles.itemTextWrap}>
+                        <Text style={styles.title}>Send feedback</Text>
+                        <Text style={styles.subtitle}>
+                            Share suggestions to improve ReadWiki
+                        </Text>
+                    </View>
+                </View>
+            </Pressable>
+
             {/* General */}
             <Text style={styles.sectionTitle}>General</Text>
 
@@ -540,4 +663,3 @@ const createStyles = (colors: ThemeColors) =>
             color: colors.textSecondary,
         },
     });
-

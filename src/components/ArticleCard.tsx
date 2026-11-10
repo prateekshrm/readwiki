@@ -32,7 +32,9 @@ export default function ArticleCard({
         <Pressable
             style={({ pressed }) => [
                 styles.card,
-                pressed && styles.cardPressed,
+                pressed && {
+                    backgroundColor: colors.backgroundSecondary,
+                },
             ]}
             onPress={onPress}
         >
@@ -95,10 +97,6 @@ const createStyles = (colors: ThemeColors) =>
             backgroundColor: colors.background,
             paddingHorizontal: 16,
             paddingVertical: 12,
-        },
-
-        cardPressed: {
-            opacity: 0.8,
         },
 
         thumbnail: {

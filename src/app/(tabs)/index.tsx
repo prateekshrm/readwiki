@@ -76,7 +76,7 @@ const Home = () => {
     const hasData = Boolean(
         featuredArticle ||
         trendingArticles.length > 0 ||
-        imageOfTheDay ||
+        imageOfTheDay?.thumbnail?.source ||
         news.length > 0 ||
         onThisDayArticles.length > 0 ||
         facts.length > 0,

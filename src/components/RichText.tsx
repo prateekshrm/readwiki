@@ -26,10 +26,10 @@ const RichText = ({ spans, style, onLinkPress }: RichTextProps) => {
     return (
         <Text style={style}>
             {spans.map((span, index) => {
-                const runStyle: TextStyle = {};
-
-                if (span.bold) runStyle.fontFamily = "DMSans-Bold";
-                if (span.italic) runStyle.fontStyle = "italic";
+                const runStyle: TextStyle = {
+                    ...(span.bold && { fontFamily: "DMSans-Bold" }),
+                    ...(span.italic && { fontStyle: "italic" }),
+                };
 
                 if (span.link) {
                     return (

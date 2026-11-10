@@ -135,7 +135,7 @@ const ArticleBlockItem = memo(
                                 : styles.heading3,
                             {
                                 fontSize:
-                                    (block.level === 2 ? 32 : 28) * fontScale,
+                                    (block.level === 2 ? 32 : 24) * fontScale,
                             },
                         ]}
                     >
@@ -431,7 +431,7 @@ const Article = () => {
 
                             <View style={styles.divider} />
                         </View>
-                    ) : null
+                    ) : undefined
                 }
             />
             <ArticlePreviewSheet

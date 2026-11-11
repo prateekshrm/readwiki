@@ -14,7 +14,7 @@ export default (): ExpoConfig => {
               : "ReadWiki",
 
         slug: "ReadWiki",
-        version: "1.6.0",
+        version: "1.7.0",
         orientation: "portrait",
 
         icon: "./assets/images/icon.png",
@@ -79,6 +79,21 @@ export default (): ExpoConfig => {
             ],
             "expo-localization",
             "expo-widgets",
+            [
+                "expo-quick-actions",
+                {
+                    androidIcons: {
+                        shortcut_search: {
+                            foregroundImage: "./assets/shortcuts/search.png",
+                            backgroundColor: "#191919",
+                        },
+                        shortcut_flow: {
+                            foregroundImage: "./assets/shortcuts/flow.png",
+                            backgroundColor: "#191919",
+                        },
+                    },
+                },
+            ],
         ],
 
         experiments: {

@@ -27,8 +27,8 @@ export const getFeaturedData = async () => {
 
         const response = await fetch(url, {
             headers: {
-                "User-Agent": "ReadWiki/1.0",
-                "Api-User-Agent": "ReadWiki/1.0",
+                "User-Agent": "ReadWiki/1.7.0",
+                "Api-User-Agent": "ReadWiki/1.7.0",
             },
         });
 
@@ -59,8 +59,8 @@ export const getTomorrowFeaturedArticleTitle = async () => {
 
         const response = await fetch(url, {
             headers: {
-                "User-Agent": "ReadWiki/1.0",
-                "Api-User-Agent": "ReadWiki/1.0",
+                "User-Agent": "ReadWiki/1.7.0",
+                "Api-User-Agent": "ReadWiki/1.7.0",
             },
         });
 
@@ -92,12 +92,12 @@ export const getFullArticle = async (title: string) => {
 
         const response = await fetch(
             `https://en.wikipedia.org/w/api.php?action=parse&page=${encodedTitle}` +
-            `&prop=text&format=json&formatversion=2&redirects=1` +
-            `&disableeditsection=1&disabletoc=1`,
+                `&prop=text&format=json&formatversion=2&redirects=1` +
+                `&disableeditsection=1&disabletoc=1`,
             {
                 headers: {
-                    "User-Agent": "ReadWiki/1.0",
-                    "Api-User-Agent": "ReadWiki/1.0",
+                    "User-Agent": "ReadWiki/1.7.0",
+                    "Api-User-Agent": "ReadWiki/1.7.0",
                 },
             },
         );
@@ -131,8 +131,8 @@ export const getArticleSummary = async (title: string) => {
             `https://en.wikipedia.org/api/rest_v1/page/summary/${encodedTitle}`,
             {
                 headers: {
-                    "User-Agent": "ReadWiki/1.0",
-                    "Api-User-Agent": "ReadWiki/1.0",
+                    "User-Agent": "ReadWiki/1.7.0",
+                    "Api-User-Agent": "ReadWiki/1.7.0",
                 },
             },
         );
@@ -164,8 +164,8 @@ export const searchArticles = async (query: string) => {
             `https://en.wikipedia.org/w/api.php?action=query&generator=prefixsearch&description&prop=pageprops%7Cpageimages%7Cdescription&piprop=thumbnail&pithumbsize=128&gpslimit=6&format=json&formatversion=2&maxage=900&smaxage=900&gpssearch=${encodedQuery}`,
             {
                 headers: {
-                    "User-Agent": "ReadWiki/1.0",
-                    "Api-User-Agent": "ReadWiki/1.0",
+                    "User-Agent": "ReadWiki/1.7.0",
+                    "Api-User-Agent": "ReadWiki/1.7.0",
                 },
             },
         );
@@ -185,8 +185,8 @@ export const getRandomArticle = async () => {
             `https://en.wikipedia.org/api/rest_v1/page/random/summary`,
             {
                 headers: {
-                    "User-Agent": "ReadWiki/1.0",
-                    "Api-User-Agent": "ReadWiki/1.0",
+                    "User-Agent": "ReadWiki/1.7.0",
+                    "Api-User-Agent": "ReadWiki/1.7.0",
                 },
             },
         );
@@ -209,8 +209,8 @@ export async function getRandomArticles(limit = 20) {
         `https://en.wikipedia.org/w/api.php?action=query&format=json&generator=random&grnnamespace=0&prop=extracts|info|pageimages&inprop=url|varianttitles&grnlimit=${limit}&exintro=1&exlimit=max&exsentences=5&explaintext=1&piprop=thumbnail&pithumbsize=800&origin=*`,
         {
             headers: {
-                "User-Agent": "ReadWiki/1.0",
-                "Api-User-Agent": "ReadWiki/1.0",
+                "User-Agent": "ReadWiki/1.7.0",
+                "Api-User-Agent": "ReadWiki/1.7.0",
             },
         },
     );

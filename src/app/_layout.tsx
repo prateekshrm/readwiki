@@ -9,6 +9,8 @@ import {
 } from "@/services/notification";
 import { usePreferences } from "@/services/preferences";
 import { useFonts } from "expo-font";
+import * as QuickActions from "expo-quick-actions";
+import { RouterAction, useQuickActionRouting } from "expo-quick-actions/router";
 import { router, Stack, useRootNavigationState } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
@@ -25,6 +27,8 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
     useNetworkAlert();
+    useQuickActionRouting();
+
     const { colors } = useTheme();
     const preferences = usePreferences();
     const rootNavigationState = useRootNavigationState();
@@ -38,6 +42,28 @@ export default function RootLayout() {
         "Fraunces-Medium": Fraunces_500Medium,
         "Fraunces-MediumItalic": Fraunces_500Medium_Italic,
     });
+
+    // Configure Android app shortcuts.
+    useEffect(() => {
+        QuickActions.setItems<RouterAction>([
+            {
+                id: "search",
+                title: "Search",
+                icon: "shortcut_search",
+                params: {
+                    href: "/(tabs)/search",
+                },
+            },
+            {
+                id: "flow",
+                title: "Flow",
+                icon: "shortcut_flow",
+                params: {
+                    href: "/(tabs)/flow",
+                },
+            },
+        ]).catch(console.error);
+    }, []);
 
     useEffect(() => {
         if (loaded || error) {

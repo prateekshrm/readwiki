@@ -116,15 +116,9 @@ export const getFullArticle = async (title: string) => {
 };
 
 // Short summary of an article: title, one-line description, extract and
-// lead image. Used for the article header and for saving articles.
+// lead image. Used for previewing articles without caching.
 export const getArticleSummary = async (title: string) => {
     try {
-        const cachedData = getArticleSummaryCache(title);
-
-        if (cachedData) {
-            return cachedData;
-        }
-
         const encodedTitle = encodeURIComponent(title);
 
         const response = await fetch(
@@ -143,7 +137,30 @@ export const getArticleSummary = async (title: string) => {
 
         const data = await response.json();
 
-        setArticleSummaryCache(title, data);
+        return data;
+    } catch (error) {
+        console.log(error);
+        return null;
+    }
+};
+
+export const getArticlePreviewSummary = getArticleSummary;
+
+// Short summary of an article used when viewing the article page.
+// Caches the response so repeated visits don't need to refetch.
+export const getArticlePageSummary = async (title: string) => {
+    try {
+        const cachedData = getArticleSummaryCache(title);
+
+        if (cachedData) {
+            return cachedData;
+        }
+
+        const data = await getArticleSummary(title);
+
+        if (data) {
+            setArticleSummaryCache(title, data);
+        }
 
         return data;
     } catch (error) {

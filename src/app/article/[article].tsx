@@ -11,7 +11,7 @@ import { addToHistory } from "@/services/articleHistory";
 import { parseArticle, type Block } from "@/services/articleParser";
 import { usePreferences } from "@/services/preferences";
 import { toggleSavedArticle, useIsSaved } from "@/services/savedArticles";
-import { getArticleSummary, getFullArticle } from "@/services/wikipedia";
+import { getArticlePageSummary, getFullArticle } from "@/services/wikipedia";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -283,7 +283,7 @@ const Article = () => {
         try {
             // Fetch the summary (title / lead image) and the full HTML together.
             const [summary, html] = await Promise.all([
-                getArticleSummary(article),
+                getArticlePageSummary(article),
                 getFullArticle(article),
             ]);
 

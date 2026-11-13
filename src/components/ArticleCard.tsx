@@ -73,15 +73,15 @@ export default function ArticleCard({
                         styles.pill,
                         pressed && styles.pillPressed,
                     ]}
+                    onPress={onRemove}
+                    hitSlop={8}
                 >
-                    <Pressable onPress={onRemove}>
-                        <RemixIcon
-                            name={removeIcon}
-                            size={20}
-                            color={colors.text}
-                            fallback={null}
-                        />
-                    </Pressable>
+                    <RemixIcon
+                        name={removeIcon}
+                        size={20}
+                        color={colors.text}
+                        fallback={null}
+                    />
                 </Pressable>
             )}
         </Pressable>

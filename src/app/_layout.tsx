@@ -62,6 +62,14 @@ export default function RootLayout() {
                     href: "/(tabs)/flow",
                 },
             },
+            {
+                id: "library",
+                title: "Library",
+                icon: "shortcut_library",
+                params: {
+                    href: "/(tabs)/library",
+                },
+            },
         ]).catch(console.error);
     }, []);
 

@@ -26,7 +26,7 @@ const withShortcutKeep = (config) =>
     See: https://developer.android.com/build/shrink-code#keep-resources
 -->
 <resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@mipmap/shortcut_search,@mipmap/shortcut_flow" />
+    tools:keep="@mipmap/shortcut_search,@mipmap/shortcut_flow,@mipmap/shortcut_library" />
 `;
             await fs.promises.writeFile(
                 path.join(rawDir, "keep.xml"),

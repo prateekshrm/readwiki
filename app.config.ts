@@ -92,6 +92,10 @@ export default (): ExpoConfig => {
                             foregroundImage: "./assets/shortcuts/flow.png",
                             backgroundColor: "#191919",
                         },
+                        shortcut_library: {
+                            foregroundImage: "./assets/shortcuts/library.png",
+                            backgroundColor: "#191919",
+                        },
                     },
                 },
             ],

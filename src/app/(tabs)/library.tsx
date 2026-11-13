@@ -68,7 +68,7 @@ const Library = () => {
                             color={colors.text}
                             fallback={null}
                         />
-                        <Text style={styles.sectionTitle}>History</Text>
+                        <Text style={styles.sectionTitle}>Recently Read</Text>
                     </View>
 
                     {latestHistory.length > 0 ? (
@@ -123,7 +123,7 @@ const Library = () => {
                             color={colors.text}
                             fallback={null}
                         />
-                        <Text style={styles.sectionTitle}>Saved</Text>
+                        <Text style={styles.sectionTitle}>Saved Articles</Text>
                     </View>
 
                     {latestSaved.length > 0 ? (

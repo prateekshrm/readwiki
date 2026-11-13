@@ -79,6 +79,7 @@ export default (): ExpoConfig => {
             ],
             "expo-localization",
             "expo-widgets",
+            "./plugins/withShortcutKeep",
             [
                 "expo-quick-actions",
                 {

@@ -583,7 +583,7 @@ const createStyles = (colors: ThemeColors) =>
         },
 
         cardPressed: {
-            opacity: 0.9,
+            filter: "brightness(0.8)",
         },
 
         imageCardImage: {

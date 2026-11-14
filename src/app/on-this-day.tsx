@@ -8,8 +8,9 @@ import useTheme from "@/hooks/useTheme";
 import { getFeaturedData } from "@/services/wikipedia";
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
+import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const OnThisDay = () => {
@@ -23,6 +24,26 @@ const OnThisDay = () => {
 
     const isConnected = useNetworkStatus();
     const prevConnectedRef = useRef<boolean | null>(null);
+
+    const date = new Date();
+    const formattedDate = date
+        .toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "long",
+        })
+        .replace(/^(\d+)/, (day) => {
+            const n = Number(day);
+            const suffix =
+                n % 10 === 1 && n !== 11
+                    ? "st"
+                    : n % 10 === 2 && n !== 12
+                      ? "nd"
+                      : n % 10 === 3 && n !== 13
+                        ? "rd"
+                        : "th";
+
+            return `${n}${suffix}`;
+        });
 
     const loadData = useCallback(async () => {
         try {
@@ -97,6 +118,23 @@ const OnThisDay = () => {
                 ]}
                 onScroll={onScroll}
                 scrollEventThrottle={16}
+                ListHeaderComponent={
+                    <View style={styles.otdSectionDate}>
+                        <RemixIcon
+                            name="calendar-event-line"
+                            size={14}
+                            color={colors.textSecondary}
+                            fallback={null}
+                        />
+                        <Text style={styles.otdSectionDateText}>
+                            {formattedDate}
+                        </Text>
+                    </View>
+                }
+                ListHeaderComponentStyle={{
+                    paddingHorizontal: 16,
+                    marginBottom: 12,
+                }}
                 renderItem={({ item, index }) => {
                     return (
                         <OnThisDayEvent
@@ -146,5 +184,24 @@ const createStyles = (colors: ThemeColors) =>
         },
         listContent: {
             paddingTop: 100,
+        },
+
+        otdSectionDate: {
+            paddingVertical: 6,
+            paddingHorizontal: 12,
+            borderRadius: 999,
+            backgroundColor: colors.backgroundMuted,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            alignSelf: "flex-start",
+            marginTop: 8,
+        },
+
+        otdSectionDateText: {
+            fontSize: 14,
+            fontFamily: "DMSans-Medium",
+            color: colors.text,
         },
     });

@@ -32,7 +32,7 @@ const ClearButton = () => {
             ]}
             onPress={() =>
                 showModal({
-                    title: "Clear saved articles",
+                    title: "Clear Saved Articles",
                     message: `Remove all ${savedArticles.length} saved article(s)? This cannot be undone.`,
                     confirmButton: {
                         label: "Clear",

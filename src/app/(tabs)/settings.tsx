@@ -126,7 +126,7 @@ const Settings = () => {
         }
 
         showModal({
-            title: "Clear saved articles",
+            title: "Clear Saved Articles",
             message: `Remove all ${savedArticles.length} saved article(s)? This cannot be undone.`,
             confirmButton: {
                 label: "Clear",
@@ -174,7 +174,7 @@ const Settings = () => {
 
         void Linking.openURL(url).catch(() => {
             showModal({
-                title: "Unable to open email",
+                title: "Unable to Open Email",
                 message: "Please email us at hello.pratk@gmail.com",
                 confirmButton: {
                     label: "OK",

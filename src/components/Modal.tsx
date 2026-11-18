@@ -157,7 +157,7 @@ const createStyles = (colors: ThemeColors) =>
         },
         message: {
             fontSize: 16,
-            fontFamily: "DMSans-Regular",
+            fontFamily: "DMSans-Medium",
             textAlign: "center",
         },
         buttonsContainer: {

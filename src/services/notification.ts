@@ -135,10 +135,7 @@ export const scheduleTomorrowFeaturedNotification = async () => {
             },
         });
 
-        await AsyncStorage.setItem(
-            FEATURED_NOTIFICATION_DATE_KEY,
-            tomorrowStr,
-        );
+        await AsyncStorage.setItem(FEATURED_NOTIFICATION_DATE_KEY, tomorrowStr);
         console.log(
             `Scheduled notification for tomorrow (${tomorrowStr} 9:00 AM) with title: ${title}`,
         );
@@ -207,7 +204,7 @@ const processPendingNavigation = () => {
     if (isRouterReady && pendingHref) {
         const targetHref = pendingHref;
         pendingHref = null; // Clear first to prevent duplicate navigation
-        router.push(targetHref);
+        router.navigate(targetHref);
     }
 };
 

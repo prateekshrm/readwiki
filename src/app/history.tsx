@@ -103,7 +103,7 @@ const History = () => {
                         subtitle={formatTimeAgo(item.readAt)}
                         image={item.thumbnail}
                         onPress={() =>
-                            router.push({
+                            router.navigate({
                                 pathname: "/article/[article]",
                                 params: { article: item.title },
                             })

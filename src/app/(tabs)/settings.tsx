@@ -497,7 +497,7 @@ const Settings = () => {
 
             <Pressable
                 style={styles.item}
-                onPress={() => router.push("/onboarding")}
+                onPress={() => router.navigate("/onboarding")}
             >
                 <View style={styles.left}>
                     <View style={styles.iconContainer}>
@@ -527,7 +527,7 @@ const Settings = () => {
 
             <Pressable
                 style={styles.item}
-                onPress={() => router.push("/about")}
+                onPress={() => router.navigate("/about")}
             >
                 <View style={styles.left}>
                     <View style={styles.iconContainer}>

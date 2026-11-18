@@ -155,7 +155,7 @@ const Search = () => {
                             subtitle={item.description}
                             image={item.thumbnail?.source}
                             onPress={() =>
-                                router.push({
+                                router.navigate({
                                     pathname: "/article/[article]",
                                     params: {
                                         article: item.title,

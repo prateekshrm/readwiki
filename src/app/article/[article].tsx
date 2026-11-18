@@ -42,7 +42,7 @@ type ArticleMeta = {
 const biggerImage = (src: string) => src.replace(/\/(\d+)px-/, "/1280px-");
 
 const openImage = (src: string) => {
-    router.push({
+    router.navigate({
         pathname: "/image/[image]",
         params: { image: biggerImage(src) },
     });

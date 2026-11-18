@@ -108,7 +108,7 @@ const News = () => {
                             image={article?.thumbnail?.source}
                             onPress={() =>
                                 article &&
-                                router.push({
+                                router.navigate({
                                     pathname: "/article/[article]",
                                     params: {
                                         article: article.normalizedtitle,

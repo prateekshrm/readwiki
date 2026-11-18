@@ -93,7 +93,7 @@ const ArticlePreviewSheet = ({
         onDismiss();
 
         if (articleToOpen) {
-            router.push({
+            router.navigate({
                 pathname: "/article/[article]",
                 params: { article: articleToOpen },
             });

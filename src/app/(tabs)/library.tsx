@@ -80,7 +80,7 @@ const Library = () => {
                                     subtitle={formatTimeAgo(item.readAt)}
                                     image={item.thumbnail}
                                     onPress={() =>
-                                        router.push({
+                                        router.navigate({
                                             pathname: "/article/[article]",
                                             params: { article: item.title },
                                         })
@@ -134,7 +134,7 @@ const Library = () => {
                                     title={item.title}
                                     image={item.thumbnail}
                                     onPress={() =>
-                                        router.push({
+                                        router.navigate({
                                             pathname: "/article/[article]",
                                             params: { article: item.title },
                                         })

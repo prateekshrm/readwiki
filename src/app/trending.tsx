@@ -104,7 +104,7 @@ const Trending = () => {
                         subtitle={item.extract}
                         image={item.thumbnail?.source}
                         onPress={() =>
-                            router.push({
+                            router.navigate({
                                 pathname: "/article/[article]",
                                 params: {
                                     article: item.titles.normalized,

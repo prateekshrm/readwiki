@@ -147,7 +147,7 @@ const OnThisDay = () => {
                                 const target =
                                     article?.normalizedtitle || article?.title;
                                 if (target) {
-                                    router.push({
+                                    router.navigate({
                                         pathname: "/article/[article]",
                                         params: {
                                             article: target,

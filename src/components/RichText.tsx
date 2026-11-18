@@ -11,7 +11,7 @@ type RichTextProps = {
 
 // Opens a linked Wikipedia article inside the app.
 const openArticle = (title: string) => {
-    router.push({
+    router.navigate({
         pathname: "/article/[article]",
         params: { article: title },
     });

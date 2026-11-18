@@ -221,7 +221,7 @@ const Home = () => {
                                     variant="primary"
                                     mode="light"
                                     onPress={() =>
-                                        router.push({
+                                        router.navigate({
                                             pathname: "/article/[article]",
                                             params: {
                                                 article: featuredArticle?.title,
@@ -248,7 +248,7 @@ const Home = () => {
                                         subtitle={item.extract}
                                         image={item.thumbnail?.source}
                                         onPress={() =>
-                                            router.push({
+                                            router.navigate({
                                                 pathname: "/article/[article]",
                                                 params: {
                                                     article:
@@ -284,7 +284,7 @@ const Home = () => {
                                         image={article?.thumbnail?.source}
                                         onPress={() =>
                                             article &&
-                                            router.push({
+                                            router.navigate({
                                                 pathname: "/article/[article]",
                                                 params: {
                                                     article:
@@ -425,7 +425,7 @@ const Home = () => {
                                                     article?.normalizedtitle ||
                                                     article?.title;
                                                 if (target) {
-                                                    router.push({
+                                                    router.navigate({
                                                         pathname:
                                                             "/article/[article]",
                                                         params: {

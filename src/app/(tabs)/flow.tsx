@@ -182,7 +182,7 @@ const Flow = () => {
     }, [isConnected, loadInitial]);
 
     const openArticle = useCallback((title: string) => {
-        router.push({
+        router.navigate({
             pathname: "/article/[article]",
             params: { article: title },
         });

@@ -54,17 +54,19 @@ Whether you're diving deep into complex topics, browsing daily curated trivia, o
 
 ```
 ReadWiki/
-├── assets/             # App icons, splash screens, and static media
+├── assets/             # App icons, splash screen, shortcut icons, and static images
+├── plugins/            # Custom Expo config plugins
 ├── src/
 │   ├── app/            # Expo Router file-based pages and navigation
-│   │   ├── (tabs)/     # Primary tab bar views (Home, Flow, Search, Saved, Settings)
-│   │   ├── article/    # Detailed article view & table of contents
-│   │   ├── onboarding.tsx
-│   │   └── ...         # Dedicated sub-pages (News, Trending, On-this-day, etc.)
+│   │   ├── (tabs)/     # Primary tab bar views (Flow, Home, Search, Library, Settings)
+│   │   ├── article/    # Detailed article reader view
+│   │   ├── image/      # Full-screen image viewer
+│   │   └── ...         # Dedicated sub-pages (News, Trending, On-this-day, History, etc.)
 │   ├── components/     # Reusable UI components & custom reader controls
 │   ├── constants/      # Design tokens, theme colors, typography definitions
 │   ├── hooks/          # Custom React hooks for data fetching & theme handling
 │   ├── services/       # Wikipedia REST API integrations & data mappers
+│   ├── stores/         # Global state management (Zustand stores)
 │   └── utils/          # HTML parsing, text formatting, and offline helpers
 └── app.json            # Expo app configuration
 ```

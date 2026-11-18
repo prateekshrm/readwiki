@@ -118,6 +118,7 @@ const ArticlePreviewSheet = ({
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
             }}
+            settleDuration={300}
         >
             {loading ? (
                 <View

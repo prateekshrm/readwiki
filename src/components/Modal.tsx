@@ -57,6 +57,7 @@ const Modal = () => {
             surfaceStyle={{
                 borderRadius: 24,
             }}
+            settleDuration={300}
         >
             <View style={[styles.container]}>
                 {/* Title */}

@@ -1,10 +1,10 @@
-import Colors from "@/constants/Colors";
+import Colors, { ThemeColors } from "@/constants/Colors";
 import { useTheme } from "@/hooks/useTheme";
 import { getArticleSummary } from "@/services/wikipedia";
 import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -28,6 +28,8 @@ const ArticlePreviewSheet = ({
     onDismiss,
 }: ArticlePreviewSheetProps) => {
     const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
+
     const insets = useSafeAreaInsets();
 
     const [index, setIndex] = useState(title ? 1 : 0);
@@ -221,70 +223,71 @@ const ArticlePreviewSheet = ({
 
 export default ArticlePreviewSheet;
 
-const styles = StyleSheet.create({
-    loadingContainer: {
-        height: 200,
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 12,
-        padding: 16,
-    },
-    contentContainer: {
-        padding: 16,
-    },
-    topSection: {
-        flexDirection: "row",
-        gap: 14,
-        marginBottom: 16,
-    },
-    thumbnail: {
-        width: 76,
-        height: 76,
-        borderRadius: 8,
-        backgroundColor: Colors.backgroundMuted,
-    },
-    fallbackImageIcon: {
-        width: 76,
-        height: 76,
-        borderRadius: 8,
-        backgroundColor: Colors.backgroundMuted,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    headerTextContainer: {
-        flex: 1,
-    },
-    title: {
-        fontSize: 20,
-        fontFamily: "Fraunces-Medium",
-        marginBottom: 4,
-    },
-    subtitle: {
-        fontSize: 14,
-        lineHeight: 18,
-        fontFamily: "DMSans-Medium",
-    },
-    extract: {
-        fontSize: 16,
-        lineHeight: 22,
-        fontFamily: "DMSans-Regular",
-        marginBottom: 20,
-    },
-    readButton: {
-        width: "100%",
-        paddingVertical: 14,
-        borderRadius: 999,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 6,
-    },
-    readButtonText: {
-        fontSize: 16,
-        fontFamily: "DMSans-SemiBold",
-    },
-    buttonPressed: {
-        opacity: 0.8,
-        transform: [{ scale: 0.98 }],
-    },
-});
+const createStyles = (colors: ThemeColors) =>
+    StyleSheet.create({
+        loadingContainer: {
+            height: 200,
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 12,
+            padding: 16,
+        },
+        contentContainer: {
+            padding: 16,
+        },
+        topSection: {
+            flexDirection: "row",
+            gap: 14,
+            marginBottom: 16,
+        },
+        thumbnail: {
+            width: 76,
+            height: 76,
+            borderRadius: 8,
+            backgroundColor: Colors.backgroundMuted,
+        },
+        fallbackImageIcon: {
+            width: 76,
+            height: 76,
+            borderRadius: 8,
+            backgroundColor: Colors.backgroundMuted,
+            alignItems: "center",
+            justifyContent: "center",
+        },
+        headerTextContainer: {
+            flex: 1,
+        },
+        title: {
+            fontSize: 20,
+            fontFamily: "Fraunces-Medium",
+            marginBottom: 4,
+        },
+        subtitle: {
+            fontSize: 14,
+            lineHeight: 18,
+            fontFamily: "DMSans-Medium",
+        },
+        extract: {
+            fontSize: 16,
+            lineHeight: 22,
+            fontFamily: "DMSans-Regular",
+            marginBottom: 20,
+        },
+        readButton: {
+            width: "100%",
+            paddingVertical: 14,
+            borderRadius: 999,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+        },
+        readButtonText: {
+            fontSize: 16,
+            fontFamily: "DMSans-SemiBold",
+        },
+        buttonPressed: {
+            opacity: 0.8,
+            transform: [{ scale: 0.98 }],
+        },
+    });

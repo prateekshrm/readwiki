@@ -21,6 +21,7 @@ import { DMSans_500Medium } from "@expo-google-fonts/dm-sans/500Medium";
 import { DMSans_600SemiBold } from "@expo-google-fonts/dm-sans/600SemiBold";
 import { DMSans_700Bold } from "@expo-google-fonts/dm-sans/700Bold";
 
+import Modal from "@/components/Modal";
 import { Fraunces_500Medium } from "@expo-google-fonts/fraunces/500Medium";
 import { Fraunces_500Medium_Italic } from "@expo-google-fonts/fraunces/500Medium_Italic";
 
@@ -107,6 +108,7 @@ export default function RootLayout() {
     return (
         <BottomSheetProvider>
             <HeaderScrollProvider>
+                <Modal />
                 <Stack
                     screenOptions={{
                         headerTransparent: true,

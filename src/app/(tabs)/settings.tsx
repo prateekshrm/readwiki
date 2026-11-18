@@ -13,10 +13,10 @@ import {
     usePreferences,
 } from "@/services/preferences";
 import { clearSavedArticles, useSavedArticles } from "@/services/savedArticles";
+import { useModalStore } from "@/stores/modal.store";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-    Alert,
     AppState,
     Linking,
     Pressable,
@@ -31,6 +31,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Settings = () => {
     const insets = useSafeAreaInsets();
+
+    const { showModal } = useModalStore();
 
     const { colors, colorScheme } = useTheme();
     const preferences = usePreferences();
@@ -92,24 +94,25 @@ const Settings = () => {
         try {
             const result = await sendTestNotification();
             if (!result.success && permissionStatus === "denied") {
-                Alert.alert(
-                    "Notification Permission Required",
-                    result.message,
-                    [
-                        { text: "Cancel", style: "cancel" },
-                        {
-                            text: "Open Settings",
-                            onPress: () => {
-                                void Linking.openSettings();
-                            },
+                showModal({
+                    title: "Notification Permission Required",
+                    message: result.message,
+                    confirmButton: {
+                        label: "Open Settings",
+                        onPress: () => {
+                            void Linking.openSettings();
                         },
-                    ],
-                );
+                    },
+                    dismissButton: { label: "Cancel" },
+                });
             } else {
-                Alert.alert(
-                    result.success ? "Test Notification" : "Notice",
-                    result.message,
-                );
+                showModal({
+                    title: result.success ? "Test Notification" : "Notice",
+                    message: result.message,
+                    confirmButton: {
+                        label: "OK",
+                    },
+                });
             }
             void checkPermission();
         } finally {
@@ -122,18 +125,16 @@ const Settings = () => {
             return;
         }
 
-        Alert.alert(
-            "Clear saved articles",
-            `Remove all ${savedArticles.length} saved article(s)? This cannot be undone.`,
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Clear",
-                    style: "destructive",
-                    onPress: clearSavedArticles,
-                },
-            ],
-        );
+        showModal({
+            title: "Clear saved articles",
+            message: `Remove all ${savedArticles.length} saved article(s)? This cannot be undone.`,
+            confirmButton: {
+                label: "Clear",
+                variant: "destructive",
+                onPress: clearSavedArticles,
+            },
+            dismissButton: { label: "Cancel" },
+        });
     };
 
     const getPermissionSubtitle = () => {
@@ -172,10 +173,13 @@ const Settings = () => {
         const url = `mailto:hello.pratk@gmail.com?subject=${encodeURIComponent(subject)}`;
 
         void Linking.openURL(url).catch(() => {
-            Alert.alert(
-                "Unable to open email",
-                "Please email us at hello.pratk@gmail.com",
-            );
+            showModal({
+                title: "Unable to open email",
+                message: "Please email us at hello.pratk@gmail.com",
+                confirmButton: {
+                    label: "OK",
+                },
+            });
         });
     };
 

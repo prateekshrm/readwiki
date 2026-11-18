@@ -8,14 +8,17 @@ import {
     removeFromHistory,
     useHistory,
 } from "@/services/articleHistory";
+import { useModalStore } from "@/stores/modal.store";
 import { router, useNavigation } from "expo-router";
 import { useEffect, useMemo } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ClearButton = () => {
+    const { showModal } = useModalStore();
+
     const history = useHistory();
     const { colors, isDark } = useTheme();
 
@@ -29,18 +32,16 @@ const ClearButton = () => {
                 pressed && styles.headerButtonPressed,
             ]}
             onPress={() =>
-                Alert.alert(
-                    "Clear History",
-                    "Remove all articles from your reading history?",
-                    [
-                        { text: "Cancel", style: "cancel" },
-                        {
-                            text: "Clear",
-                            style: "destructive",
-                            onPress: clearHistory,
-                        },
-                    ],
-                )
+                showModal({
+                    title: "Clear History",
+                    message: "Remove all articles from your reading history?",
+                    confirmButton: {
+                        label: "Clear",
+                        variant: "destructive",
+                        onPress: clearHistory,
+                    },
+                    dismissButton: { label: "Cancel" },
+                })
             }
         >
             <RemixIcon

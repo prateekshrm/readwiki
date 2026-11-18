@@ -7,14 +7,17 @@ import {
     removeArticle,
     useSavedArticles,
 } from "@/services/savedArticles";
+import { useModalStore } from "@/stores/modal.store";
 import { router, useNavigation } from "expo-router";
 import { useEffect, useMemo } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ClearButton = () => {
+    const { showModal } = useModalStore();
+
     const savedArticles = useSavedArticles();
     const { colors } = useTheme();
 
@@ -28,14 +31,16 @@ const ClearButton = () => {
                 pressed && styles.headerButtonPressed,
             ]}
             onPress={() =>
-                Alert.alert("Clear Saved", "Remove all saved articles?", [
-                    { text: "Cancel", style: "cancel" },
-                    {
-                        text: "Clear",
-                        style: "destructive",
+                showModal({
+                    title: "Clear saved articles",
+                    message: `Remove all ${savedArticles.length} saved article(s)? This cannot be undone.`,
+                    confirmButton: {
+                        label: "Clear",
+                        variant: "destructive",
                         onPress: clearSavedArticles,
                     },
-                ])
+                    dismissButton: { label: "Cancel" },
+                })
             }
         >
             <RemixIcon

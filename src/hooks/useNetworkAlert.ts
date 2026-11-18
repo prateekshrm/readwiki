@@ -1,9 +1,12 @@
+import { useModalStore } from "@/stores/modal.store";
 import NetInfo from "@react-native-community/netinfo";
 import * as IntentLauncher from "expo-intent-launcher";
 import { useEffect, useRef } from "react";
-import { Alert, Linking, Platform } from "react-native";
+import { Linking, Platform } from "react-native";
 
 export default function useNetworkAlert() {
+    const { showModal } = useModalStore();
+
     const alertVisible = useRef(false);
 
     useEffect(() => {
@@ -19,36 +22,31 @@ export default function useNetworkAlert() {
 
             alertVisible.current = true;
 
-            Alert.alert(
-                "No Internet Connection",
-                "Please enable Wi-Fi or mobile data to continue using ReadWiki.",
-                [
-                    {
-                        text: "Cancel",
-                        onPress: () => {
-                            alertVisible.current = false;
-                        },
-                    },
-                    {
-                        text: "Open Settings",
-                        onPress: async () => {
-                            alertVisible.current = false;
+            showModal({
+                title: "No Internet Connection",
+                message:
+                    "Please enable Wi-Fi or mobile data to continue using ReadWiki.",
+                confirmButton: {
+                    label: "Open Settings",
+                    onPress: async () => {
+                        alertVisible.current = false;
 
-                            if (Platform.OS === "android") {
-                                await IntentLauncher.startActivityAsync(
-                                    IntentLauncher.ActivityAction
-                                        .WIRELESS_SETTINGS,
-                                );
-                            } else {
-                                await Linking.openSettings();
-                            }
-                        },
+                        if (Platform.OS === "android") {
+                            await IntentLauncher.startActivityAsync(
+                                IntentLauncher.ActivityAction.WIRELESS_SETTINGS,
+                            );
+                        } else {
+                            await Linking.openSettings();
+                        }
                     },
-                ],
-                {
-                    cancelable: false,
                 },
-            );
+                dismissButton: {
+                    label: "Cancel",
+                    onPress: () => {
+                        alertVisible.current = false;
+                    },
+                },
+            });
         });
 
         return unsubscribe;

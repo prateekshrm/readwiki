@@ -102,14 +102,14 @@ const createStyles = (colors: ThemeColors) =>
         thumbnail: {
             width: 72,
             height: 72,
-            borderRadius: 8,
+            borderRadius: 12,
             backgroundColor: colors.backgroundMuted,
         },
 
         fallbackImageIcon: {
             width: 72,
             height: 72,
-            borderRadius: 8,
+            borderRadius: 12,
             backgroundColor: colors.backgroundMuted,
             alignItems: "center",
             justifyContent: "center",

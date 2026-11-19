@@ -1,5 +1,4 @@
 import Colors, { ThemeColors } from "@/constants/Colors";
-import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
 import { getArticleSummary } from "@/services/wikipedia";
 import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
@@ -150,7 +149,7 @@ const ArticlePreviewSheet = ({
                             <View style={styles.fallbackImageIcon}>
                                 <RemixIcon
                                     name="file-list-2-line"
-                                    size={28}
+                                    size={24}
                                     color={colors.textMuted}
                                     fallback={null}
                                 />
@@ -161,7 +160,7 @@ const ArticlePreviewSheet = ({
                             <Text
                                 numberOfLines={2}
                                 style={[
-                                    fraunces,
+                                    // fraunces,
                                     styles.title,
                                     { color: colors.text },
                                 ]}
@@ -247,15 +246,15 @@ const createStyles = (colors: ThemeColors) =>
             marginBottom: 16,
         },
         thumbnail: {
-            width: 76,
-            height: 76,
-            borderRadius: 8,
+            width: 72,
+            height: 72,
+            borderRadius: 12,
             backgroundColor: Colors.backgroundMuted,
         },
         fallbackImageIcon: {
-            width: 76,
-            height: 76,
-            borderRadius: 8,
+            width: 72,
+            height: 72,
+            borderRadius: 12,
             backgroundColor: Colors.backgroundMuted,
             alignItems: "center",
             justifyContent: "center",
@@ -266,8 +265,10 @@ const createStyles = (colors: ThemeColors) =>
         title: {
             fontSize: 20,
             marginBottom: 4,
+            fontFamily: "DMSans-Bold",
         },
         subtitle: {
+            marginTop: 4,
             fontSize: 14,
             lineHeight: 18,
             fontFamily: "DMSans-Medium",

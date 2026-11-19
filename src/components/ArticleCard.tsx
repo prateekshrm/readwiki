@@ -140,7 +140,8 @@ const createStyles = (colors: ThemeColors) =>
         subtitle: {
             marginTop: 4,
             color: colors.textMuted,
-            fontSize: 13,
+            fontSize: 14,
+            lineHeight: 18,
             fontFamily: "DMSans-Medium",
         },
 

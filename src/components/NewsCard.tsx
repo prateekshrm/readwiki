@@ -121,7 +121,7 @@ const createStyles = (colors: ThemeColors) =>
         title: {
             flex: 1,
             color: colors.textSecondary,
-            fontSize: 13,
+            fontSize: 14,
             fontFamily: "DMSans-Medium",
         },
     });

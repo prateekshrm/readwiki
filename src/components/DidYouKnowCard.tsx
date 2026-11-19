@@ -37,9 +37,9 @@ const createStyles = (colors: ThemeColors) =>
         },
 
         iconContainer: {
-            width: 36,
+            width: 48,
             height: 36,
-            borderRadius: 18,
+            borderRadius: 999,
             justifyContent: "center",
             alignItems: "center",
             backgroundColor: colors.backgroundMuted,
@@ -48,9 +48,9 @@ const createStyles = (colors: ThemeColors) =>
 
         fact: {
             flexShrink: 1,
-            fontSize: 15,
-            lineHeight: 28,
-            fontFamily: "DMSans-Medium",
-            color: colors.textSecondary,
+            fontSize: 16,
+            lineHeight: 24,
+            fontFamily: "DMSans-Regular",
+            color: colors.text,
         },
     });

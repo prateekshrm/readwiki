@@ -203,24 +203,24 @@ const createStyles = (colors: ThemeColors) =>
             gap: 10,
             padding: 8,
             paddingRight: 12,
-            borderRadius: 12,
+            borderRadius: 999,
             backgroundColor: colors.surface,
         },
 
         articleChipPressed: {
-            opacity: 0.8,
+            backgroundColor: colors.surfaceMuted,
         },
 
         thumbnail: {
-            width: 36,
+            width: 48,
             height: 36,
-            borderRadius: 8,
+            borderRadius: 999,
         },
 
         thumbnailFallback: {
-            width: 36,
+            width: 48,
             height: 36,
-            borderRadius: 8,
+            borderRadius: 999,
             backgroundColor: colors.backgroundMuted,
             alignItems: "center",
             justifyContent: "center",

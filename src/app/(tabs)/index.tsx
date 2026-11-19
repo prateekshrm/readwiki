@@ -16,7 +16,14 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -30,7 +37,9 @@ const Home = () => {
     const [news, setNews] = useState<any[]>([]);
     const [onThisDayArticles, setOnThisDayArticles] = useState<any[]>([]);
     const [facts, setFacts] = useState<any[]>([]);
+
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
 
     const date = new Date();
     const formattedDate = date
@@ -76,6 +85,16 @@ const Home = () => {
 
     useEffect(() => {
         loadData();
+    }, [loadData]);
+
+    const handleRefresh = useCallback(async () => {
+        setRefreshing(true);
+
+        try {
+            await loadData();
+        } finally {
+            setRefreshing(false);
+        }
     }, [loadData]);
 
     // Refetch when internet arrives
@@ -153,6 +172,16 @@ const Home = () => {
                 ]}
                 showsVerticalScrollIndicator={false}
                 scrollEventThrottle={16}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        tintColor={colors.textSecondary}
+                        colors={[colors.textSecondary]}
+                        progressBackgroundColor={colors.background}
+                        progressViewOffset={75}
+                    />
+                }
             >
                 {featuredArticle && (
                     <View style={styles.featuredCard}>

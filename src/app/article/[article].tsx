@@ -18,6 +18,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Platform,
     Pressable,
+    RefreshControl,
     Share,
     StyleSheet,
     Text,
@@ -235,7 +236,9 @@ const Article = () => {
 
     const [blocks, setBlocks] = useState<Block[]>([]);
     const [meta, setMeta] = useState<ArticleMeta | null>(null);
+
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
 
     const isConnected = useNetworkStatus();
     const prevConnectedRef = useRef<boolean | null>(null);
@@ -329,6 +332,16 @@ const Article = () => {
         loadArticle();
     }, [loadArticle]);
 
+    const handleRefresh = useCallback(async () => {
+        setRefreshing(true);
+
+        try {
+            await loadArticle();
+        } finally {
+            setRefreshing(false);
+        }
+    }, [loadArticle]);
+
     // Refetch when internet arrives
     useEffect(() => {
         if (prevConnectedRef.current === false && isConnected === true) {
@@ -395,6 +408,16 @@ const Article = () => {
                 windowSize={7}
                 initialNumToRender={8}
                 updateCellsBatchingPeriod={50}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        tintColor={colors.text}
+                        colors={[colors.text]}
+                        progressBackgroundColor={colors.surface}
+                        progressViewOffset={75}
+                    />
+                }
                 ListHeaderComponent={
                     meta ? (
                         <View style={styles.header}>

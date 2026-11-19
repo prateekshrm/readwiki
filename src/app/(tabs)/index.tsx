@@ -176,9 +176,9 @@ const Home = () => {
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={handleRefresh}
-                        tintColor={colors.textSecondary}
-                        colors={[colors.textSecondary]}
-                        progressBackgroundColor={colors.background}
+                        tintColor={colors.text}
+                        colors={[colors.text]}
+                        progressBackgroundColor={colors.surface}
                         progressViewOffset={75}
                     />
                 }

@@ -27,8 +27,39 @@ import {
     View,
 } from "react-native";
 import Animated from "react-native-reanimated";
-import RemixIcon from "react-native-remix-icon";
+import RemixIcon, { IconName } from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+// Types
+
+type SettingsItem =
+    | {
+          type: "theme";
+          title: string;
+          description: string;
+          icon: IconName;
+      }
+    | {
+          type: "textSize";
+          title: string;
+          description: string;
+          icon: IconName;
+      }
+    | {
+          type: "navigation";
+          title: string;
+          description: string;
+          icon: IconName;
+          onPress: () => void;
+          disabled?: boolean;
+          rightIcon?: IconName;
+          rightIconColor?: string;
+      };
+
+type SettingsSection = {
+    title: string;
+    items: SettingsItem[];
+};
 
 const Settings = () => {
     const insets = useSafeAreaInsets();
@@ -39,22 +70,29 @@ const Settings = () => {
     const preferences = usePreferences();
     const savedArticles = useSavedArticles();
     const onScroll = useScreenScroll();
+
     const styles = useMemo(() => createStyles(colors), [colors]);
 
     const [permissionStatus, setPermissionStatus] = useState<
         "granted" | "denied" | "undetermined" | "unsupported" | "loading"
     >("loading");
+
     const [sendingTest, setSendingTest] = useState(false);
+
+    // Notifications
 
     const checkPermission = async () => {
         const status = await getNotificationPermissionStatus();
         setPermissionStatus(status);
+
         if (status !== "unsupported") {
             const isGranted = status === "granted";
+
             setPreference(
                 "notificationPermission",
                 isGranted ? "granted" : "denied",
             );
+
             if (isGranted) {
                 await scheduleTomorrowFeaturedNotification();
             }
@@ -82,9 +120,8 @@ const Settings = () => {
     }, []);
 
     const handleOpenNotificationSettings = () => {
-        if (permissionStatus === "unsupported") {
-            return;
-        }
+        if (permissionStatus === "unsupported") return;
+
         void Linking.openSettings();
     };
 
@@ -92,8 +129,10 @@ const Settings = () => {
         if (sendingTest) return;
 
         setSendingTest(true);
+
         try {
             const result = await sendTestNotification();
+
             if (!result.success && permissionStatus === "denied") {
                 showModal({
                     title: "Notification Permission Required",
@@ -115,16 +154,29 @@ const Settings = () => {
                     },
                 });
             }
+
             void checkPermission();
         } finally {
             setSendingTest(false);
         }
     };
 
-    const confirmClearSaved = () => {
-        if (savedArticles.length === 0) {
-            return;
+    const getPermissionsettingDescription = () => {
+        if (permissionStatus === "unsupported") {
+            return "Not supported on this device";
         }
+
+        if (permissionStatus === "granted") {
+            return "Notifications enabled";
+        }
+
+        return "Notifications disabled";
+    };
+
+    // Library
+
+    const confirmClearSaved = () => {
+        if (savedArticles.length === 0) return;
 
         showModal({
             title: "Clear Saved Articles",
@@ -138,15 +190,7 @@ const Settings = () => {
         });
     };
 
-    const getPermissionSubtitle = () => {
-        if (permissionStatus === "unsupported") {
-            return "Not supported on this device";
-        }
-        if (permissionStatus === "granted") {
-            return "Notifications enabled. Tap to manage in settings";
-        }
-        return "Notifications disabled. Tap to manage in settings";
-    };
+    // Support
 
     const APP_URL =
         "https://play.google.com/store/apps/details?id=com.pratksharma.readwiki";
@@ -184,6 +228,311 @@ const Settings = () => {
         });
     };
 
+    // Settings configuration
+
+    const settingsSections: SettingsSection[] = [
+        {
+            title: "Appearance",
+            items: [
+                {
+                    type: "theme",
+                    title: "Theme",
+                    description:
+                        preferences.theme === "system"
+                            ? `System (${colorScheme === "dark" ? "Dark" : "Light"})`
+                            : preferences.theme === "dark"
+                              ? "Dark"
+                              : "Light",
+                    icon: "palette-line",
+                },
+            ],
+        },
+        {
+            title: "Reading",
+            items: [
+                {
+                    type: "textSize",
+                    title: "Text Size",
+                    description: "Adjust how large article text appears.",
+                    icon: "font-size",
+                },
+            ],
+        },
+        {
+            title: "Notifications",
+            items: [
+                {
+                    type: "navigation",
+                    title: "Notification Permission",
+                    description: getPermissionsettingDescription(),
+                    icon:
+                        permissionStatus === "granted"
+                            ? "notification-4-line"
+                            : "notification-off-line",
+                    onPress: handleOpenNotificationSettings,
+                    disabled: permissionStatus === "unsupported",
+                    rightIcon:
+                        permissionStatus === "granted"
+                            ? "checkbox-circle-fill"
+                            : permissionStatus === "unsupported"
+                              ? undefined
+                              : "arrow-right-s-line",
+                    rightIconColor:
+                        permissionStatus === "granted"
+                            ? colors.accent
+                            : colors.textSecondary,
+                },
+                {
+                    type: "navigation",
+                    title: "Send Test Notification",
+                    description:
+                        permissionStatus === "unsupported"
+                            ? "Not supported on this device"
+                            : "Trigger a test notification in 2 seconds",
+                    icon: "notification-badge-line",
+                    onPress: handleTestNotification,
+                    disabled: sendingTest || permissionStatus === "unsupported",
+                },
+            ],
+        },
+        {
+            title: "Library",
+            items: [
+                {
+                    type: "navigation",
+                    title: "Clear Saved Articles",
+                    description:
+                        savedArticles.length === 0
+                            ? "No saved articles"
+                            : `${savedArticles.length} saved`,
+                    icon: "delete-bin-line",
+                    onPress: confirmClearSaved,
+                    disabled: savedArticles.length === 0,
+                },
+            ],
+        },
+        {
+            title: "Support",
+            items: [
+                {
+                    type: "navigation",
+                    title: "Rate ReadWiki",
+                    description: "Enjoying the app? Leave us a rating",
+                    icon: "star-smile-line",
+                    onPress: handleRateApp,
+                },
+                {
+                    type: "navigation",
+                    title: "Share the app",
+                    description: "Tell your friends about ReadWiki",
+                    icon: "share-line",
+                    onPress: handleShareApp,
+                },
+                {
+                    type: "navigation",
+                    title: "Report a Problem",
+                    description: "Let us know if something isn't working",
+                    icon: "bug-line",
+                    onPress: () => handleContactSupport("problem"),
+                },
+                {
+                    type: "navigation",
+                    title: "Send Feedback",
+                    description: "Share suggestions to improve ReadWiki",
+                    icon: "feedback-line",
+                    onPress: () => handleContactSupport("feedback"),
+                },
+            ],
+        },
+        {
+            title: "General",
+            items: [
+                {
+                    type: "navigation",
+                    title: "Onboarding",
+                    description: "View the welcome screen again",
+                    icon: "compass-3-line",
+                    rightIcon: "arrow-right-s-line",
+                    onPress: () => router.navigate("/onboarding"),
+                },
+                {
+                    type: "navigation",
+                    title: "About",
+                    description: "Learn more about ReadWiki",
+                    icon: "information-line",
+                    rightIcon: "arrow-right-s-line",
+                    onPress: () => router.navigate("/about"),
+                },
+            ],
+        },
+    ];
+
+    // Render settings
+
+    const renderSettingItem = (item: SettingsItem) => {
+        switch (item.type) {
+            case "theme":
+                return (
+                    <View key={item.title} style={styles.setting}>
+                        <View style={styles.settingLeftContainer}>
+                            <View style={styles.settingIconContainer}>
+                                <RemixIcon
+                                    name={item.icon}
+                                    size={20}
+                                    color={colors.accent}
+                                    fallback={null}
+                                />
+                            </View>
+
+                            <View style={styles.settingTextWrapper}>
+                                <Text style={styles.settingTitle}>
+                                    {item.title}
+                                </Text>
+                                <Text style={styles.settingDescription}>
+                                    {item.description}
+                                </Text>
+                            </View>
+                        </View>
+
+                        <ThemeSwitcher />
+                    </View>
+                );
+
+            case "textSize":
+                return (
+                    <View key={item.title} style={styles.textSizeSetting}>
+                        {/* Same header layout as other settings */}
+                        <View style={styles.settingLeftContainer}>
+                            <View style={styles.settingIconContainer}>
+                                <RemixIcon
+                                    name={item.icon}
+                                    size={20}
+                                    color={colors.accent}
+                                    fallback={null}
+                                />
+                            </View>
+
+                            <View style={styles.settingTextWrapper}>
+                                <Text style={styles.settingTitle}>
+                                    {item.title}
+                                </Text>
+                                <Text style={styles.settingDescription}>
+                                    {item.description}
+                                </Text>
+                            </View>
+                        </View>
+
+                        {/* Text size options */}
+                        <View style={styles.chips}>
+                            {FONT_SCALES.map((option) => {
+                                const active =
+                                    preferences.fontScale === option.value;
+
+                                return (
+                                    <Pressable
+                                        key={option.label}
+                                        style={[
+                                            styles.chip,
+                                            active && styles.chipActive,
+                                        ]}
+                                        onPress={() =>
+                                            setPreference(
+                                                "fontScale",
+                                                option.value,
+                                            )
+                                        }
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.chipText,
+                                                active && styles.chipTextActive,
+                                            ]}
+                                        >
+                                            {option.label}
+                                        </Text>
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+
+                        {/* Preview */}
+                        <View style={styles.preview}>
+                            <Text
+                                style={[
+                                    fraunces,
+                                    styles.headingPreview,
+                                    {
+                                        fontSize: 28 * preferences.fontScale,
+                                    },
+                                ]}
+                            >
+                                Preview Heading
+                            </Text>
+
+                            <Text
+                                style={[
+                                    styles.paragraphPreview,
+                                    {
+                                        fontSize: 17 * preferences.fontScale,
+                                        lineHeight: 28 * preferences.fontScale,
+                                    },
+                                ]}
+                            >
+                                This is a preview text showing how article
+                                content appears with your selected font size.
+                            </Text>
+                        </View>
+                    </View>
+                );
+
+            case "navigation":
+                return (
+                    <Pressable
+                        key={item.title}
+                        style={({ pressed }) => [
+                            styles.setting,
+                            item.disabled && styles.settingDisabled,
+                            pressed && styles.settingPressed,
+                        ]}
+                        onPress={item.onPress}
+                        disabled={item.disabled}
+                    >
+                        <View style={styles.settingLeftContainer}>
+                            <View style={styles.settingIconContainer}>
+                                <RemixIcon
+                                    name={item.icon}
+                                    size={20}
+                                    color={colors.accent}
+                                    fallback={null}
+                                />
+                            </View>
+
+                            <View style={styles.settingTextWrapper}>
+                                <Text style={styles.settingTitle}>
+                                    {item.title}
+                                </Text>
+
+                                <Text style={styles.settingDescription}>
+                                    {item.description}
+                                </Text>
+                            </View>
+                        </View>
+
+                        {item.rightIcon && (
+                            <RemixIcon
+                                name={item.rightIcon}
+                                size={20}
+                                color={
+                                    item.rightIconColor ?? colors.textSecondary
+                                }
+                                fallback={null}
+                            />
+                        )}
+                    </Pressable>
+                );
+        }
+    };
+
     return (
         <Animated.ScrollView
             style={styles.container}
@@ -197,370 +546,22 @@ const Settings = () => {
             onScroll={onScroll}
             scrollEventThrottle={16}
         >
-            {/* Appearance */}
-            <Text style={styles.sectionTitle}>Appearance</Text>
+            {settingsSections.map((section) => (
+                <View key={section.title} style={styles.section}>
+                    <Text style={styles.sectionTitle}>{section.title}</Text>
 
-            <View style={styles.themeCard}>
-                <View style={styles.left}>
-                    <View style={styles.iconContainer}>
-                        <RemixIcon
-                            name="palette-line"
-                            size={22}
-                            color={colors.accent}
-                            fallback={null}
-                        />
-                    </View>
-
-                    <View style={styles.itemTextWrap}>
-                        <Text style={styles.title}>Theme</Text>
-                        <Text style={styles.subtitle}>
-                            {preferences.theme === "system"
-                                ? `System (${colorScheme === "dark" ? "Dark" : "Light"})`
-                                : preferences.theme === "dark"
-                                  ? "Dark"
-                                  : "Light"}
-                        </Text>
+                    <View style={styles.sectionContent}>
+                        {section.items.map(renderSettingItem)}
                     </View>
                 </View>
-
-                <ThemeSwitcher />
-            </View>
-
-            {/* Reading text size */}
-            <Text style={styles.sectionTitle}>Reading</Text>
-
-            <View style={styles.card}>
-                <Text style={styles.title}>Text size</Text>
-                <Text style={styles.subtitle}>
-                    Adjust how large article text appears.
-                </Text>
-
-                <View style={styles.chips}>
-                    {FONT_SCALES.map((option) => {
-                        const active = preferences.fontScale === option.value;
-
-                        return (
-                            <Pressable
-                                key={option.label}
-                                style={[
-                                    styles.chip,
-                                    active && styles.chipActive,
-                                ]}
-                                onPress={() =>
-                                    setPreference("fontScale", option.value)
-                                }
-                            >
-                                <Text
-                                    style={[
-                                        styles.chipText,
-                                        active && styles.chipTextActive,
-                                    ]}
-                                >
-                                    {option.label}
-                                </Text>
-                            </Pressable>
-                        );
-                    })}
-                </View>
-                <View
-                    style={{
-                        paddingTop: 6,
-                        borderTopWidth: 1,
-                        borderTopColor: colors.backgroundMuted,
-                    }}
-                >
-                    <Text
-                        style={[
-                            fraunces,
-                            styles.headingPreview,
-                            {
-                                fontSize: 28 * preferences.fontScale,
-                            },
-                        ]}
-                    >
-                        Preview Heading
-                    </Text>
-                    <Text
-                        style={[
-                            styles.paragraphPreview,
-                            {
-                                fontSize: 17 * preferences.fontScale,
-                                lineHeight: 28 * preferences.fontScale,
-                            },
-                        ]}
-                    >
-                        This is a preview text showing how article content
-                        appears with your selected font size.
-                    </Text>
-                </View>
-            </View>
-
-            {/* Notifications */}
-            <Text style={styles.sectionTitle}>Notifications</Text>
-
-            <Pressable
-                style={[
-                    styles.item,
-                    permissionStatus === "unsupported" && styles.disabledItem,
-                ]}
-                onPress={handleOpenNotificationSettings}
-                disabled={permissionStatus === "unsupported"}
-            >
-                <View style={styles.left}>
-                    <View style={styles.iconContainer}>
-                        {permissionStatus === "granted" ? (
-                            <RemixIcon
-                                name="notification-4-line"
-                                size={22}
-                                color={colors.accent}
-                                fallback={null}
-                            />
-                        ) : permissionStatus !== "unsupported" ? (
-                            <RemixIcon
-                                name="notification-off-line"
-                                size={22}
-                                color={colors.accent}
-                                fallback={null}
-                            />
-                        ) : null}
-                    </View>
-
-                    <View style={styles.itemTextWrap}>
-                        <Text style={styles.title}>
-                            Notification Permission
-                        </Text>
-                        <Text style={styles.subtitle}>
-                            {getPermissionSubtitle()}
-                        </Text>
-                    </View>
-                </View>
-
-                {permissionStatus === "granted" ? (
-                    <RemixIcon
-                        name="checkbox-circle-fill"
-                        size={22}
-                        color={colors.accent}
-                        fallback={null}
-                    />
-                ) : permissionStatus !== "unsupported" ? (
-                    <RemixIcon
-                        name="arrow-right-s-line"
-                        size={22}
-                        color={colors.textSecondary}
-                        fallback={null}
-                    />
-                ) : null}
-            </Pressable>
-
-            <Pressable
-                style={[
-                    styles.item,
-                    (sendingTest || permissionStatus === "unsupported") &&
-                        styles.disabledItem,
-                ]}
-                onPress={handleTestNotification}
-                disabled={sendingTest || permissionStatus === "unsupported"}
-            >
-                <View style={styles.left}>
-                    <View style={styles.iconContainer}>
-                        <RemixIcon
-                            name="notification-badge-line"
-                            size={22}
-                            color={colors.accent}
-                            fallback={null}
-                        />
-                    </View>
-
-                    <View style={styles.itemTextWrap}>
-                        <Text style={styles.title}>Send Test Notification</Text>
-                        <Text style={styles.subtitle}>
-                            {permissionStatus === "unsupported"
-                                ? "Not supported on this device"
-                                : "Trigger a test notification in 2 seconds"}
-                        </Text>
-                    </View>
-                </View>
-            </Pressable>
-
-            {/* Library */}
-            <Text style={styles.sectionTitle}>Library</Text>
-
-            <Pressable style={styles.item} onPress={confirmClearSaved}>
-                <View style={styles.left}>
-                    <View style={styles.iconContainer}>
-                        <RemixIcon
-                            name="delete-bin-line"
-                            size={22}
-                            color={colors.accent}
-                            fallback={null}
-                        />
-                    </View>
-
-                    <View style={styles.itemTextWrap}>
-                        <Text style={styles.title}>Clear saved articles</Text>
-                        <Text style={styles.subtitle}>
-                            {savedArticles.length} saved
-                        </Text>
-                    </View>
-                </View>
-            </Pressable>
-
-            {/* Support */}
-            <Text style={styles.sectionTitle}>Support</Text>
-
-            <Pressable style={styles.item} onPress={handleRateApp}>
-                <View style={styles.left}>
-                    <View style={styles.iconContainer}>
-                        <RemixIcon
-                            name="star-smile-line"
-                            size={22}
-                            color={colors.accent}
-                            fallback={null}
-                        />
-                    </View>
-
-                    <View style={styles.itemTextWrap}>
-                        <Text style={styles.title}>Rate ReadWiki</Text>
-                        <Text style={styles.subtitle}>
-                            Enjoying the app? Leave us a rating
-                        </Text>
-                    </View>
-                </View>
-            </Pressable>
-
-            <Pressable style={styles.item} onPress={handleShareApp}>
-                <View style={styles.left}>
-                    <View style={styles.iconContainer}>
-                        <RemixIcon
-                            name="share-line"
-                            size={22}
-                            color={colors.accent}
-                            fallback={null}
-                        />
-                    </View>
-
-                    <View style={styles.itemTextWrap}>
-                        <Text style={styles.title}>Share the app</Text>
-                        <Text style={styles.subtitle}>
-                            Tell your friends about ReadWiki
-                        </Text>
-                    </View>
-                </View>
-            </Pressable>
-
-            <Pressable
-                style={styles.item}
-                onPress={() => handleContactSupport("problem")}
-            >
-                <View style={styles.left}>
-                    <View style={styles.iconContainer}>
-                        <RemixIcon
-                            name="bug-line"
-                            size={22}
-                            color={colors.accent}
-                            fallback={null}
-                        />
-                    </View>
-
-                    <View style={styles.itemTextWrap}>
-                        <Text style={styles.title}>Report a problem</Text>
-                        <Text style={styles.subtitle}>
-                            Let us know if something isn't working
-                        </Text>
-                    </View>
-                </View>
-            </Pressable>
-
-            <Pressable
-                style={styles.item}
-                onPress={() => handleContactSupport("feedback")}
-            >
-                <View style={styles.left}>
-                    <View style={styles.iconContainer}>
-                        <RemixIcon
-                            name="feedback-line"
-                            size={22}
-                            color={colors.accent}
-                            fallback={null}
-                        />
-                    </View>
-
-                    <View style={styles.itemTextWrap}>
-                        <Text style={styles.title}>Send feedback</Text>
-                        <Text style={styles.subtitle}>
-                            Share suggestions to improve ReadWiki
-                        </Text>
-                    </View>
-                </View>
-            </Pressable>
-
-            {/* General */}
-            <Text style={styles.sectionTitle}>General</Text>
-
-            <Pressable
-                style={styles.item}
-                onPress={() => router.navigate("/onboarding")}
-            >
-                <View style={styles.left}>
-                    <View style={styles.iconContainer}>
-                        <RemixIcon
-                            name="compass-3-line"
-                            size={22}
-                            color={colors.accent}
-                            fallback={null}
-                        />
-                    </View>
-
-                    <View style={styles.itemTextWrap}>
-                        <Text style={styles.title}>Onboarding</Text>
-                        <Text style={styles.subtitle}>
-                            View the welcome screen again
-                        </Text>
-                    </View>
-                </View>
-
-                <RemixIcon
-                    name="arrow-right-s-line"
-                    size={22}
-                    color={colors.textSecondary}
-                    fallback={null}
-                />
-            </Pressable>
-
-            <Pressable
-                style={styles.item}
-                onPress={() => router.navigate("/about")}
-            >
-                <View style={styles.left}>
-                    <View style={styles.iconContainer}>
-                        <RemixIcon
-                            name="information-line"
-                            size={22}
-                            color={colors.accent}
-                            fallback={null}
-                        />
-                    </View>
-
-                    <View style={styles.itemTextWrap}>
-                        <Text style={styles.title}>About</Text>
-                        <Text style={styles.subtitle}>
-                            Learn more about ReadWiki
-                        </Text>
-                    </View>
-                </View>
-
-                <RemixIcon
-                    name="arrow-right-s-line"
-                    size={22}
-                    color={colors.textSecondary}
-                    fallback={null}
-                />
-            </Pressable>
+            ))}
         </Animated.ScrollView>
     );
 };
 
 export default Settings;
+
+// Styles
 
 const createStyles = (colors: ThemeColors) =>
     StyleSheet.create({
@@ -571,6 +572,9 @@ const createStyles = (colors: ThemeColors) =>
         content: {
             padding: 16,
             paddingTop: 120,
+            gap: 20,
+        },
+        section: {
             gap: 12,
         },
         sectionTitle: {
@@ -579,23 +583,17 @@ const createStyles = (colors: ThemeColors) =>
             color: colors.textSecondary,
             textTransform: "uppercase",
             letterSpacing: 0.5,
-            marginTop: 8,
             marginLeft: 4,
         },
-        card: {
-            padding: 16,
-            borderRadius: 16,
-            backgroundColor: colors.surface,
-        },
-        themeCard: {
-            padding: 16,
-            borderRadius: 16,
-            backgroundColor: colors.surface,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
+        sectionContent: {
             gap: 8,
         },
+        textSizeSetting: {
+            padding: 12,
+            borderRadius: 20,
+            backgroundColor: colors.surface,
+        },
+        preview: {},
         headingPreview: {
             color: colors.text,
             marginBottom: 8,
@@ -608,7 +606,10 @@ const createStyles = (colors: ThemeColors) =>
             flexDirection: "row",
             flexWrap: "wrap",
             gap: 8,
-            marginVertical: 14,
+            marginVertical: 12,
+            paddingTop: 12,
+            borderTopWidth: 1,
+            borderTopColor: colors.backgroundMuted,
         },
         chip: {
             paddingVertical: 6,
@@ -628,41 +629,43 @@ const createStyles = (colors: ThemeColors) =>
         chipTextActive: {
             color: colors.textInverse,
         },
-        item: {
+        setting: {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: 16,
-            borderRadius: 16,
+            padding: 12,
+            borderRadius: 999,
             backgroundColor: colors.surface,
         },
-        disabledItem: {
+        settingPressed: {
+            backgroundColor: colors.surfaceMuted,
+        },
+        settingDisabled: {
             opacity: 0.6,
         },
-        left: {
+        settingLeftContainer: {
             flexDirection: "row",
             alignItems: "center",
             flex: 1,
         },
-        iconContainer: {
-            width: 42,
-            height: 42,
-            borderRadius: 21,
+        settingIconContainer: {
+            width: 48,
+            height: 36,
+            borderRadius: 999,
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: colors.backgroundMuted,
-            marginRight: 14,
+            marginRight: 12,
         },
-        itemTextWrap: {
+        settingTextWrapper: {
             flex: 1,
         },
-        title: {
+        settingTitle: {
             fontSize: 16,
             fontFamily: "DMSans-SemiBold",
             color: colors.text,
         },
-        subtitle: {
-            marginTop: 2,
+        settingDescription: {
             fontSize: 13,
             fontFamily: "DMSans-Regular",
             color: colors.textSecondary,

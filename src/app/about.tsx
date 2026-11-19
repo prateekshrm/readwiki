@@ -65,64 +65,71 @@ export default function About() {
             </View>
 
             <Text style={styles.sectionTitle}>Author</Text>
-            <View style={styles.card}>
+            <View style={styles.authorCard}>
                 <Image
                     source={require("@/assets/profile.png")}
-                    style={styles.avatar}
+                    style={styles.authorAvatar}
                 />
 
-                <View style={styles.cardContent}>
-                    <Text style={styles.name}>{AUTHOR_NAME}</Text>
+                <View style={styles.authorCardContent}>
+                    <Text style={styles.authorName}>{AUTHOR_NAME}</Text>
 
-                    <Text style={styles.bio}>{AUTHOR_BIO}</Text>
+                    <Text style={styles.authorBio}>{AUTHOR_BIO}</Text>
 
-                    <Pressable
-                        style={styles.authorLink}
-                        onPress={() => Linking.openURL(AUTHOR_PORTFOLIO)}
-                    >
-                        <RemixIcon
-                            name="global-line"
-                            size={16}
-                            color={colors.accent}
-                        />
+                    <View style={styles.authorLinks}>
+                        <Pressable
+                            style={styles.authorLink}
+                            onPress={() => Linking.openURL(AUTHOR_PORTFOLIO)}
+                        >
+                            <RemixIcon
+                                name="global-line"
+                                size={16}
+                                color={colors.accent}
+                            />
 
-                        <Text style={styles.authorLinkText}>
-                            {AUTHOR_PORTFOLIO.replace(/^https?:\/\//, "")}
-                        </Text>
-                    </Pressable>
+                            <Text style={styles.authorLinksText}>
+                                {AUTHOR_PORTFOLIO.replace(/^https?:\/\//, "")}
+                            </Text>
+                        </Pressable>
 
-                    <Pressable
-                        style={styles.authorLink}
-                        onPress={() => Linking.openURL(AUTHOR_GITHUB)}
-                    >
-                        <RemixIcon
-                            name="github-fill"
-                            size={16}
-                            color={colors.accent}
-                        />
+                        <Pressable
+                            style={styles.authorLink}
+                            onPress={() => Linking.openURL(AUTHOR_GITHUB)}
+                        >
+                            <RemixIcon
+                                name="github-fill"
+                                size={16}
+                                color={colors.accent}
+                            />
 
-                        <Text style={styles.authorLinkText}>@prateekshrm</Text>
-                    </Pressable>
+                            <Text style={styles.authorLinksText}>
+                                @prateekshrm
+                            </Text>
+                        </Pressable>
+                    </View>
                 </View>
             </View>
 
             <Text style={styles.sectionTitle}>WikiPedia</Text>
 
             <Pressable
-                style={styles.item}
+                style={({ pressed }) => [
+                    styles.link,
+                    pressed && styles.linkPressed,
+                ]}
                 onPress={() => Linking.openURL("https://en.wikipedia.org")}
             >
-                <View style={styles.left}>
-                    <View style={styles.iconContainer}>
+                <View style={styles.linkLeft}>
+                    <View style={styles.linkIconContainer}>
                         <Image
                             source={require("@/assets/wikipedia-icon.png")}
                             style={{ height: 24, width: 24 }}
                         />
                     </View>
 
-                    <View style={styles.itemTextWrap}>
-                        <Text style={styles.title}>Wikipedia</Text>
-                        <Text style={styles.subtitle}>
+                    <View style={styles.linkTextWrapper}>
+                        <Text style={styles.linkTitle}>Wikipedia</Text>
+                        <Text style={styles.linkSubtitle}>
                             Visit the Wikipedia website
                         </Text>
                     </View>
@@ -137,22 +144,25 @@ export default function About() {
             </Pressable>
 
             <Pressable
-                style={styles.item}
+                style={({ pressed }) => [
+                    styles.link,
+                    pressed && styles.linkPressed,
+                ]}
                 onPress={() =>
                     Linking.openURL("https://wikimediafoundation.org/support")
                 }
             >
-                <View style={styles.left}>
-                    <View style={styles.iconContainer}>
+                <View style={styles.linkLeft}>
+                    <View style={styles.linkIconContainer}>
                         <Image
                             source={require("@/assets/wikimedia-icon.png")}
                             style={{ height: 22, width: 22 }}
                         />
                     </View>
 
-                    <View style={styles.itemTextWrap}>
-                        <Text style={styles.title}>Support Wikipedia</Text>
-                        <Text style={styles.subtitle}>
+                    <View style={styles.linkTextWrapper}>
+                        <Text style={styles.linkTitle}>Support Wikipedia</Text>
+                        <Text style={styles.linkSubtitle}>
                             Donate or contribute to Wikipedia
                         </Text>
                     </View>
@@ -242,74 +252,79 @@ const createStyles = (colors: ThemeColors) =>
             marginTop: 8,
             marginLeft: 4,
         },
-        card: {
+        authorCard: {
             flexDirection: "row",
             backgroundColor: colors.surface,
-            borderRadius: 16,
-            padding: 16,
+            padding: 12,
+            borderRadius: 20,
         },
-        avatar: {
-            width: 64,
-            height: 64,
-            borderRadius: 32,
-            marginRight: 16,
+        authorAvatar: {
+            width: 48,
+            height: 36,
+            borderRadius: 999,
+            marginRight: 12,
         },
-        cardContent: {
+        authorCardContent: {
             flex: 1,
         },
-        name: {
+        authorName: {
             fontSize: 18,
             fontFamily: "DMSans-Bold",
             color: colors.text,
         },
-        bio: {
-            marginTop: 2,
+        authorBio: {
             color: colors.textSecondary,
             fontFamily: "DMSans-Regular",
+        },
+        authorLinks: {
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 12,
+            marginTop: 8,
         },
         authorLink: {
             flexDirection: "row",
             alignItems: "center",
             gap: 6,
-            marginTop: 8,
-            alignSelf: "flex-start",
         },
-        authorLinkText: {
+        authorLinksText: {
             color: colors.accent,
             fontFamily: "DMSans-Medium",
         },
-        item: {
+        link: {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: 16,
-            borderRadius: 16,
+            padding: 12,
+            borderRadius: 999,
             backgroundColor: colors.surface,
         },
-        left: {
+        linkPressed: {
+            backgroundColor: colors.surfaceMuted,
+        },
+        linkLeft: {
             flexDirection: "row",
             alignItems: "center",
             flex: 1,
         },
-        iconContainer: {
-            width: 42,
-            height: 42,
-            borderRadius: 21,
+        linkIconContainer: {
+            width: 48,
+            height: 36,
+            borderRadius: 999,
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: colors.backgroundMuted,
-            marginRight: 14,
+            marginRight: 12,
         },
-        itemTextWrap: {
+        linkTextWrapper: {
             flex: 1,
         },
-        title: {
+        linkTitle: {
             fontSize: 16,
             fontFamily: "DMSans-SemiBold",
             color: colors.text,
         },
-        subtitle: {
-            marginTop: 2,
+        linkSubtitle: {
             fontSize: 13,
             fontFamily: "DMSans-Regular",
             color: colors.textSecondary,

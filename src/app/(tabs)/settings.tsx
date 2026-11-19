@@ -1,6 +1,7 @@
 import { useScreenScroll } from "@/components/HeaderScroll";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { ThemeColors } from "@/constants/Colors";
+import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
 import {
     getNotificationPermissionStatus,
@@ -270,6 +271,7 @@ const Settings = () => {
                 >
                     <Text
                         style={[
+                            fraunces,
                             styles.headingPreview,
                             {
                                 fontSize: 28 * preferences.fontScale,
@@ -595,7 +597,6 @@ const createStyles = (colors: ThemeColors) =>
             gap: 8,
         },
         headingPreview: {
-            fontFamily: "Fraunces-Medium",
             color: colors.text,
             marginBottom: 8,
         },

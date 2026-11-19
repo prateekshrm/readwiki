@@ -1,6 +1,7 @@
 import ArticleCard from "@/components/ArticleCard";
 import { useScreenScroll } from "@/components/HeaderScroll";
 import { ThemeColors } from "@/constants/Colors";
+import { fraunces } from "@/constants/Typography";
 import useTheme from "@/hooks/useTheme";
 import {
     clearHistory,
@@ -77,7 +78,9 @@ const History = () => {
                     color={colors.textMuted}
                     fallback={null}
                 />
-                <Text style={styles.emptyTitle}>No reading history</Text>
+                <Text style={[fraunces, styles.emptyTitle]}>
+                    No reading history
+                </Text>
                 <Text style={styles.emptySubtitle}>
                     Articles you read will show up here.
                 </Text>
@@ -153,7 +156,6 @@ const createStyles = (colors: ThemeColors) =>
         emptyTitle: {
             marginTop: 16,
             fontSize: 20,
-            fontFamily: "Fraunces-Medium",
             color: colors.text,
         },
 

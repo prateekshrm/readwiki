@@ -1,3 +1,4 @@
+import { fraunces, frauncesItalic } from "@/constants/Typography";
 import { completeOnboarding } from "@/services/preferences";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -60,8 +61,8 @@ const Onboarding = () => {
                 />
 
                 <Text style={styles.appName}>
-                    <Text style={styles.appNameRegular}>Read</Text>
-                    <Text style={styles.appNameItalic}>Wiki</Text>
+                    <Text style={fraunces}>Read</Text>
+                    <Text style={frauncesItalic}>Wiki</Text>
                 </Text>
 
                 <Text style={styles.description}>
@@ -118,12 +119,6 @@ const styles = StyleSheet.create({
         color: "#F8F9FA",
         textAlign: "center",
         marginBottom: 24,
-    },
-    appNameRegular: {
-        fontFamily: "Fraunces-Medium",
-    },
-    appNameItalic: {
-        fontFamily: "Fraunces-MediumItalic",
     },
     description: {
         fontSize: 16,

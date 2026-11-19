@@ -1,6 +1,7 @@
 import { useSolidHeader } from "@/components/HeaderScroll";
 import Loader from "@/components/Loader";
 import NoInternetView from "@/components/NoInternetView";
+import { fraunces } from "@/constants/Typography";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { toggleSavedArticle, useIsSaved } from "@/services/savedArticles";
 import { getRandomArticles } from "@/services/wikipedia";
@@ -249,7 +250,10 @@ const Flow = () => {
                             </View>
                         )}
 
-                        <Text style={styles.title} numberOfLines={2}>
+                        <Text
+                            style={[fraunces, styles.title]}
+                            numberOfLines={2}
+                        >
                             {item.title}
                         </Text>
 
@@ -468,7 +472,6 @@ const styles = StyleSheet.create({
         color: "#F8F9FA",
         fontSize: 28,
         letterSpacing: -0.5,
-        fontFamily: "Fraunces-Medium",
     },
 
     extract: {

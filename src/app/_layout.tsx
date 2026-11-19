@@ -22,8 +22,6 @@ import { DMSans_600SemiBold } from "@expo-google-fonts/dm-sans/600SemiBold";
 import { DMSans_700Bold } from "@expo-google-fonts/dm-sans/700Bold";
 
 import Modal from "@/components/Modal";
-import { Fraunces_500Medium } from "@expo-google-fonts/fraunces/500Medium";
-import { Fraunces_500Medium_Italic } from "@expo-google-fonts/fraunces/500Medium_Italic";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -41,8 +39,8 @@ export default function RootLayout() {
         "DMSans-Medium": DMSans_500Medium,
         "DMSans-SemiBold": DMSans_600SemiBold,
         "DMSans-Bold": DMSans_700Bold,
-        "Fraunces-Medium": Fraunces_500Medium,
-        "Fraunces-MediumItalic": Fraunces_500Medium_Italic,
+        "Fraunces-Variable": require("@/assets/fonts/Fraunces-Variable.ttf"),
+        "Fraunces-Variable-Italic": require("@/assets/fonts/Fraunces-Variable-Italic.ttf"),
     });
 
     // Configure Android app shortcuts.

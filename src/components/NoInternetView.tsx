@@ -1,5 +1,6 @@
 import Button from "@/components/Button";
 import { ThemeColors } from "@/constants/Colors";
+import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
 import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -42,7 +43,7 @@ export default function NoInternetView({
                         fallback={null}
                     />
                 </View>
-                <Text style={styles.title}>{title}</Text>
+                <Text style={[fraunces, styles.title]}>{title}</Text>
                 <Text style={styles.description}>{description}</Text>
                 <View style={styles.buttonWrapper}>
                     <Button
@@ -86,7 +87,6 @@ const createStyles = (colors: ThemeColors) =>
         },
         title: {
             fontSize: 22,
-            fontFamily: "Fraunces-Medium",
             color: colors.text,
             textAlign: "center",
             marginBottom: 8,

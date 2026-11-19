@@ -5,6 +5,7 @@ import NoInternetView from "@/components/NoInternetView";
 import RichText from "@/components/RichText";
 import TableView from "@/components/TableView";
 import { ThemeColors } from "@/constants/Colors";
+import { fraunces } from "@/constants/Typography";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { useTheme } from "@/hooks/useTheme";
 import { addToHistory } from "@/services/articleHistory";
@@ -131,6 +132,7 @@ const ArticleBlockItem = memo(
                 return (
                     <Text
                         style={[
+                            fraunces,
                             block.level === 2
                                 ? styles.heading2
                                 : styles.heading3,
@@ -444,7 +446,9 @@ const Article = () => {
                                 </Pressable>
                             )}
 
-                            <Text style={styles.title}>{meta.title}</Text>
+                            <Text style={[fraunces, styles.title]}>
+                                {meta.title}
+                            </Text>
 
                             {!!meta.description && (
                                 <Text style={styles.description}>
@@ -509,8 +513,6 @@ const createStyles = (colors: ThemeColors) =>
 
         title: {
             fontSize: 34,
-            lineHeight: 40,
-            fontFamily: "Fraunces-Medium",
             color: colors.text,
             paddingHorizontal: 16,
             marginTop: 20,
@@ -532,7 +534,6 @@ const createStyles = (colors: ThemeColors) =>
         },
 
         heading2: {
-            fontFamily: "Fraunces-Medium",
             color: colors.text,
             marginTop: 28,
             marginBottom: 12,
@@ -540,7 +541,6 @@ const createStyles = (colors: ThemeColors) =>
         },
 
         heading3: {
-            fontFamily: "Fraunces-Medium",
             color: colors.text,
             marginTop: 20,
             marginBottom: 10,

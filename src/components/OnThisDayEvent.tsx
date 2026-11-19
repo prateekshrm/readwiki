@@ -1,4 +1,5 @@
 import { ThemeColors } from "@/constants/Colors";
+import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
 import { Image } from "expo-image";
 import { useMemo } from "react";
@@ -74,7 +75,7 @@ export default function OnThisDayEvent({
                           },
                 ]}
             >
-                <Text style={styles.year}>{year}</Text>
+                <Text style={[fraunces, styles.year]}>{year}</Text>
                 <Text style={styles.text}>{text}</Text>
 
                 {pageList.length > 0 && (
@@ -180,7 +181,6 @@ const createStyles = (colors: ThemeColors) =>
         year: {
             fontSize: 20,
             color: colors.text,
-            fontFamily: "Fraunces-Medium",
             lineHeight: 22,
         },
 

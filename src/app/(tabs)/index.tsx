@@ -8,6 +8,7 @@ import NoInternetView from "@/components/NoInternetView";
 import OnThisDayEvent from "@/components/OnThisDayEvent";
 import SectionButton from "@/components/SectionButton";
 import { ThemeColors } from "@/constants/Colors";
+import { fraunces } from "@/constants/Typography";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { useTheme } from "@/hooks/useTheme";
 import { getFeaturedData } from "@/services/wikipedia";
@@ -226,7 +227,7 @@ const Home = () => {
                             </View>
 
                             <Text
-                                style={styles.featuredCardTitle}
+                                style={[fraunces, styles.featuredCardTitle]}
                                 numberOfLines={2}
                             >
                                 {featuredArticle?.normalizedtitle ??
@@ -265,7 +266,9 @@ const Home = () => {
                 {trendingArticles.length > 0 && (
                     <View style={styles.section}>
                         <View style={styles.sectionTitleContainer}>
-                            <Text style={styles.sectionTitle}>Trending</Text>
+                            <Text style={[fraunces, styles.sectionTitle]}>
+                                Trending
+                            </Text>
                         </View>
                         <View style={styles.sectionContent}>
                             {trendingArticles.map(
@@ -299,7 +302,9 @@ const Home = () => {
                 {news.length > 0 && (
                     <View style={styles.section}>
                         <View style={styles.sectionTitleContainer}>
-                            <Text style={styles.sectionTitle}>In the News</Text>
+                            <Text style={[fraunces, styles.sectionTitle]}>
+                                In the News
+                            </Text>
                         </View>
                         <View style={styles.sectionContent}>
                             {news.map((item: any, index: number) => {
@@ -335,7 +340,7 @@ const Home = () => {
                 {imageOfTheDay && (
                     <View style={styles.section}>
                         <View style={styles.sectionTitleContainer}>
-                            <Text style={styles.sectionTitle}>
+                            <Text style={[fraunces, styles.sectionTitle]}>
                                 Image of the Day
                             </Text>
                         </View>
@@ -368,7 +373,10 @@ const Home = () => {
                             <View style={styles.imageCardContent}>
                                 {!!imageOfTheDay.description?.text && (
                                     <Text
-                                        style={styles.imageCardCaption}
+                                        style={[
+                                            fraunces,
+                                            styles.imageCardCaption,
+                                        ]}
                                         numberOfLines={3}
                                     >
                                         {imageOfTheDay.description.text}
@@ -398,7 +406,7 @@ const Home = () => {
                 {facts.length > 0 && (
                     <View style={styles.section}>
                         <View style={styles.sectionTitleContainer}>
-                            <Text style={styles.sectionTitle}>
+                            <Text style={[fraunces, styles.sectionTitle]}>
                                 Did You Know?
                             </Text>
                         </View>
@@ -422,7 +430,9 @@ const Home = () => {
                 {onThisDayArticles.length > 0 && (
                     <View style={styles.section}>
                         <View style={styles.sectionTitleContainer}>
-                            <Text style={styles.sectionTitle}>On This Day</Text>
+                            <Text style={[fraunces, styles.sectionTitle]}>
+                                On This Day
+                            </Text>
                             <View style={styles.otdSectionDate}>
                                 <RemixIcon
                                     name="calendar-event-line"
@@ -571,7 +581,6 @@ const createStyles = (colors: ThemeColors) =>
             fontSize: 32,
             lineHeight: 38,
             letterSpacing: -0.5,
-            fontFamily: "Fraunces-Medium",
             color: "#FFFFFF",
         },
 
@@ -632,7 +641,6 @@ const createStyles = (colors: ThemeColors) =>
             fontSize: 18,
             lineHeight: 24,
             color: "#FFFFFF",
-            fontFamily: "Fraunces-Medium",
         },
 
         imageCardByline: {
@@ -661,7 +669,6 @@ const createStyles = (colors: ThemeColors) =>
         sectionTitle: {
             fontSize: 28,
             color: colors.text,
-            fontFamily: "Fraunces-Medium",
         },
 
         otdSectionDate: {

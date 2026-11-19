@@ -1,4 +1,5 @@
 import type { ThemeColors } from "@/constants/Colors";
+import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
 import { useModalStore } from "@/stores/modal.store";
 import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
@@ -61,7 +62,7 @@ const Modal = () => {
         >
             <View style={[styles.container]}>
                 {/* Title */}
-                <Text style={[styles.title, { color: colors.text }]}>
+                <Text style={[fraunces, styles.title, { color: colors.text }]}>
                     {title}
                 </Text>
 
@@ -151,7 +152,6 @@ const createStyles = (colors: ThemeColors) =>
         },
         title: {
             fontSize: 24,
-            fontFamily: "Fraunces-Medium",
             marginBottom: 8,
             textAlign: "center",
         },

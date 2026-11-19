@@ -1,5 +1,6 @@
 import { useScreenScroll } from "@/components/HeaderScroll";
 import { ThemeColors } from "@/constants/Colors";
+import { fraunces, frauncesItalic } from "@/constants/Typography";
 import useTheme from "@/hooks/useTheme";
 import * as Application from "expo-application";
 import { Image } from "expo-image";
@@ -42,8 +43,8 @@ export default function About() {
                 />
 
                 <Text style={styles.appName}>
-                    <Text style={styles.appNameRegular}>Read</Text>
-                    <Text style={styles.appNameItalic}>Wiki</Text>
+                    <Text style={fraunces}>Read</Text>
+                    <Text style={frauncesItalic}>Wiki</Text>
                 </Text>
 
                 <Text style={styles.version}>
@@ -213,12 +214,6 @@ const createStyles = (colors: ThemeColors) =>
             color: colors.text,
             textAlign: "center",
             marginBottom: 4,
-        },
-        appNameRegular: {
-            fontFamily: "Fraunces-Medium",
-        },
-        appNameItalic: {
-            fontFamily: "Fraunces-MediumItalic",
         },
         version: {
             fontFamily: "DMSans-Medium",

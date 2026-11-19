@@ -2,6 +2,7 @@ import ArticleCard from "@/components/ArticleCard";
 import { useScreenScroll } from "@/components/HeaderScroll";
 import SectionButton from "@/components/SectionButton";
 import { ThemeColors } from "@/constants/Colors";
+import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
 import {
     formatTimeAgo,
@@ -39,7 +40,9 @@ const Library = () => {
                     color={colors.textMuted}
                     fallback={null}
                 />
-                <Text style={styles.emptyTitle}>Your library is empty</Text>
+                <Text style={[fraunces, styles.emptyTitle]}>
+                    Your library is empty
+                </Text>
                 <Text style={styles.emptySubtitle}>
                     Articles you read will appear in History, and articles you
                     bookmark will appear in Saved.
@@ -68,7 +71,9 @@ const Library = () => {
                             color={colors.text}
                             fallback={null}
                         />
-                        <Text style={styles.sectionTitle}>Recently Read</Text>
+                        <Text style={[fraunces, styles.sectionTitle]}>
+                            Recently Read
+                        </Text>
                     </View>
 
                     {latestHistory.length > 0 ? (
@@ -123,7 +128,9 @@ const Library = () => {
                             color={colors.text}
                             fallback={null}
                         />
-                        <Text style={styles.sectionTitle}>Saved Articles</Text>
+                        <Text style={[fraunces, styles.sectionTitle]}>
+                            Saved Articles
+                        </Text>
                     </View>
 
                     {latestSaved.length > 0 ? (
@@ -194,7 +201,6 @@ const createStyles = (colors: ThemeColors) =>
         emptyTitle: {
             marginTop: 16,
             fontSize: 20,
-            fontFamily: "Fraunces-Medium",
             color: colors.text,
         },
 
@@ -224,7 +230,6 @@ const createStyles = (colors: ThemeColors) =>
         sectionTitle: {
             fontSize: 24,
             color: colors.text,
-            fontFamily: "Fraunces-Medium",
         },
 
         sectionContent: {

@@ -1,6 +1,7 @@
 import ArticleCard from "@/components/ArticleCard";
 import { useScreenScroll } from "@/components/HeaderScroll";
 import { ThemeColors } from "@/constants/Colors";
+import { fraunces } from "@/constants/Typography";
 import useTheme from "@/hooks/useTheme";
 import {
     clearSavedArticles,
@@ -76,7 +77,9 @@ const Saved = () => {
                     color={colors.textMuted}
                     fallback={null}
                 />
-                <Text style={styles.emptyTitle}>No saved articles</Text>
+                <Text style={[fraunces, styles.emptyTitle]}>
+                    No saved articles
+                </Text>
                 <Text style={styles.emptySubtitle}>
                     Tap the bookmark icon while reading an article to save it
                     here for later.
@@ -151,7 +154,6 @@ const createStyles = (colors: ThemeColors) =>
         emptyTitle: {
             marginTop: 16,
             fontSize: 20,
-            fontFamily: "Fraunces-Medium",
             color: colors.text,
         },
 

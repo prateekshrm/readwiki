@@ -1,4 +1,5 @@
 import { useHeaderProgress } from "@/components/HeaderScroll";
+import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -98,7 +99,7 @@ const Header = ({ title, canGoBack = false, rightComponent }: HeaderProps) => {
                         </Pressable>
                     )}
 
-                    <Animated.Text style={[styles.logo, titleStyle]}>
+                    <Animated.Text style={[fraunces, styles.logo, titleStyle]}>
                         {title}
                     </Animated.Text>
                 </View>
@@ -144,7 +145,6 @@ const styles = StyleSheet.create({
 
     logo: {
         fontSize: 28,
-        fontFamily: "Fraunces-Medium",
     },
 
     rightContainer: {

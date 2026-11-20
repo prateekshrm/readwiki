@@ -1,4 +1,4 @@
-import Colors, { ThemeColors } from "@/constants/Colors";
+import { ThemeColors } from "@/constants/Colors";
 import { useTheme } from "@/hooks/useTheme";
 import { getArticleSummary } from "@/services/wikipedia";
 import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
@@ -110,7 +110,7 @@ const ArticlePreviewSheet = ({
                 <View
                     style={[
                         StyleSheet.absoluteFill,
-                        { backgroundColor: colors.background },
+                        { backgroundColor: colors.surface },
                     ]}
                 />
             }
@@ -249,13 +249,13 @@ const createStyles = (colors: ThemeColors) =>
             width: 72,
             height: 72,
             borderRadius: 12,
-            backgroundColor: Colors.backgroundMuted,
+            backgroundColor: colors.backgroundMuted,
         },
         fallbackImageIcon: {
             width: 72,
             height: 72,
             borderRadius: 12,
-            backgroundColor: Colors.backgroundMuted,
+            backgroundColor: colors.backgroundMuted,
             alignItems: "center",
             justifyContent: "center",
         },

@@ -3,6 +3,7 @@ import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { ThemeColors } from "@/constants/Colors";
 import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
+import { clearHistory, useHistory } from "@/services/articleHistory";
 import {
     getNotificationPermissionStatus,
     scheduleTomorrowFeaturedNotification,
@@ -69,6 +70,7 @@ const Settings = () => {
     const { colors, colorScheme } = useTheme();
     const preferences = usePreferences();
     const savedArticles = useSavedArticles();
+    const history = useHistory();
     const onScroll = useScreenScroll();
 
     const styles = useMemo(() => createStyles(colors), [colors]);
@@ -180,11 +182,32 @@ const Settings = () => {
 
         showModal({
             title: "Clear Saved Articles",
-            message: `Remove all ${savedArticles.length} saved article(s)? This cannot be undone.`,
+            message:
+                savedArticles.length > 1
+                    ? `Remove all ${savedArticles.length} saved articles? This cannot be undone.`
+                    : `Remove ${savedArticles.length} saved article? This cannot be undone.`,
             confirmButton: {
                 label: "Clear",
                 variant: "destructive",
                 onPress: clearSavedArticles,
+            },
+            dismissButton: { label: "Cancel" },
+        });
+    };
+
+    const confirmClearHistory = () => {
+        if (history.length === 0) return;
+
+        showModal({
+            title: "Clear History",
+            message:
+                history.length > 1
+                    ? `Remove all ${history.length} articles from history? This cannot be undone.`
+                    : `Remove ${history.length} article from history? This cannot be undone.`,
+            confirmButton: {
+                label: "Clear",
+                variant: "destructive",
+                onPress: clearHistory,
             },
             dismissButton: { label: "Cancel" },
         });
@@ -304,10 +327,25 @@ const Settings = () => {
                     description:
                         savedArticles.length === 0
                             ? "No saved articles"
-                            : `${savedArticles.length} saved`,
+                            : savedArticles.length === 1
+                              ? `${savedArticles.length} article`
+                              : `${savedArticles.length} articles`,
                     icon: "delete-bin-line",
                     onPress: confirmClearSaved,
                     disabled: savedArticles.length === 0,
+                },
+                {
+                    type: "navigation",
+                    title: "Clear History",
+                    description:
+                        history.length === 0
+                            ? "No reading history"
+                            : history.length === 1
+                              ? `${history.length} article`
+                              : `${history.length} articles`,
+                    icon: "delete-bin-line",
+                    onPress: confirmClearHistory,
+                    disabled: history.length === 0,
                 },
             ],
         },

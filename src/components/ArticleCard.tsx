@@ -10,6 +10,7 @@ type ArticleCardProps = {
     subtitle?: string;
     image?: string;
     tag?: string;
+    tagIcon?: IconName;
     onPress: () => void;
     // When provided, an action button is shown on the right (used in Saved/History to quickly remove an article).
     onRemove?: () => void;
@@ -21,6 +22,7 @@ export default function ArticleCard({
     subtitle,
     image,
     tag,
+    tagIcon,
     onPress,
     onRemove,
     removeIcon = "bookmark-fill",
@@ -56,7 +58,19 @@ export default function ArticleCard({
             )}
 
             <View style={styles.content}>
-                {tag && <Text style={styles.tag}>{tag}</Text>}
+                {tag && (
+                    <View style={styles.tag}>
+                        {tagIcon && (
+                            <RemixIcon
+                                name={tagIcon}
+                                size={14}
+                                color={colors.textSecondary}
+                                fallback={null}
+                            />
+                        )}
+                        <Text style={styles.tagText}>{tag}</Text>
+                    </View>
+                )}
 
                 <Text style={styles.title}>{title}</Text>
 
@@ -121,14 +135,21 @@ const createStyles = (colors: ThemeColors) =>
 
         tag: {
             fontSize: 12,
-            color: colors.textSecondary,
             backgroundColor: colors.backgroundMuted,
-            fontFamily: "DMSans-SemiBold",
             paddingVertical: 2,
             paddingHorizontal: 8,
             borderRadius: 12,
             alignSelf: "flex-start",
             marginBottom: 4,
+            flexDirection: "row",
+            gap: 4,
+            alignItems: "center",
+        },
+
+        tagText: {
+            fontSize: 12,
+            color: colors.textSecondary,
+            fontFamily: "DMSans-SemiBold",
         },
 
         title: {

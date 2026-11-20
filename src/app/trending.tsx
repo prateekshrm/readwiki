@@ -97,22 +97,38 @@ const Trending = () => {
                 ]}
                 onScroll={onScroll}
                 scrollEventThrottle={16}
-                renderItem={({ item, index }) => (
-                    <ArticleCard
-                        tag={`${item.views.toLocaleString()} views`}
-                        title={item.titles.normalized}
-                        subtitle={item.extract}
-                        image={item.thumbnail?.source}
-                        onPress={() =>
-                            router.navigate({
-                                pathname: "/article/[article]",
-                                params: {
-                                    article: item.titles.normalized,
-                                },
-                            })
-                        }
-                    />
-                )}
+                renderItem={({ item, index }) => {
+                    const history = item.view_history;
+                    const lastDateViews = history.at(-1)?.views ?? 0;
+                    const secondLastDateViews = history.at(-2)?.views ?? 0;
+                    const tagIcon =
+                        history.length < 2
+                            ? undefined
+                            : lastDateViews > secondLastDateViews
+                              ? "arrow-right-up-line"
+                              : lastDateViews < secondLastDateViews
+                                ? "arrow-right-down-line"
+                                : undefined;
+
+                    return (
+                        <ArticleCard
+                            key={item.titles.normalized + index}
+                            tag={`${item.views.toLocaleString()} views`}
+                            tagIcon={tagIcon}
+                            title={item.titles.normalized}
+                            subtitle={item.extract}
+                            image={item.thumbnail?.source}
+                            onPress={() =>
+                                router.navigate({
+                                    pathname: "/article/[article]",
+                                    params: {
+                                        article: item.titles.normalized,
+                                    },
+                                })
+                            }
+                        />
+                    );
+                }}
                 keyExtractor={(item, index) =>
                     `${item.title}-${index}` || `${item.titles.normalized}`
                 }

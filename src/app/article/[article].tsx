@@ -13,10 +13,12 @@ import { parseArticle, type Block } from "@/services/articleParser";
 import { usePreferences } from "@/services/preferences";
 import { toggleSavedArticle, useIsSaved } from "@/services/savedArticles";
 import { getArticlePageSummary, getFullArticle } from "@/services/wikipedia";
+import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+    Linking,
     Platform,
     Pressable,
     RefreshControl,
@@ -50,9 +52,6 @@ const openImage = (src: string) => {
     });
 };
 
-// Header button that saves / unsaves the current article. Kept inside this
-// file so it can share the loaded metadata.
-
 const articleUrl = (item: any) =>
     item.fullurl ??
     item.canonicalurl ??
@@ -72,7 +71,22 @@ const shareArticle = async (item: any) => {
     }
 };
 
-const HeaderRight = ({ meta }: { meta: ArticleMeta }) => {
+const openOnWikipedia = async (item: ArticleMeta) => {
+    try {
+        await Linking.openURL(articleUrl(item));
+    } catch (error) {
+        console.log("Failed to open article on Wikipedia:", error);
+    }
+};
+
+// Header buttons that save / unsave the current article and open the actions sheet.
+const HeaderRight = ({
+    meta,
+    onMorePress,
+}: {
+    meta: ArticleMeta;
+    onMorePress: () => void;
+}) => {
     const saved = useIsSaved(meta.title);
     const { colors } = useTheme();
 
@@ -105,10 +119,10 @@ const HeaderRight = ({ meta }: { meta: ArticleMeta }) => {
                     { backgroundColor: colors.backgroundMuted },
                     pressed && styles.headerRightButtonPressed,
                 ]}
-                onPress={() => shareArticle(meta)}
+                onPress={onMorePress}
             >
                 <RemixIcon
-                    name={"share-line"}
+                    name="more-fill"
                     size={20}
                     color={colors.text}
                     fallback={null}
@@ -248,6 +262,12 @@ const Article = () => {
     const fontScale = preferences.fontScale;
 
     const [previewTitle, setPreviewTitle] = useState<string | null>(null);
+    const [menuIndex, setMenuIndex] = useState(0);
+
+    const activeMeta = useMemo(
+        () => meta ?? (article ? { title: article } : null),
+        [meta, article],
+    );
 
     const handleLinkPress = useCallback((title: string) => {
         setPreviewTitle(title);
@@ -256,6 +276,26 @@ const Article = () => {
     const handleDismissPreview = useCallback(() => {
         setPreviewTitle(null);
     }, []);
+
+    const handleOpenMenu = useCallback(() => {
+        setMenuIndex(1);
+    }, []);
+
+    const handleCloseMenu = useCallback(() => {
+        setMenuIndex(0);
+    }, []);
+
+    const handleShare = useCallback(() => {
+        if (!activeMeta) return;
+        setMenuIndex(0);
+        shareArticle(activeMeta);
+    }, [activeMeta]);
+
+    const handleReadOnWikipedia = useCallback(() => {
+        if (!activeMeta) return;
+        setMenuIndex(0);
+        openOnWikipedia(activeMeta);
+    }, [activeMeta]);
 
     const renderItem = useCallback(
         ({ item }: { item: Block }) => (
@@ -275,13 +315,17 @@ const Article = () => {
     );
 
     useEffect(() => {
-        const currentMeta = meta ?? (article ? { title: article } : null);
-        if (currentMeta) {
+        if (activeMeta) {
             navigation.setOptions({
-                headerRight: () => <HeaderRight meta={currentMeta} />,
+                headerRight: () => (
+                    <HeaderRight
+                        meta={activeMeta}
+                        onMorePress={handleOpenMenu}
+                    />
+                ),
             });
         }
-    }, [navigation, meta, article]);
+    }, [navigation, activeMeta, handleOpenMenu]);
 
     const loadArticle = useCallback(async () => {
         if (!article) return;
@@ -461,10 +505,75 @@ const Article = () => {
                     ) : undefined
                 }
             />
+
             <ArticlePreviewSheet
                 title={previewTitle}
                 onDismiss={handleDismissPreview}
             />
+
+            <ModalBottomSheet
+                detents={[0, "content"]}
+                index={menuIndex}
+                onIndexChange={setMenuIndex}
+                onCloseRequest={handleCloseMenu}
+                scrimColor="rgba(0, 0, 0, 0.4)"
+                surface={
+                    <View
+                        style={[
+                            StyleSheet.absoluteFill,
+                            { backgroundColor: colors.surface },
+                        ]}
+                    />
+                }
+                surfaceStyle={{
+                    borderTopLeftRadius: 24,
+                    borderTopRightRadius: 24,
+                }}
+                settleDuration={300}
+            >
+                <View
+                    style={[
+                        styles.menuSheetContent,
+                        { paddingBottom: insets.bottom + 16 },
+                    ]}
+                >
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.menuSheetOption,
+                            pressed && styles.menuSheetOptionPressed,
+                        ]}
+                        onPress={handleShare}
+                    >
+                        <RemixIcon
+                            name="share-line"
+                            size={20}
+                            color={colors.text}
+                            fallback={null}
+                        />
+                        <Text style={styles.menuSheetOptionText}>
+                            Share article
+                        </Text>
+                    </Pressable>
+
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.menuSheetOption,
+                            pressed && styles.menuSheetOptionPressed,
+                        ]}
+                        onPress={handleReadOnWikipedia}
+                    >
+                        <RemixIcon
+                            name="external-link-line"
+                            size={20}
+                            color={colors.text}
+                            fallback={null}
+                        />
+                        <Text style={styles.menuSheetOptionText}>
+                            Read article on Wikipedia
+                        </Text>
+                    </Pressable>
+                </View>
+            </ModalBottomSheet>
         </View>
     );
 };
@@ -587,5 +696,28 @@ const createStyles = (colors: ThemeColors) =>
             color: colors.textMuted,
             paddingHorizontal: 16,
             marginTop: 8,
+        },
+
+        menuSheetContent: {
+            padding: 16,
+            gap: 4,
+        },
+
+        menuSheetOption: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 14,
+            padding: 14,
+            borderRadius: 999,
+        },
+
+        menuSheetOptionPressed: {
+            backgroundColor: colors.surfaceMuted,
+        },
+
+        menuSheetOptionText: {
+            fontSize: 16,
+            fontFamily: "DMSans-Medium",
+            color: colors.text,
         },
     });

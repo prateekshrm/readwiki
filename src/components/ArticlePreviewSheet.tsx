@@ -1,4 +1,5 @@
 import { ThemeColors } from "@/constants/Colors";
+import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
 import { getArticleSummary } from "@/services/wikipedia";
 import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
@@ -160,7 +161,7 @@ const ArticlePreviewSheet = ({
                             <Text
                                 numberOfLines={2}
                                 style={[
-                                    // fraunces,
+                                    fraunces,
                                     styles.title,
                                     { color: colors.text },
                                 ]}
@@ -263,9 +264,7 @@ const createStyles = (colors: ThemeColors) =>
             flex: 1,
         },
         title: {
-            fontSize: 20,
-            marginBottom: 4,
-            fontFamily: "DMSans-Bold",
+            fontSize: 24,
         },
         subtitle: {
             marginTop: 4,

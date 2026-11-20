@@ -292,7 +292,12 @@ const Home = () => {
                                     return (
                                         <ArticleCard
                                             key={item.titles.normalized + index}
-                                            tag={`${item.views.toLocaleString()} views`}
+                                            tag={`${new Intl.NumberFormat(
+                                                "en",
+                                                {
+                                                    notation: "compact",
+                                                },
+                                            ).format(item.views)} views`}
                                             tagIcon={tagIcon}
                                             title={item.titles.normalized}
                                             subtitle={item.extract}

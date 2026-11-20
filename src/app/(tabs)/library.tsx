@@ -9,10 +9,9 @@ import {
     removeFromHistory,
     useHistory,
 } from "@/services/articleHistory";
-import { removeArticle, useSavedArticles } from "@/services/savedArticles";
 import { router } from "expo-router";
 import { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,35 +20,10 @@ const Library = () => {
     const { colors, isDark } = useTheme();
     const styles = useMemo(() => createStyles(colors), [colors]);
     const history = useHistory();
-    const savedArticles = useSavedArticles();
     const onScroll = useScreenScroll();
     const insets = useSafeAreaInsets();
 
     const latestHistory = history.slice(0, 3);
-    const latestSaved = savedArticles.slice(0, 3);
-
-    const isEmpty = history.length === 0 && savedArticles.length === 0;
-
-    // Full-screen empty state when both sections are empty.
-    if (isEmpty) {
-        return (
-            <View style={styles.empty}>
-                <RemixIcon
-                    name="book-shelf-line"
-                    size={48}
-                    color={colors.textMuted}
-                    fallback={null}
-                />
-                <Text style={[fraunces, styles.emptyTitle]}>
-                    Your library is empty
-                </Text>
-                <Text style={styles.emptySubtitle}>
-                    Articles you read will appear in History, and articles you
-                    bookmark will appear in Saved.
-                </Text>
-            </View>
-        );
-    }
 
     return (
         <View style={styles.container}>
@@ -62,17 +36,48 @@ const Library = () => {
                 onScroll={onScroll}
                 scrollEventThrottle={16}
             >
-                {/* ── History Section ── */}
-                <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
+                <View style={styles.linkContainer}>
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.link,
+                            pressed && styles.linkPressed,
+                        ]}
+                        onPress={() => router.navigate("/saved")}
+                    >
+                        <View style={styles.linkLeft}>
+                            <View style={styles.linkIconContainer}>
+                                <RemixIcon
+                                    name="bookmark-line"
+                                    size={20}
+                                    color={colors.accent}
+                                    fallback={null}
+                                />
+                            </View>
+
+                            <View style={styles.linkTextWrapper}>
+                                <Text style={styles.linkTitle}>
+                                    Saved Articles
+                                </Text>
+                                <Text style={styles.linkSubtitle}>
+                                    View all your saved articles
+                                </Text>
+                            </View>
+                        </View>
+
                         <RemixIcon
-                            name="history-line"
-                            size={24}
-                            color={colors.text}
+                            name="arrow-right-s-line"
+                            size={22}
+                            color={colors.textSecondary}
                             fallback={null}
                         />
+                    </Pressable>
+                </View>
+
+                {/* History Section */}
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
                         <Text style={[fraunces, styles.sectionTitle]}>
-                            Recently Read
+                            History
                         </Text>
                     </View>
 
@@ -101,12 +106,12 @@ const Library = () => {
                         <View style={styles.sectionEmpty}>
                             <RemixIcon
                                 name="history-line"
-                                size={28}
+                                size={20}
                                 color={colors.textMuted}
                                 fallback={null}
                             />
                             <Text style={styles.sectionEmptyText}>
-                                No reading history yet
+                                No Reading History Yet
                             </Text>
                         </View>
                     )}
@@ -115,59 +120,6 @@ const Library = () => {
                         <SectionButton
                             text="View All History"
                             onPress={() => router.navigate("/history")}
-                        />
-                    )}
-                </View>
-
-                {/* ── Saved Section ── */}
-                <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
-                        <RemixIcon
-                            name="bookmark-line"
-                            size={24}
-                            color={colors.text}
-                            fallback={null}
-                        />
-                        <Text style={[fraunces, styles.sectionTitle]}>
-                            Saved Articles
-                        </Text>
-                    </View>
-
-                    {latestSaved.length > 0 ? (
-                        <View style={styles.sectionContent}>
-                            {latestSaved.map((item) => (
-                                <ArticleCard
-                                    key={item.title}
-                                    title={item.title}
-                                    image={item.thumbnail}
-                                    onPress={() =>
-                                        router.navigate({
-                                            pathname: "/article/[article]",
-                                            params: { article: item.title },
-                                        })
-                                    }
-                                    onRemove={() => removeArticle(item.title)}
-                                />
-                            ))}
-                        </View>
-                    ) : (
-                        <View style={styles.sectionEmpty}>
-                            <RemixIcon
-                                name="bookmark-line"
-                                size={28}
-                                color={colors.textMuted}
-                                fallback={null}
-                            />
-                            <Text style={styles.sectionEmptyText}>
-                                No saved articles yet
-                            </Text>
-                        </View>
-                    )}
-
-                    {savedArticles.length > 0 && (
-                        <SectionButton
-                            text="View All Saved"
-                            onPress={() => router.navigate("/saved")}
                         />
                     )}
                 </View>
@@ -187,30 +139,6 @@ const createStyles = (colors: ThemeColors) =>
 
         content: {
             paddingTop: 100,
-        },
-
-        // ── Full-screen empty state ──
-        empty: {
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            paddingHorizontal: 40,
-            backgroundColor: colors.background,
-        },
-
-        emptyTitle: {
-            marginTop: 16,
-            fontSize: 20,
-            color: colors.text,
-        },
-
-        emptySubtitle: {
-            marginTop: 8,
-            textAlign: "center",
-            fontSize: 14,
-            lineHeight: 22,
-            fontFamily: "DMSans-Regular",
-            color: colors.textMuted,
         },
 
         // ── Section layout (mirrors home screen trending section) ──
@@ -236,18 +164,67 @@ const createStyles = (colors: ThemeColors) =>
             // ArticleCard handles its own padding
         },
 
-        // ── Inline empty state (one section empty, other has data) ──
         sectionEmpty: {
+            flexDirection: "row",
             alignItems: "center",
-            justifyContent: "center",
-            paddingVertical: 32,
-            paddingHorizontal: 24,
+            paddingVertical: 16,
+            paddingHorizontal: 16,
             gap: 8,
         },
 
         sectionEmptyText: {
-            fontSize: 14,
+            fontSize: 16,
             fontFamily: "DMSans-Medium",
             color: colors.textMuted,
+        },
+
+        linkContainer: {
+            padding: 16,
+            gap: 12,
+        },
+
+        link: {
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: 12,
+            borderRadius: 999,
+            backgroundColor: colors.surface,
+        },
+
+        linkPressed: {
+            backgroundColor: colors.surfaceMuted,
+        },
+
+        linkLeft: {
+            flexDirection: "row",
+            alignItems: "center",
+            flex: 1,
+        },
+
+        linkIconContainer: {
+            width: 48,
+            height: 36,
+            borderRadius: 999,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: colors.backgroundMuted,
+            marginRight: 12,
+        },
+
+        linkTextWrapper: {
+            flex: 1,
+        },
+
+        linkTitle: {
+            fontSize: 16,
+            fontFamily: "DMSans-SemiBold",
+            color: colors.text,
+        },
+
+        linkSubtitle: {
+            fontSize: 13,
+            fontFamily: "DMSans-Regular",
+            color: colors.textSecondary,
         },
     });

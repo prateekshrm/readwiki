@@ -60,7 +60,7 @@ const History = () => {
     const insets = useSafeAreaInsets();
     const onScroll = useScreenScroll();
     const navigation = useNavigation();
-    const { colors, isDark } = useTheme();
+    const { colors } = useTheme();
     const styles = useMemo(() => createStyles(colors), [colors]);
 
     useEffect(() => {
@@ -72,14 +72,16 @@ const History = () => {
     if (history.length === 0) {
         return (
             <View style={styles.empty}>
-                <RemixIcon
-                    name="history-line"
-                    size={48}
-                    color={colors.textMuted}
-                    fallback={null}
-                />
+                <View style={styles.emptyIconContainer}>
+                    <RemixIcon
+                        name="history-line"
+                        size={38}
+                        color={colors.textMuted}
+                        fallback={null}
+                    />
+                </View>
                 <Text style={[fraunces, styles.emptyTitle]}>
-                    No reading history
+                    No Reading History
                 </Text>
                 <Text style={styles.emptySubtitle}>
                     Articles you read will show up here.
@@ -151,6 +153,15 @@ const createStyles = (colors: ThemeColors) =>
             justifyContent: "center",
             paddingHorizontal: 40,
             backgroundColor: colors.background,
+        },
+
+        emptyIconContainer: {
+            width: 108,
+            height: 72,
+            borderRadius: 36,
+            backgroundColor: colors.backgroundMuted,
+            justifyContent: "center",
+            alignItems: "center",
         },
 
         emptyTitle: {

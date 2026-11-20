@@ -34,28 +34,28 @@ export default function NoInternetView({
                 },
             ]}
         >
-            <View style={styles.card}>
-                <View style={styles.iconContainer}>
-                    <RemixIcon
-                        name={iconName as any}
-                        size={38}
-                        color={colors.accent}
-                        fallback={null}
-                    />
-                </View>
-                <Text style={[fraunces, styles.title]}>{title}</Text>
-                <Text style={styles.description}>{description}</Text>
-                <View style={styles.buttonWrapper}>
-                    <Button
-                        text="Try Again"
-                        iconName="refresh-line"
-                        iconPosition="left"
-                        variant="primary"
-                        mode="dark"
-                        onPress={onRetry}
-                    />
-                </View>
+            {/* <View style={styles.card}> */}
+            <View style={styles.iconContainer}>
+                <RemixIcon
+                    name={iconName as any}
+                    size={38}
+                    color={colors.accent}
+                    fallback={null}
+                />
             </View>
+            <Text style={[fraunces, styles.title]}>{title}</Text>
+            <Text style={styles.description}>{description}</Text>
+            <View style={styles.buttonWrapper}>
+                <Button
+                    text="Try Again"
+                    iconName="refresh-line"
+                    iconPosition="left"
+                    variant="primary"
+                    mode="dark"
+                    onPress={onRetry}
+                />
+            </View>
+            {/* </View> */}
         </View>
     );
 }
@@ -66,40 +66,32 @@ const createStyles = (colors: ThemeColors) =>
             flex: 1,
             justifyContent: "center",
             alignItems: "center",
-            paddingHorizontal: 20,
             backgroundColor: colors.background,
-        },
-        card: {
-            width: "100%",
-            maxWidth: 340,
-            alignItems: "center",
-            paddingVertical: 32,
-            paddingHorizontal: 24,
+            paddingHorizontal: 40,
         },
         iconContainer: {
-            width: 72,
+            width: 108,
             height: 72,
             borderRadius: 36,
             backgroundColor: colors.backgroundMuted,
             justifyContent: "center",
             alignItems: "center",
-            marginBottom: 20,
         },
         title: {
-            fontSize: 22,
+            marginTop: 16,
+            fontSize: 20,
             color: colors.text,
-            textAlign: "center",
-            marginBottom: 8,
         },
         description: {
-            fontSize: 14,
-            fontFamily: "DMSans-Regular",
-            color: colors.textSecondary,
+            marginTop: 8,
             textAlign: "center",
-            lineHeight: 20,
-            marginBottom: 24,
+            fontSize: 14,
+            lineHeight: 22,
+            fontFamily: "DMSans-Regular",
+            color: colors.textMuted,
         },
         buttonWrapper: {
+            marginTop: 16,
             alignItems: "center",
         },
     });

@@ -71,14 +71,16 @@ const Saved = () => {
     if (savedArticles.length === 0) {
         return (
             <View style={styles.empty}>
-                <RemixIcon
-                    name="bookmark-line"
-                    size={48}
-                    color={colors.textMuted}
-                    fallback={null}
-                />
+                <View style={styles.emptyIconContainer}>
+                    <RemixIcon
+                        name="bookmark-line"
+                        size={38}
+                        color={colors.textMuted}
+                        fallback={null}
+                    />
+                </View>
                 <Text style={[fraunces, styles.emptyTitle]}>
-                    No saved articles
+                    No Saved Articles
                 </Text>
                 <Text style={styles.emptySubtitle}>
                     Tap the bookmark icon while reading an article to save it
@@ -149,6 +151,15 @@ const createStyles = (colors: ThemeColors) =>
             justifyContent: "center",
             paddingHorizontal: 40,
             backgroundColor: colors.background,
+        },
+
+        emptyIconContainer: {
+            width: 108,
+            height: 72,
+            borderRadius: 36,
+            backgroundColor: colors.backgroundMuted,
+            justifyContent: "center",
+            alignItems: "center",
         },
 
         emptyTitle: {

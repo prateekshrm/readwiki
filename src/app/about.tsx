@@ -123,7 +123,7 @@ export default function About() {
                     <View style={styles.linkIconContainer}>
                         <Image
                             source={require("@/assets/wikipedia-icon.png")}
-                            style={{ height: 24, width: 24 }}
+                            style={{ height: 22, width: 22 }}
                         />
                     </View>
 
@@ -156,7 +156,7 @@ export default function About() {
                     <View style={styles.linkIconContainer}>
                         <Image
                             source={require("@/assets/wikimedia-icon.png")}
-                            style={{ height: 22, width: 22 }}
+                            style={{ height: 20, width: 20 }}
                         />
                     </View>
 

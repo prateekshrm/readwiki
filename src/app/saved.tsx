@@ -75,7 +75,7 @@ const Saved = () => {
                     <RemixIcon
                         name="bookmark-line"
                         size={38}
-                        color={colors.textMuted}
+                        color={colors.accent}
                         fallback={null}
                     />
                 </View>

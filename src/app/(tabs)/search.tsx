@@ -69,7 +69,7 @@ const Search = () => {
         setSearchResults([]);
     };
 
-    const inputRef = useRef<TextInput>(null);
+    const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
     useFocusEffect(
         useCallback(() => {
             const timer = setTimeout(() => {

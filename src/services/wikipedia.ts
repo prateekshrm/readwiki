@@ -1,4 +1,7 @@
 import {
+    clearArticleSummaryCache,
+    clearFeaturedDataCache,
+    clearFullArticleCache,
     getArticleSummaryCache,
     getFeaturedDataCache,
     getFullArticleCache,
@@ -9,12 +12,16 @@ import {
 
 const BASE_URL = "https://api.wikimedia.org";
 
-export const getFeaturedData = async () => {
+export const getFeaturedData = async (forceRefresh = false) => {
     try {
-        const cachedData = getFeaturedDataCache();
+        if (!forceRefresh) {
+            const cachedData = getFeaturedDataCache();
 
-        if (cachedData) {
-            return cachedData;
+            if (cachedData) {
+                return cachedData;
+            }
+        } else {
+            clearFeaturedDataCache();
         }
 
         const today = new Date();
@@ -29,6 +36,12 @@ export const getFeaturedData = async () => {
             headers: {
                 "User-Agent": "ReadWiki/1.7.0",
                 "Api-User-Agent": "ReadWiki/1.7.0",
+                ...(forceRefresh
+                    ? {
+                          "Cache-Control": "no-cache",
+                          Pragma: "no-cache",
+                      }
+                    : {}),
             },
         });
 
@@ -43,6 +56,9 @@ export const getFeaturedData = async () => {
         return data;
     } catch (error) {
         console.log(error);
+        if (forceRefresh) {
+            return getFeaturedDataCache();
+        }
     }
 };
 
@@ -80,12 +96,16 @@ export const getTomorrowFeaturedArticleTitle = async () => {
 // Fetches the clean article HTML from the MediaWiki "parse" endpoint.
 // This returns standard HTML (real <img> tags and /wiki/ links) which is
 // far easier to render nicely than the lazy-loaded mobile-html format.
-export const getFullArticle = async (title: string) => {
+export const getFullArticle = async (title: string, forceRefresh = false) => {
     try {
-        const cachedData = getFullArticleCache(title);
+        if (!forceRefresh) {
+            const cachedData = getFullArticleCache(title);
 
-        if (cachedData) {
-            return cachedData;
+            if (cachedData) {
+                return cachedData;
+            }
+        } else {
+            clearFullArticleCache(title);
         }
 
         const encodedTitle = encodeURIComponent(title);
@@ -98,6 +118,12 @@ export const getFullArticle = async (title: string) => {
                 headers: {
                     "User-Agent": "ReadWiki/1.7.0",
                     "Api-User-Agent": "ReadWiki/1.7.0",
+                    ...(forceRefresh
+                        ? {
+                              "Cache-Control": "no-cache",
+                              Pragma: "no-cache",
+                          }
+                        : {}),
                 },
             },
         );
@@ -112,12 +138,18 @@ export const getFullArticle = async (title: string) => {
         return articleText;
     } catch (error) {
         console.log(error);
+        if (forceRefresh) {
+            return getFullArticleCache(title);
+        }
     }
 };
 
 // Short summary of an article: title, one-line description, extract and
 // lead image. Used for previewing articles without caching.
-export const getArticleSummary = async (title: string) => {
+export const getArticleSummary = async (
+    title: string,
+    forceRefresh = false,
+) => {
     try {
         const encodedTitle = encodeURIComponent(title);
 
@@ -127,6 +159,12 @@ export const getArticleSummary = async (title: string) => {
                 headers: {
                     "User-Agent": "ReadWiki/1.7.0",
                     "Api-User-Agent": "ReadWiki/1.7.0",
+                    ...(forceRefresh
+                        ? {
+                              "Cache-Control": "no-cache",
+                              Pragma: "no-cache",
+                          }
+                        : {}),
                 },
             },
         );
@@ -148,15 +186,22 @@ export const getArticlePreviewSummary = getArticleSummary;
 
 // Short summary of an article used when viewing the article page.
 // Caches the response so repeated visits don't need to refetch.
-export const getArticlePageSummary = async (title: string) => {
+export const getArticlePageSummary = async (
+    title: string,
+    forceRefresh = false,
+) => {
     try {
-        const cachedData = getArticleSummaryCache(title);
+        if (!forceRefresh) {
+            const cachedData = getArticleSummaryCache(title);
 
-        if (cachedData) {
-            return cachedData;
+            if (cachedData) {
+                return cachedData;
+            }
+        } else {
+            clearArticleSummaryCache(title);
         }
 
-        const data = await getArticleSummary(title);
+        const data = await getArticleSummary(title, forceRefresh);
 
         if (data) {
             setArticleSummaryCache(title, data);
@@ -165,6 +210,9 @@ export const getArticlePageSummary = async (title: string) => {
         return data;
     } catch (error) {
         console.log(error);
+        if (forceRefresh) {
+            return getArticleSummaryCache(title);
+        }
         return null;
     }
 };

@@ -12,6 +12,9 @@ interface CacheItem<T = any> {
 const fullArticleCache = new Map<string, CacheItem>();
 const articleSummaryCache = new Map<string, CacheItem>();
 
+const normalizeKey = (title: string) =>
+    title.trim().replace(/_/g, " ").toLowerCase();
+
 export const getFeaturedDataCache = () => {
     const isExpired = Date.now() - featuredDataCacheTime > CACHE_DURATION;
 
@@ -34,7 +37,7 @@ export const clearFeaturedDataCache = () => {
 };
 
 export const getFullArticleCache = (title: string) => {
-    const key = title.trim().toLowerCase();
+    const key = normalizeKey(title);
     const item = fullArticleCache.get(key);
 
     if (!item) {
@@ -55,7 +58,7 @@ export const getFullArticleCache = (title: string) => {
 };
 
 export const setFullArticleCache = (title: string, data: any) => {
-    const key = title.trim().toLowerCase();
+    const key = normalizeKey(title);
 
     if (fullArticleCache.has(key)) {
         fullArticleCache.delete(key);
@@ -78,14 +81,15 @@ export const setFullArticleCache = (title: string, data: any) => {
 
 export const clearFullArticleCache = (title?: string) => {
     if (title) {
-        fullArticleCache.delete(title.trim().toLowerCase());
+        const key = normalizeKey(title);
+        fullArticleCache.delete(key);
     } else {
         fullArticleCache.clear();
     }
 };
 
 export const getArticleSummaryCache = (title: string) => {
-    const key = title.trim().toLowerCase();
+    const key = normalizeKey(title);
     const item = articleSummaryCache.get(key);
 
     if (!item) {
@@ -106,7 +110,7 @@ export const getArticleSummaryCache = (title: string) => {
 };
 
 export const setArticleSummaryCache = (title: string, data: any) => {
-    const key = title.trim().toLowerCase();
+    const key = normalizeKey(title);
 
     if (articleSummaryCache.has(key)) {
         articleSummaryCache.delete(key);
@@ -129,8 +133,20 @@ export const setArticleSummaryCache = (title: string, data: any) => {
 
 export const clearArticleSummaryCache = (title?: string) => {
     if (title) {
-        articleSummaryCache.delete(title.trim().toLowerCase());
+        const key = normalizeKey(title);
+        articleSummaryCache.delete(key);
     } else {
         articleSummaryCache.clear();
     }
+};
+
+export const clearArticleCache = (title?: string) => {
+    clearFullArticleCache(title);
+    clearArticleSummaryCache(title);
+};
+
+export const clearAllCache = () => {
+    clearFeaturedDataCache();
+    clearFullArticleCache();
+    clearArticleSummaryCache();
 };

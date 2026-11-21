@@ -327,52 +327,55 @@ const Article = () => {
         }
     }, [navigation, activeMeta, handleOpenMenu]);
 
-    const loadArticle = useCallback(async () => {
-        if (!article) return;
-        try {
-            // Fetch the summary (title / lead image) and the full HTML together.
-            const [summary, html] = await Promise.all([
-                getArticlePageSummary(article),
-                getFullArticle(article),
-            ]);
+    const loadArticle = useCallback(
+        async (forceRefresh = false) => {
+            if (!article) return;
+            try {
+                // Fetch the summary (title / lead image) and the full HTML together.
+                const [summary, html] = await Promise.all([
+                    getArticlePageSummary(article, forceRefresh),
+                    getFullArticle(article, forceRefresh),
+                ]);
 
-            if (summary || html) {
-                // Prefer the full-resolution image; fall back to the thumbnail.
-                // Both carry their own width/height for the aspect ratio.
-                const hero = summary?.originalimage ?? summary?.thumbnail;
+                if (summary || html) {
+                    // Prefer the full-resolution image; fall back to the thumbnail.
+                    // Both carry their own width/height for the aspect ratio.
+                    const hero = summary?.originalimage ?? summary?.thumbnail;
 
-                const articleMeta = {
-                    title: summary?.title ?? article,
-                    description: summary?.description ?? summary?.extract,
-                    thumbnail: summary?.thumbnail?.source,
-                    heroImage: hero?.source,
-                    heroWidth: hero?.width,
-                    heroHeight: hero?.height,
-                };
+                    const articleMeta = {
+                        title: summary?.title ?? article,
+                        description: summary?.description ?? summary?.extract,
+                        thumbnail: summary?.thumbnail?.source,
+                        heroImage: hero?.source,
+                        heroWidth: hero?.width,
+                        heroHeight: hero?.height,
+                    };
 
-                setMeta(articleMeta);
+                    setMeta(articleMeta);
 
-                // Track this article in reading history.
-                addToHistory({
-                    title: articleMeta.title,
-                    thumbnail: articleMeta.thumbnail,
-                    readAt: Date.now(),
-                });
+                    // Track this article in reading history.
+                    addToHistory({
+                        title: articleMeta.title,
+                        thumbnail: articleMeta.thumbnail,
+                        readAt: Date.now(),
+                    });
 
-                if (html) {
-                    setBlocks(
-                        parseArticle(html, {
-                            hasHeroImage: !!articleMeta.heroImage,
-                        }),
-                    );
+                    if (html) {
+                        setBlocks(
+                            parseArticle(html, {
+                                hasHeroImage: !!articleMeta.heroImage,
+                            }),
+                        );
+                    }
                 }
+            } catch (error) {
+                console.log("Failed to load article:", error);
+            } finally {
+                setLoading(false);
             }
-        } catch (error) {
-            console.log("Failed to load article:", error);
-        } finally {
-            setLoading(false);
-        }
-    }, [article]);
+        },
+        [article],
+    );
 
     useEffect(() => {
         loadArticle();
@@ -382,7 +385,7 @@ const Article = () => {
         setRefreshing(true);
 
         try {
-            await loadArticle();
+            await loadArticle(true);
         } finally {
             setRefreshing(false);
         }
@@ -392,7 +395,7 @@ const Article = () => {
     useEffect(() => {
         if (prevConnectedRef.current === false && isConnected === true) {
             setLoading(true);
-            loadArticle();
+            loadArticle(true);
         }
         prevConnectedRef.current = isConnected;
     }, [isConnected, loadArticle]);
@@ -412,7 +415,7 @@ const Article = () => {
                     <NoInternetView
                         onRetry={() => {
                             setLoading(true);
-                            loadArticle();
+                            loadArticle(true);
                         }}
                     />
                 </View>
@@ -427,7 +430,7 @@ const Article = () => {
                     description="We couldn't load this article. Please check the title or try again later."
                     onRetry={() => {
                         setLoading(true);
-                        loadArticle();
+                        loadArticle(true);
                     }}
                 />
             </View>

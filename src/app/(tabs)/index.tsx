@@ -65,9 +65,9 @@ const Home = () => {
     const isConnected = useNetworkStatus();
     const prevConnectedRef = useRef<boolean | null>(null);
 
-    const loadData = useCallback(async () => {
+    const loadData = useCallback(async (forceRefresh = false) => {
         try {
-            const data = await getFeaturedData();
+            const data = await getFeaturedData(forceRefresh);
 
             if (data) {
                 setFeaturedArticle(data.tfa ?? null);
@@ -92,7 +92,7 @@ const Home = () => {
         setRefreshing(true);
 
         try {
-            await loadData();
+            await loadData(true);
         } finally {
             setRefreshing(false);
         }
@@ -102,7 +102,7 @@ const Home = () => {
     useEffect(() => {
         if (prevConnectedRef.current === false && isConnected === true) {
             setLoading(true);
-            loadData();
+            loadData(true);
         }
         prevConnectedRef.current = isConnected;
     }, [isConnected, loadData]);
@@ -139,7 +139,7 @@ const Home = () => {
                     <NoInternetView
                         onRetry={() => {
                             setLoading(true);
-                            loadData();
+                            loadData(true);
                         }}
                     />
                 </View>
@@ -154,7 +154,7 @@ const Home = () => {
                     description="Something went wrong while fetching the latest content. Please try again."
                     onRetry={() => {
                         setLoading(true);
-                        loadData();
+                        loadData(true);
                     }}
                 />
             </View>

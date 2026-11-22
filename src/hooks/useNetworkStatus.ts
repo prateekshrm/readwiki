@@ -1,4 +1,4 @@
-import { clearAllCache } from "@/services/cache";
+import { clearAllCache } from "@/stores/articleCache.store";
 import NetInfo, { NetInfoState } from "@react-native-community/netinfo";
 import { useEffect, useState } from "react";
 

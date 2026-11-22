@@ -1,27 +1,20 @@
 import {
-    clearArticleSummaryCache,
-    clearFeaturedDataCache,
-    clearFullArticleCache,
-    getArticleSummaryCache,
-    getFeaturedDataCache,
-    getFullArticleCache,
-    setArticleSummaryCache,
-    setFeaturedDataCache,
-    setFullArticleCache,
-} from "./cache";
+    ArticleData,
+    useArticleCacheStore,
+} from "@/stores/articleCache.store";
+
+export type { ArticleData };
 
 const BASE_URL = "https://api.wikimedia.org";
 
 export const getFeaturedData = async (forceRefresh = false) => {
     try {
         if (!forceRefresh) {
-            const cachedData = getFeaturedDataCache();
+            const cachedData = useArticleCacheStore.getState().featuredData;
 
             if (cachedData) {
                 return cachedData;
             }
-        } else {
-            clearFeaturedDataCache();
         }
 
         const today = new Date();
@@ -45,13 +38,13 @@ export const getFeaturedData = async (forceRefresh = false) => {
 
         const data = await response.json();
 
-        setFeaturedDataCache(data);
+        useArticleCacheStore.getState().setFeaturedData(data);
 
         return data;
     } catch (error) {
         console.log(error);
         if (forceRefresh) {
-            return getFeaturedDataCache();
+            return useArticleCacheStore.getState().featuredData;
         }
     }
 };
@@ -87,16 +80,6 @@ export const getTomorrowFeaturedArticleTitle = async () => {
     }
 };
 
-export type ArticleData = {
-    html: string;
-    title: string;
-    description?: string;
-    heroImage?: string;
-    heroWidth?: number;
-    heroHeight?: number;
-    thumbnail?: string;
-};
-
 // Converts thumbnail URLs to higher resolutions for high-DPI displays.
 const toHighRes = (url?: string) =>
     url ? url.replace(/\/(\d+)px-/, "/1280px-") : undefined;
@@ -113,19 +96,12 @@ export const getFullArticle = async (
 ): Promise<ArticleData | null> => {
     try {
         if (!forceRefresh) {
-            const cachedData = getFullArticleCache(title);
+            const cachedData =
+                useArticleCacheStore.getState().getCachedArticle(title);
 
             if (cachedData) {
-                if (typeof cachedData === "string") {
-                    return {
-                        html: cachedData,
-                        title,
-                    };
-                }
                 return cachedData;
             }
-        } else {
-            clearFullArticleCache(title);
         }
 
         const encodedTitle = encodeURIComponent(title);
@@ -236,17 +212,16 @@ export const getFullArticle = async (
             thumbnail: toThumbnail(heroImage),
         };
 
-        setFullArticleCache(title, articleData);
+        useArticleCacheStore.getState().setCachedArticle(title, articleData);
 
         return articleData;
     } catch (error) {
         console.log(error);
         if (forceRefresh) {
-            const cached = getFullArticleCache(title);
+            const cached =
+                useArticleCacheStore.getState().getCachedArticle(title);
             if (cached) {
-                return typeof cached === "string"
-                    ? { html: cached, title }
-                    : cached;
+                return cached;
             }
         }
         return null;
@@ -286,39 +261,6 @@ export const getArticleSummary = async (
 };
 
 export const getArticlePreviewSummary = getArticleSummary;
-
-// Short summary of an article used when viewing the article page.
-// Caches the response so repeated visits don't need to refetch.
-export const getArticlePageSummary = async (
-    title: string,
-    forceRefresh = false,
-) => {
-    try {
-        if (!forceRefresh) {
-            const cachedData = getArticleSummaryCache(title);
-
-            if (cachedData) {
-                return cachedData;
-            }
-        } else {
-            clearArticleSummaryCache(title);
-        }
-
-        const data = await getArticleSummary(title, forceRefresh);
-
-        if (data) {
-            setArticleSummaryCache(title, data);
-        }
-
-        return data;
-    } catch (error) {
-        console.log(error);
-        if (forceRefresh) {
-            return getArticleSummaryCache(title);
-        }
-        return null;
-    }
-};
 
 export const searchArticles = async (query: string) => {
     try {

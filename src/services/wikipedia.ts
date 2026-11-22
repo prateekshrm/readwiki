@@ -87,15 +87,41 @@ export const getTomorrowFeaturedArticleTitle = async () => {
     }
 };
 
-// Fetches the clean article HTML from the MediaWiki "parse" endpoint.
-// This returns standard HTML (real <img> tags and /wiki/ links) which is
-// far easier to render nicely than the lazy-loaded mobile-html format.
-export const getFullArticle = async (title: string, forceRefresh = false) => {
+export type ArticleData = {
+    html: string;
+    title: string;
+    description?: string;
+    heroImage?: string;
+    heroWidth?: number;
+    heroHeight?: number;
+    thumbnail?: string;
+};
+
+// Converts thumbnail URLs to higher resolutions for high-DPI displays.
+const toHighRes = (url?: string) =>
+    url ? url.replace(/\/(\d+)px-/, "/1280px-") : undefined;
+
+const toThumbnail = (url?: string) =>
+    url ? url.replace(/\/(\d+)px-/, "/640px-") : undefined;
+
+// Fetches the clean article HTML and metadata from the MediaWiki "parse" endpoint.
+// Returns the full HTML along with title, short description, and lead hero image,
+// eliminating the need for an extra summary API request.
+export const getFullArticle = async (
+    title: string,
+    forceRefresh = false,
+): Promise<ArticleData | null> => {
     try {
         if (!forceRefresh) {
             const cachedData = getFullArticleCache(title);
 
             if (cachedData) {
+                if (typeof cachedData === "string") {
+                    return {
+                        html: cachedData,
+                        title,
+                    };
+                }
                 return cachedData;
             }
         } else {
@@ -105,7 +131,7 @@ export const getFullArticle = async (title: string, forceRefresh = false) => {
         const encodedTitle = encodeURIComponent(title);
 
         const response = await fetch(
-            `https://en.wikipedia.org/w/api.php?action=parse&format=json&redirects=1&prop=text|tocdata|revid|displaytitle|images&page=${encodedTitle}`,
+            `https://en.wikipedia.org/w/api.php?action=parse&format=json&redirects=1&prop=text|tocdata|revid|displaytitle|images|properties&page=${encodedTitle}`,
             {
                 headers: {
                     "User-Agent": "ReadWiki/1.7.0",
@@ -114,19 +140,116 @@ export const getFullArticle = async (title: string, forceRefresh = false) => {
             },
         );
 
-        const data = await response.json();
-        const articleText = data?.parse?.text["*"] as string | undefined;
-
-        if (articleText) {
-            setFullArticleCache(title, articleText);
+        if (!response.ok) {
+            throw new Error("Failed to fetch article");
         }
 
-        return articleText;
+        const data = await response.json();
+        const html = (
+            typeof data?.parse?.text === "string"
+                ? data.parse.text
+                : data?.parse?.text?.["*"]
+        ) as string | undefined;
+
+        if (!html) {
+            return null;
+        }
+
+        const parsedTitle = data.parse?.title || title;
+        const properties = data.parse?.properties || [];
+
+        // Short description from properties or HTML
+        let description: string | undefined = properties.find(
+            (p: any) => p.name === "wikibase-shortdesc",
+        )?.["*"];
+
+        if (!description) {
+            const shortDescMatch = html.match(
+                /class="[^"]*shortdescription[^"]*"[^>]*>([^<]+)<\/div>/i,
+            );
+            if (shortDescMatch) {
+                description = shortDescMatch[1].trim();
+            }
+        }
+
+        // Hero image from page_image prop or first prominent image in the HTML
+        const pageImageName: string | undefined = properties.find(
+            (p: any) => p.name === "page_image_free" || p.name === "page_image",
+        )?.["*"];
+
+        let heroImage: string | undefined;
+        let heroWidth: number | undefined;
+        let heroHeight: number | undefined;
+
+        const imgRegex = /<img\b([^>]+)>/gi;
+        let match;
+
+        while ((match = imgRegex.exec(html)) !== null) {
+            const attrs = match[1];
+            const srcMatch = attrs.match(/src="([^">]+)"/i);
+            if (!srcMatch) continue;
+
+            let src = srcMatch[1];
+            if (src.startsWith("//")) src = "https:" + src;
+
+            const widthMatch = attrs.match(/width="(\d+)"/i);
+            const heightMatch = attrs.match(/height="(\d+)"/i);
+            const classMatch = attrs.match(/class="([^">]+)"/i);
+
+            const w = widthMatch ? parseInt(widthMatch[1], 10) : undefined;
+            const h = heightMatch ? parseInt(heightMatch[1], 10) : undefined;
+            const cls = classMatch ? classMatch[1] : "";
+
+            if (cls.includes("mwe-math") || cls.includes("mw-file-icon")) {
+                continue;
+            }
+            if (w && w < 50 && h && h < 50) continue;
+
+            if (pageImageName) {
+                const cleanName = encodeURIComponent(
+                    pageImageName.replace(/ /g, "_"),
+                );
+                const rawName = pageImageName.replace(/ /g, "_");
+                if (src.includes(cleanName) || src.includes(rawName)) {
+                    heroImage = src;
+                    heroWidth = w;
+                    heroHeight = h;
+                    break;
+                }
+            }
+
+            if (!heroImage) {
+                heroImage = src;
+                heroWidth = w;
+                heroHeight = h;
+                if (!pageImageName) break;
+            }
+        }
+
+        const articleData: ArticleData = {
+            html,
+            title: parsedTitle,
+            description,
+            heroImage: toHighRes(heroImage),
+            heroWidth,
+            heroHeight,
+            thumbnail: toThumbnail(heroImage),
+        };
+
+        setFullArticleCache(title, articleData);
+
+        return articleData;
     } catch (error) {
         console.log(error);
         if (forceRefresh) {
-            return getFullArticleCache(title);
+            const cached = getFullArticleCache(title);
+            if (cached) {
+                return typeof cached === "string"
+                    ? { html: cached, title }
+                    : cached;
+            }
         }
+        return null;
     }
 };
 

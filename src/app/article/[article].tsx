@@ -1,5 +1,7 @@
 import ArticlePreviewSheet from "@/components/ArticlePreviewSheet";
+import GalleryView from "@/components/GalleryView";
 import { useScreenScroll } from "@/components/HeaderScroll";
+import InfoboxView from "@/components/InfoboxView";
 import Loader from "@/components/Loader";
 import NoInternetView from "@/components/NoInternetView";
 import RichText from "@/components/RichText";
@@ -12,7 +14,7 @@ import { addToHistory } from "@/services/articleHistory";
 import { parseArticle, type Block } from "@/services/articleParser";
 import { usePreferences } from "@/services/preferences";
 import { toggleSavedArticle, useIsSaved } from "@/services/savedArticles";
-import { getArticlePageSummary, getFullArticle } from "@/services/wikipedia";
+import { getFullArticle } from "@/services/wikipedia";
 import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
@@ -22,6 +24,7 @@ import {
     Platform,
     Pressable,
     RefreshControl,
+    ScrollView,
     Share,
     StyleSheet,
     Text,
@@ -137,28 +140,49 @@ type ArticleBlockItemProps = {
     fontScale: number;
     styles: ReturnType<typeof createStyles>;
     onLinkPress: (title: string) => void;
+    articleTitle?: string;
 };
 
 const ArticleBlockItem = memo(
-    ({ block, fontScale, styles, onLinkPress }: ArticleBlockItemProps) => {
+    ({
+        block,
+        fontScale,
+        styles,
+        onLinkPress,
+        articleTitle,
+    }: ArticleBlockItemProps) => {
         switch (block.type) {
-            case "heading":
+            case "heading": {
+                const headingStyle =
+                    block.level === 2
+                        ? styles.heading2
+                        : block.level === 3
+                          ? styles.heading3
+                          : block.level === 4
+                            ? styles.heading4
+                            : styles.heading5;
+
+                const headingSize =
+                    (block.level === 2
+                        ? 30
+                        : block.level === 3
+                          ? 24
+                          : block.level === 4
+                            ? 20
+                            : 17) * fontScale;
+
                 return (
                     <Text
                         style={[
                             fraunces,
-                            block.level === 2
-                                ? styles.heading2
-                                : styles.heading3,
-                            {
-                                fontSize:
-                                    (block.level === 2 ? 32 : 24) * fontScale,
-                            },
+                            headingStyle,
+                            { fontSize: headingSize },
                         ]}
                     >
                         {block.text}
                     </Text>
                 );
+            }
 
             case "paragraph":
                 return (
@@ -172,6 +196,72 @@ const ArticleBlockItem = memo(
                                 lineHeight: 28 * fontScale,
                             },
                         ]}
+                    />
+                );
+
+            case "quote":
+                return (
+                    <View style={styles.quote}>
+                        <RichText
+                            spans={block.spans}
+                            onLinkPress={onLinkPress}
+                            style={[
+                                styles.quoteText,
+                                {
+                                    fontSize: 16 * fontScale,
+                                    lineHeight: 26 * fontScale,
+                                },
+                            ]}
+                        />
+                        {!!block.citation && (
+                            <Text
+                                style={[
+                                    styles.quoteCitation,
+                                    { fontSize: 13 * fontScale },
+                                ]}
+                            >
+                                — {block.citation}
+                            </Text>
+                        )}
+                    </View>
+                );
+
+            case "code":
+                return (
+                    <View style={styles.codeBlock}>
+                        {!!block.language && (
+                            <Text style={styles.codeLanguage}>
+                                {block.language}
+                            </Text>
+                        )}
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.codeScroll}
+                        >
+                            <Text
+                                selectable
+                                style={[
+                                    styles.codeText,
+                                    {
+                                        fontSize: 13 * fontScale,
+                                        lineHeight: 20 * fontScale,
+                                    },
+                                ]}
+                            >
+                                {block.code}
+                            </Text>
+                        </ScrollView>
+                    </View>
+                );
+
+            case "infobox":
+                return (
+                    <InfoboxView
+                        block={block}
+                        fontScale={fontScale}
+                        onLinkPress={onLinkPress}
+                        articleTitle={articleTitle}
                     />
                 );
 
@@ -202,20 +292,26 @@ const ArticleBlockItem = memo(
                 );
 
             case "image": {
-                const ratio =
+                const rawRatio =
                     block.width && block.height
                         ? block.width / block.height
                         : 3 / 2;
+                const ratio = Math.max(0.4, Math.min(2.5, rawRatio));
 
                 return (
                     <View style={styles.figure}>
                         <Pressable onPress={() => openImage(block.src)}>
-                            <Image
-                                source={block.src}
-                                style={[styles.image, { aspectRatio: ratio }]}
-                                contentFit="cover"
-                                transition={200}
-                            />
+                            <View style={styles.imageWrapper}>
+                                <Image
+                                    source={block.src}
+                                    style={[
+                                        styles.image,
+                                        { aspectRatio: ratio },
+                                    ]}
+                                    contentFit="cover"
+                                    transition={200}
+                                />
+                            </View>
                         </Pressable>
                         {!!block.caption && (
                             <Text style={styles.caption}>{block.caption}</Text>
@@ -224,12 +320,22 @@ const ArticleBlockItem = memo(
                 );
             }
 
+            case "gallery":
+                return (
+                    <GalleryView
+                        block={block}
+                        fontScale={fontScale}
+                        onImagePress={openImage}
+                    />
+                );
+
             case "table":
                 return (
                     <TableView
                         block={block}
                         fontScale={fontScale}
                         onLinkPress={onLinkPress}
+                        onImagePress={openImage}
                     />
                 );
 
@@ -270,6 +376,12 @@ const Article = () => {
     );
 
     const handleLinkPress = useCallback((title: string) => {
+        if (/^https?:\/\//i.test(title)) {
+            Linking.openURL(title).catch((err) => {
+                console.log("Failed to open external link:", err);
+            });
+            return;
+        }
         setPreviewTitle(title);
     }, []);
 
@@ -304,9 +416,10 @@ const Article = () => {
                 fontScale={fontScale}
                 styles={styles}
                 onLinkPress={handleLinkPress}
+                articleTitle={activeMeta?.title || article}
             />
         ),
-        [fontScale, styles, handleLinkPress],
+        [fontScale, styles, handleLinkPress, activeMeta, article],
     );
 
     const keyExtractor = useCallback(
@@ -331,24 +444,16 @@ const Article = () => {
         async (forceRefresh = false) => {
             if (!article) return;
             try {
-                // Fetch the summary (title / lead image) and the full HTML together.
-                const [summary, html] = await Promise.all([
-                    getArticlePageSummary(article, forceRefresh),
-                    getFullArticle(article, forceRefresh),
-                ]);
+                const data = await getFullArticle(article, forceRefresh);
 
-                if (summary || html) {
-                    // Prefer the full-resolution image; fall back to the thumbnail.
-                    // Both carry their own width/height for the aspect ratio.
-                    const hero = summary?.originalimage ?? summary?.thumbnail;
-
-                    const articleMeta = {
-                        title: summary?.title ?? article,
-                        description: summary?.description ?? summary?.extract,
-                        thumbnail: summary?.thumbnail?.source,
-                        heroImage: hero?.source,
-                        heroWidth: hero?.width,
-                        heroHeight: hero?.height,
+                if (data) {
+                    const articleMeta: ArticleMeta = {
+                        title: data.title || article,
+                        description: data.description,
+                        thumbnail: data.thumbnail,
+                        heroImage: data.heroImage,
+                        heroWidth: data.heroWidth,
+                        heroHeight: data.heroHeight,
                     };
 
                     setMeta(articleMeta);
@@ -360,9 +465,9 @@ const Article = () => {
                         readAt: Date.now(),
                     });
 
-                    if (html) {
+                    if (data.html) {
                         setBlocks(
-                            parseArticle(html, {
+                            parseArticle(data.html, {
                                 hasHeroImage: !!articleMeta.heroImage,
                             }),
                         );
@@ -659,11 +764,71 @@ const createStyles = (colors: ThemeColors) =>
             paddingHorizontal: 16,
         },
 
+        heading4: {
+            color: colors.text,
+            marginTop: 18,
+            marginBottom: 8,
+            paddingHorizontal: 16,
+        },
+
+        heading5: {
+            color: colors.text,
+            marginTop: 14,
+            marginBottom: 6,
+            paddingHorizontal: 16,
+        },
+
         paragraph: {
             fontFamily: "DMSans-Regular",
             color: colors.text,
             marginBottom: 16,
             paddingHorizontal: 16,
+        },
+
+        quote: {
+            marginHorizontal: 16,
+            marginVertical: 12,
+            paddingLeft: 14,
+            borderLeftWidth: 3,
+            borderLeftColor: colors.accent,
+        },
+
+        quoteText: {
+            fontFamily: "DMSans-Regular",
+            fontStyle: "italic",
+            color: colors.text,
+        },
+
+        quoteCitation: {
+            fontFamily: "DMSans-Medium",
+            color: colors.textMuted,
+            marginTop: 6,
+        },
+
+        codeBlock: {
+            marginHorizontal: 16,
+            marginVertical: 12,
+            backgroundColor: colors.surface,
+            borderRadius: 14,
+            padding: 14,
+        },
+
+        codeLanguage: {
+            fontSize: 11,
+            fontFamily: "DMSans-Bold",
+            color: colors.textMuted,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            marginBottom: 6,
+        },
+
+        codeScroll: {
+            flexGrow: 1,
+        },
+
+        codeText: {
+            fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+            color: colors.text,
         },
 
         list: {
@@ -685,7 +850,14 @@ const createStyles = (colors: ThemeColors) =>
         },
 
         figure: {
-            marginVertical: 12,
+            marginVertical: 14,
+            paddingHorizontal: 16,
+        },
+
+        imageWrapper: {
+            borderRadius: 14,
+            overflow: "hidden",
+            backgroundColor: colors.backgroundMuted,
         },
 
         image: {
@@ -697,7 +869,6 @@ const createStyles = (colors: ThemeColors) =>
             fontSize: 13,
             fontFamily: "DMSans-Regular",
             color: colors.textMuted,
-            paddingHorizontal: 16,
             marginTop: 8,
         },
 

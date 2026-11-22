@@ -1,7 +1,7 @@
 import { useTheme } from "@/hooks/useTheme";
 import type { Span } from "@/services/articleParser";
 import { router } from "expo-router";
-import { StyleSheet, Text, TextStyle } from "react-native";
+import { Linking, StyleSheet, Text, TextStyle } from "react-native";
 
 type RichTextProps = {
     spans: Span[];
@@ -17,9 +17,25 @@ const openArticle = (title: string) => {
     });
 };
 
+const handlePressLink = async (
+    link: string,
+    onLinkPress?: (title: string) => void,
+) => {
+    if (/^https?:\/\//i.test(link)) {
+        try {
+            await Linking.openURL(link);
+        } catch (error) {
+            console.log("Failed to open external link:", error);
+        }
+    } else if (onLinkPress) {
+        onLinkPress(link);
+    } else {
+        openArticle(link);
+    }
+};
+
 // Renders an array of inline runs as a single <Text>, keeping bold /
-// italic formatting and turning wiki links into tappable text that opens
-// the linked article in the app.
+// italic formatting and turning wiki and external links into tappable text.
 const RichText = ({ spans, style, onLinkPress }: RichTextProps) => {
     const { colors } = useTheme();
 
@@ -40,13 +56,12 @@ const RichText = ({ spans, style, onLinkPress }: RichTextProps) => {
                                 { color: colors.link },
                                 runStyle,
                             ]}
-                            onPress={() => {
-                                if (onLinkPress) {
-                                    onLinkPress(span.link as string);
-                                } else {
-                                    openArticle(span.link as string);
-                                }
-                            }}
+                            onPress={() =>
+                                handlePressLink(
+                                    span.link as string,
+                                    onLinkPress,
+                                )
+                            }
                         >
                             {span.text}
                         </Text>

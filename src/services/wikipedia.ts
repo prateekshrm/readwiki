@@ -36,12 +36,6 @@ export const getFeaturedData = async (forceRefresh = false) => {
             headers: {
                 "User-Agent": "ReadWiki/1.7.0",
                 "Api-User-Agent": "ReadWiki/1.7.0",
-                ...(forceRefresh
-                    ? {
-                          "Cache-Control": "no-cache",
-                          Pragma: "no-cache",
-                      }
-                    : {}),
             },
         });
 
@@ -111,25 +105,17 @@ export const getFullArticle = async (title: string, forceRefresh = false) => {
         const encodedTitle = encodeURIComponent(title);
 
         const response = await fetch(
-            `https://en.wikipedia.org/w/api.php?action=parse&page=${encodedTitle}` +
-                `&prop=text&format=json&formatversion=2&redirects=1` +
-                `&disableeditsection=1&disabletoc=1`,
+            `https://en.wikipedia.org/w/api.php?action=parse&format=json&redirects=1&prop=text|tocdata|revid|displaytitle|images&page=${encodedTitle}`,
             {
                 headers: {
                     "User-Agent": "ReadWiki/1.7.0",
                     "Api-User-Agent": "ReadWiki/1.7.0",
-                    ...(forceRefresh
-                        ? {
-                              "Cache-Control": "no-cache",
-                              Pragma: "no-cache",
-                          }
-                        : {}),
                 },
             },
         );
 
         const data = await response.json();
-        const articleText = data?.parse?.text as string | undefined;
+        const articleText = data?.parse?.text["*"] as string | undefined;
 
         if (articleText) {
             setFullArticleCache(title, articleText);
@@ -159,12 +145,6 @@ export const getArticleSummary = async (
                 headers: {
                     "User-Agent": "ReadWiki/1.7.0",
                     "Api-User-Agent": "ReadWiki/1.7.0",
-                    ...(forceRefresh
-                        ? {
-                              "Cache-Control": "no-cache",
-                              Pragma: "no-cache",
-                          }
-                        : {}),
                 },
             },
         );

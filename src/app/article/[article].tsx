@@ -86,9 +86,11 @@ const openOnWikipedia = async (item: ArticleMeta) => {
 const HeaderRight = ({
     meta,
     onMorePress,
+    loading,
 }: {
     meta: ArticleMeta;
     onMorePress: () => void;
+    loading: boolean;
 }) => {
     const saved = useIsSaved(meta.title);
     const { colors } = useTheme();
@@ -100,6 +102,9 @@ const HeaderRight = ({
                     styles.headerRightButton,
                     { backgroundColor: colors.backgroundMuted },
                     pressed && styles.headerRightButtonPressed,
+                    loading && {
+                        opacity: 0.6,
+                    },
                 ]}
                 onPress={() =>
                     toggleSavedArticle({
@@ -108,6 +113,7 @@ const HeaderRight = ({
                         savedAt: Date.now(),
                     })
                 }
+                disabled={loading}
             >
                 <RemixIcon
                     name={saved ? "bookmark-fill" : "bookmark-line"}
@@ -121,8 +127,12 @@ const HeaderRight = ({
                     styles.headerRightButton,
                     { backgroundColor: colors.backgroundMuted },
                     pressed && styles.headerRightButtonPressed,
+                    loading && {
+                        opacity: 0.6,
+                    },
                 ]}
                 onPress={onMorePress}
+                disabled={loading}
             >
                 <RemixIcon
                     name="more-fill"
@@ -438,11 +448,12 @@ const Article = () => {
                     <HeaderRight
                         meta={activeMeta}
                         onMorePress={handleOpenMenu}
+                        loading={loading}
                     />
                 ),
             });
         }
-    }, [navigation, activeMeta, handleOpenMenu]);
+    }, [navigation, activeMeta, handleOpenMenu, loading]);
 
     const loadArticle = useCallback(
         async (forceRefresh = false) => {

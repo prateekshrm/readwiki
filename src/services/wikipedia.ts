@@ -102,7 +102,7 @@ const toHighRes = (url?: string) =>
     url ? url.replace(/\/(\d+)px-/, "/1280px-") : undefined;
 
 const toThumbnail = (url?: string) =>
-    url ? url.replace(/\/(\d+)px-/, "/640px-") : undefined;
+    url ? url.replace(/\/(\d+)px-/, "/250px-") : undefined;
 
 // Fetches the clean article HTML and metadata from the MediaWiki "parse" endpoint.
 // Returns the full HTML along with title, short description, and lead hero image,

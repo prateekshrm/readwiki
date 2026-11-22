@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
 
     logo: {
         fontSize: 28,
+        lineHeight: 28 * 1.5,
     },
 
     rightContainer: {

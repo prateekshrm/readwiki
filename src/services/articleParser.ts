@@ -54,15 +54,31 @@ export type TableBlock = {
     blocks: LogicalRowBlock[];
 };
 
+export type InfoboxComparativeColumn = {
+    spans: Span[];
+    images?: TableCellImage[];
+    align?: "left" | "center" | "right";
+};
+
 export type InfoboxItem =
     | {
           type: "header";
           title: string;
       }
     | {
+          type: "subheader";
+          values: Span[];
+      }
+    | {
           type: "row";
           label: string;
           values: Span[];
+      }
+    | {
+          type: "comparison";
+          label?: string;
+          isScore?: boolean;
+          columns: InfoboxComparativeColumn[];
       };
 
 export type InfoboxBlock = {
@@ -178,6 +194,9 @@ const SKIP_CLASSES = new Set([
     "collapseButton",
     "sidebar",
     "side-box",
+    "chessboard",
+    "chess-pieces",
+    "chess-board",
 ]);
 
 // Top-level h2 headings after which the rest of the page is references / links.
@@ -390,6 +409,14 @@ const parseFigure = (node: any): ImageBlock | null => {
     if (!src) return null;
 
     if (src.startsWith("//")) src = `https:${src}`;
+
+    if (
+        node?.attribs?.class?.includes("chessboard") ||
+        src.includes("Chessboard480") ||
+        src.includes("Chess_")
+    ) {
+        return null;
+    }
 
     const width = Number(img.attribs?.width) || undefined;
     const height = Number(img.attribs?.height) || undefined;
@@ -638,6 +665,25 @@ const parseInfobox = (node: any): InfoboxBlock | null => {
     let title = "";
     let image: { src: string; caption?: string } | undefined;
 
+    // Check <caption> first
+    if (Array.isArray(node.children)) {
+        for (const child of node.children) {
+            if (
+                child.type === "tag" &&
+                child.name === "caption" &&
+                !shouldSkip(child)
+            ) {
+                const captionSpans = getSpans(child);
+                title = captionSpans
+                    .map((s) => s.text)
+                    .join(" ")
+                    .replace(/\s+/g, " ")
+                    .trim();
+                break;
+            }
+        }
+    }
+
     const trs: any[] = [];
     const findTrs = (container: any) => {
         if (!container || !Array.isArray(container.children)) return;
@@ -677,7 +723,8 @@ const parseInfobox = (node: any): InfoboxBlock | null => {
 
         const isAbove =
             tr.attribs?.class?.includes("infobox-above") ||
-            ths.some((th: any) => th.attribs?.class?.includes("infobox-above"));
+            ths.some((th: any) => th.attribs?.class?.includes("infobox-above")) ||
+            tds.some((td: any) => td.attribs?.class?.includes("infobox-above"));
         const isHeader =
             tr.attribs?.class?.includes("infobox-header") ||
             ths.some((th: any) => th.attribs?.class?.includes("infobox-header"));
@@ -701,6 +748,170 @@ const parseInfobox = (node: any): InfoboxBlock | null => {
             continue;
         }
 
+        // Subheader row (e.g. venue, dates in sports/events)
+        if (
+            tds.length === 1 &&
+            ths.length === 0 &&
+            tds[0].attribs?.class?.includes("infobox-subheader")
+        ) {
+            const spans = getSpans(tds[0]);
+            if (spans.length) {
+                items.push({ type: "subheader", values: spans });
+            }
+            continue;
+        }
+
+        // Below / footer navigation row (e.g. ← 2012 | 2014 →)
+        if (
+            tds.length === 1 &&
+            ths.length === 0 &&
+            tds[0].attribs?.class?.includes("infobox-below")
+        ) {
+            const td = tds[0];
+            let leftSpans: Span[] = [];
+            let rightSpans: Span[] = [];
+
+            const findFloatSpans = (n: any) => {
+                if (!n || n.type !== "tag") return;
+                const style = n.attribs?.style || "";
+                if (/float:\s*left/i.test(style)) {
+                    leftSpans = getSpans(n);
+                } else if (/float:\s*right/i.test(style)) {
+                    rightSpans = getSpans(n);
+                } else {
+                    (n.children || []).forEach(findFloatSpans);
+                }
+            };
+            findFloatSpans(td);
+
+            if (leftSpans.length || rightSpans.length) {
+                items.push({
+                    type: "comparison",
+                    columns: [
+                        { spans: leftSpans, align: "left" },
+                        { spans: rightSpans, align: "right" },
+                    ],
+                });
+            } else {
+                const spans = getSpans(td);
+                if (spans.length) {
+                    items.push({
+                        type: "header",
+                        title: spans.map((s) => s.text).join("").trim(),
+                    });
+                }
+            }
+            continue;
+        }
+
+        // Nested score table inside td (e.g. 3½ - Scores - 6½)
+        if (tds.length === 1) {
+            let nestedTable: any = null;
+            const findNestedTable = (n: any) => {
+                if (!n || nestedTable) return;
+                if (n.type === "tag" && n.name === "table") {
+                    nestedTable = n;
+                    return;
+                }
+                (n.children || []).forEach(findNestedTable);
+            };
+            findNestedTable(tds[0]);
+
+            if (nestedTable) {
+                const cells: any[] = [];
+                const findCells = (n: any) => {
+                    if (!n) return;
+                    if (
+                        n.type === "tag" &&
+                        (n.name === "th" || n.name === "td")
+                    ) {
+                        cells.push(n);
+                        return;
+                    }
+                    (n.children || []).forEach(findCells);
+                };
+                findCells(nestedTable);
+
+                if (cells.length === 3) {
+                    const score1 = getSpans(cells[0]);
+                    const scoreLabel = getText(cells[1]).trim();
+                    const score2 = getSpans(cells[2]);
+                    items.push({
+                        type: "comparison",
+                        isScore: true,
+                        label: scoreLabel || "Scores",
+                        columns: [
+                            { spans: score1, align: "center" },
+                            { spans: score2, align: "center" },
+                        ],
+                    });
+                    continue;
+                }
+            }
+        }
+
+        // Multi-column comparative row (2 or more tds, e.g. contestant A vs B)
+        if (tds.length >= 2) {
+            let label = "";
+            if (ths.length > 0) {
+                const labelSpans = getSpans(ths[0]);
+                label = labelSpans
+                    .map((s) => s.text)
+                    .join(" ")
+                    .trim()
+                    .replace(/^[•·\s]+/, "")
+                    .replace(/:\s*$/, "")
+                    .trim();
+            }
+
+            const columns: InfoboxComparativeColumn[] = tds.map((td: any) => {
+                const spans = getSpans(td);
+                const { images } = parseCellImages(td);
+
+                const hasLargeImg = images.some(
+                    (i) => (i.width ?? 0) > 40 || (i.height ?? 0) > 40,
+                );
+                let colSpans = spans;
+                if (
+                    hasLargeImg &&
+                    spans.length === 1 &&
+                    images.some(
+                        (i) =>
+                            i.alt && i.alt.trim() === spans[0].text.trim(),
+                    )
+                ) {
+                    colSpans = [];
+                }
+
+                const alignAttr = td.attribs?.align;
+                const styleAlign = td.attribs?.style?.match(
+                    /text-align:\s*(\w+)/,
+                )?.[1];
+                let align: "left" | "center" | "right" = "center";
+                const rawAlign = (alignAttr || styleAlign || "").toLowerCase();
+                if (
+                    rawAlign === "left" ||
+                    rawAlign === "center" ||
+                    rawAlign === "right"
+                ) {
+                    align = rawAlign;
+                }
+
+                return {
+                    spans: colSpans,
+                    images: images.length > 0 ? images : undefined,
+                    align,
+                };
+            });
+
+            items.push({
+                type: "comparison",
+                label: label || undefined,
+                columns,
+            });
+            continue;
+        }
+
         // Single TD cell (image or subheader)
         if (tds.length > 0 && ths.length === 0) {
             if (!image) findImg(tds[0]);
@@ -709,11 +920,16 @@ const parseInfobox = (node: any): InfoboxBlock | null => {
             const tdText = getText(tds[0]).trim();
             if (
                 tdText &&
-                (isHeader ||
+                (isAbove ||
+                    isHeader ||
                     tds[0].attribs?.class?.includes("infobox-header") ||
                     tdText.length < 40)
             ) {
-                items.push({ type: "header", title: tdText });
+                if (isAbove && !title) {
+                    title = tdText;
+                } else {
+                    items.push({ type: "header", title: tdText });
+                }
             }
             continue;
         }
@@ -1126,6 +1342,16 @@ const parseTable = (node: any): TableBlock | null => {
     };
 };
 
+// Checks if a table is used strictly for presentation/layout (e.g. multi-column layout)
+const isLayoutTable = (node: any): boolean => {
+    if (!node || node.type !== "tag" || node.name !== "table") return false;
+    const role = node.attribs?.role;
+    if (role === "presentation") return true;
+    const cls = node.attribs?.class || "";
+    if (/\b(col-begin|multicol|columns-start)\b/i.test(cls)) return true;
+    return false;
+};
+
 // ---------------------------------------------------------------------------
 // Main entry point
 // ---------------------------------------------------------------------------
@@ -1158,6 +1384,10 @@ export const parseArticle = (
                 return;
 
             case "table": {
+                if (isLayoutTable(node)) {
+                    (node.children ?? []).forEach(walk);
+                    return;
+                }
                 const block = parseTable(node);
                 if (block) blocks.push(block);
                 return;
@@ -1286,9 +1516,76 @@ export const parseArticle = (
                         (child.name === "dd" || child.name === "dt") &&
                         !shouldSkip(child)
                     ) {
-                        const spans = getSpans(child);
-                        if (spans.length) {
-                            blocks.push({ type: "paragraph", spans });
+                        const hasBlockChildren = (child.children ?? []).some(
+                            (c: any) =>
+                                c.type === "tag" &&
+                                [
+                                    "table",
+                                    "ul",
+                                    "ol",
+                                    "dl",
+                                    "blockquote",
+                                    "pre",
+                                    "figure",
+                                    "div",
+                                    "h1",
+                                    "h2",
+                                    "h3",
+                                    "h4",
+                                    "h5",
+                                    "h6",
+                                ].includes(c.name),
+                        );
+
+                        if (hasBlockChildren) {
+                            let inlineGroup: any[] = [];
+                            const flushInline = () => {
+                                if (inlineGroup.length) {
+                                    const spans = mergeSpans(
+                                        inlineGroup.flatMap((n) => getSpans(n)),
+                                    );
+                                    if (spans.length) {
+                                        blocks.push({
+                                            type: "paragraph",
+                                            spans,
+                                        });
+                                    }
+                                    inlineGroup = [];
+                                }
+                            };
+
+                            for (const grandChild of child.children ?? []) {
+                                if (
+                                    grandChild.type === "tag" &&
+                                    [
+                                        "table",
+                                        "ul",
+                                        "ol",
+                                        "dl",
+                                        "blockquote",
+                                        "pre",
+                                        "figure",
+                                        "div",
+                                        "h1",
+                                        "h2",
+                                        "h3",
+                                        "h4",
+                                        "h5",
+                                        "h6",
+                                    ].includes(grandChild.name)
+                                ) {
+                                    flushInline();
+                                    walk(grandChild);
+                                } else {
+                                    inlineGroup.push(grandChild);
+                                }
+                            }
+                            flushInline();
+                        } else {
+                            const spans = getSpans(child);
+                            if (spans.length) {
+                                blocks.push({ type: "paragraph", spans });
+                            }
                         }
                     }
                 }

@@ -140,6 +140,7 @@ type ArticleBlockItemProps = {
     fontScale: number;
     styles: ReturnType<typeof createStyles>;
     onLinkPress: (title: string) => void;
+    onImagePress?: (src: string) => void;
     articleTitle?: string;
 };
 
@@ -149,6 +150,7 @@ const ArticleBlockItem = memo(
         fontScale,
         styles,
         onLinkPress,
+        onImagePress,
         articleTitle,
     }: ArticleBlockItemProps) => {
         switch (block.type) {
@@ -261,6 +263,7 @@ const ArticleBlockItem = memo(
                         block={block}
                         fontScale={fontScale}
                         onLinkPress={onLinkPress}
+                        onImagePress={onImagePress}
                         articleTitle={articleTitle}
                     />
                 );
@@ -416,6 +419,7 @@ const Article = () => {
                 fontScale={fontScale}
                 styles={styles}
                 onLinkPress={handleLinkPress}
+                onImagePress={openImage}
                 articleTitle={activeMeta?.title || article}
             />
         ),

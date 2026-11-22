@@ -3,6 +3,7 @@ import { ThemeColors } from "@/constants/Colors";
 import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
 import type { InfoboxBlock } from "@/services/articleParser";
+import { Image } from "expo-image";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
     LayoutChangeEvent,
@@ -24,13 +25,80 @@ type InfoboxViewProps = {
     block: InfoboxBlock;
     fontScale?: number;
     onLinkPress?: (title: string) => void;
+    onImagePress?: (src: string) => void;
     articleTitle?: string;
+};
+
+const getSubtitle = (items: InfoboxBlock["items"]): string | null => {
+    // 1. Try to find explicit section headers (type === "header")
+    const explicitHeaders = items
+        .filter(
+            (
+                item,
+            ): item is Extract<
+                InfoboxBlock["items"][number],
+                { type: "header" }
+            > => item.type === "header",
+        )
+        .map((item) => item.title.trim())
+        .filter(Boolean);
+
+    if (explicitHeaders.length >= 2) {
+        return `${explicitHeaders[0]}, ${explicitHeaders[1]}...`;
+    }
+
+    // 2. Otherwise get headings/labels from the first available items
+    const headings: string[] = [];
+    for (const item of items) {
+        let name = "";
+        if (item.type === "header") {
+            name = item.title.trim();
+        } else if (item.type === "subheader") {
+            name = item.values
+                .map((s) => s.text)
+                .join("")
+                .trim();
+        } else if (item.type === "row") {
+            name = item.label.trim();
+        } else if (item.type === "comparison") {
+            if (item.label) {
+                name = item.label.trim();
+            } else if (item.columns && item.columns.length > 0) {
+                const colTexts = item.columns
+                    .map((c) =>
+                        c.spans
+                            .map((s) => s.text)
+                            .join("")
+                            .trim(),
+                    )
+                    .filter(Boolean);
+                if (colTexts.length > 0) {
+                    name = colTexts.join(" / ");
+                }
+            }
+        }
+
+        if (name && !headings.includes(name)) {
+            headings.push(name);
+            if (headings.length === 2) break;
+        }
+    }
+
+    if (headings.length >= 2) {
+        return `${headings[0]}, ${headings[1]}...`;
+    }
+    if (headings.length === 1) {
+        return `${headings[0]}...`;
+    }
+
+    return null;
 };
 
 const InfoboxView = ({
     block,
     fontScale = 1,
     onLinkPress,
+    onImagePress,
     articleTitle,
 }: InfoboxViewProps) => {
     const { colors } = useTheme();
@@ -40,6 +108,11 @@ const InfoboxView = ({
     const progress = useSharedValue(0);
     const measuredHeight = useSharedValue(0);
     const [contentHeight, setContentHeight] = useState(0);
+
+    const subtitle = useMemo(() => getSubtitle(block.items), [block.items]);
+    const displaySubtitle =
+        subtitle ||
+        (expanded ? "Click to collapse facts" : "Click to expand facts");
 
     useEffect(() => {
         progress.value = withTiming(expanded ? 1 : 0, {
@@ -102,10 +175,12 @@ const InfoboxView = ({
 
                         <View style={styles.headerTextWrapper}>
                             <Text style={styles.headerTitle}>Quick Facts</Text>
-                            <Text style={styles.headerSubtitle}>
-                                {expanded
-                                    ? "Click to collapse facts"
-                                    : "Click to expand facts"}
+                            <Text
+                                style={styles.headerSubtitle}
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
+                            >
+                                {displaySubtitle}
                             </Text>
                         </View>
                     </View>
@@ -144,6 +219,29 @@ const InfoboxView = ({
 
                         <View style={styles.itemsList}>
                             {block.items.map((item, index) => {
+                                if (item.type === "subheader") {
+                                    return (
+                                        <View
+                                            key={`subheader-${index}`}
+                                            style={styles.subheaderContainer}
+                                        >
+                                            <RichText
+                                                spans={item.values}
+                                                onLinkPress={onLinkPress}
+                                                style={[
+                                                    styles.subheaderText,
+                                                    {
+                                                        fontSize:
+                                                            13 * fontScale,
+                                                        lineHeight:
+                                                            18 * fontScale,
+                                                    },
+                                                ]}
+                                            />
+                                        </View>
+                                    );
+                                }
+
                                 if (item.type === "header") {
                                     return (
                                         <View
@@ -161,9 +259,361 @@ const InfoboxView = ({
                                     );
                                 }
 
+                                if (item.type === "comparison") {
+                                    if (item.isScore) {
+                                        return (
+                                            <View
+                                                key={`score-${index}`}
+                                                style={styles.scoreCard}
+                                            >
+                                                {!!item.label && (
+                                                    <Text
+                                                        style={
+                                                            styles.scoreLabel
+                                                        }
+                                                    >
+                                                        {item.label.toUpperCase()}
+                                                    </Text>
+                                                )}
+                                                <View style={styles.scoreRow}>
+                                                    <View
+                                                        style={styles.scoreCol}
+                                                    >
+                                                        <RichText
+                                                            spans={
+                                                                item.columns[0]
+                                                                    ?.spans ||
+                                                                []
+                                                            }
+                                                            onLinkPress={
+                                                                onLinkPress
+                                                            }
+                                                            style={[
+                                                                fraunces,
+                                                                styles.scoreNumber,
+                                                                {
+                                                                    fontSize:
+                                                                        26 *
+                                                                        fontScale,
+                                                                },
+                                                            ]}
+                                                        />
+                                                    </View>
+                                                    <Text
+                                                        style={[
+                                                            styles.scoreDash,
+                                                            {
+                                                                fontSize:
+                                                                    20 *
+                                                                    fontScale,
+                                                            },
+                                                        ]}
+                                                    >
+                                                        –
+                                                    </Text>
+                                                    <View
+                                                        style={styles.scoreCol}
+                                                    >
+                                                        <RichText
+                                                            spans={
+                                                                item.columns[1]
+                                                                    ?.spans ||
+                                                                []
+                                                            }
+                                                            onLinkPress={
+                                                                onLinkPress
+                                                            }
+                                                            style={[
+                                                                fraunces,
+                                                                styles.scoreNumber,
+                                                                {
+                                                                    fontSize:
+                                                                        26 *
+                                                                        fontScale,
+                                                                },
+                                                            ]}
+                                                        />
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        );
+                                    }
+
+                                    const hasLargeImages =
+                                        item.columns.some((col) =>
+                                            col.images?.some(
+                                                (img) =>
+                                                    (img.width ?? 0) > 40 ||
+                                                    (img.height ?? 0) > 40,
+                                            ),
+                                        );
+
+                                    if (hasLargeImages) {
+                                        return (
+                                            <View
+                                                key={`portraits-${index}`}
+                                                style={styles.portraitsRow}
+                                            >
+                                                {item.columns.map(
+                                                    (col, colIdx) => {
+                                                        const largeImg =
+                                                            col.images?.find(
+                                                                (img) =>
+                                                                    (img.width ??
+                                                                        0) >
+                                                                        40 ||
+                                                                    (img.height ??
+                                                                        0) > 40,
+                                                            );
+                                                        if (!largeImg)
+                                                            return null;
+                                                        return (
+                                                            <View
+                                                                key={colIdx}
+                                                                style={
+                                                                    styles.portraitCol
+                                                                }
+                                                            >
+                                                                <Pressable
+                                                                    onPress={() => {
+                                                                        if (
+                                                                            largeImg.link
+                                                                        ) {
+                                                                            onLinkPress?.(
+                                                                                largeImg.link,
+                                                                            );
+                                                                        } else if (
+                                                                            onImagePress
+                                                                        ) {
+                                                                            onImagePress(
+                                                                                largeImg.src,
+                                                                            );
+                                                                        }
+                                                                    }}
+                                                                    accessibilityRole="imagebutton"
+                                                                    accessibilityLabel={
+                                                                        largeImg.alt ||
+                                                                        "Photo"
+                                                                    }
+                                                                >
+                                                                    <Image
+                                                                        source={
+                                                                            largeImg.src
+                                                                        }
+                                                                        style={[
+                                                                            styles.portraitImage,
+                                                                            {
+                                                                                width:
+                                                                                    125 *
+                                                                                    fontScale,
+                                                                                height:
+                                                                                    145 *
+                                                                                    fontScale,
+                                                                            },
+                                                                        ]}
+                                                                        contentFit="cover"
+                                                                        transition={
+                                                                            150
+                                                                        }
+                                                                        cachePolicy="memory-disk"
+                                                                    />
+                                                                </Pressable>
+                                                            </View>
+                                                        );
+                                                    },
+                                                )}
+                                            </View>
+                                        );
+                                    }
+
+                                    const prevItem = block.items[index - 1];
+                                    const isFollowUp =
+                                        prevItem &&
+                                        (prevItem.type === "row" ||
+                                            prevItem.type === "comparison");
+
+                                    return (
+                                        <View
+                                            key={`comp-${index}`}
+                                            style={styles.comparisonWrapper}
+                                        >
+                                            {!!item.label && (
+                                                <View
+                                                    style={
+                                                        styles.comparisonLabelContainer
+                                                    }
+                                                >
+                                                    <Text
+                                                        style={
+                                                            styles.comparisonLabelText
+                                                        }
+                                                    >
+                                                        {item.label}
+                                                    </Text>
+                                                </View>
+                                            )}
+                                            <View
+                                                style={[
+                                                    styles.comparisonRow,
+                                                    isFollowUp &&
+                                                        styles.rowDivider,
+                                                ]}
+                                            >
+                                                {item.columns.map(
+                                                    (col, colIdx) => (
+                                                        <View
+                                                            key={colIdx}
+                                                            style={[
+                                                                styles.comparisonCol,
+                                                                colIdx > 0 &&
+                                                                    styles.comparisonColBorder,
+                                                                col.align ===
+                                                                    "left" && {
+                                                                    alignItems:
+                                                                        "flex-start",
+                                                                },
+                                                                col.align ===
+                                                                    "right" && {
+                                                                    alignItems:
+                                                                        "flex-end",
+                                                                },
+                                                                col.align ===
+                                                                    "center" && {
+                                                                    alignItems:
+                                                                        "center",
+                                                                },
+                                                            ]}
+                                                        >
+                                                            <View
+                                                                style={[
+                                                                    styles.comparisonContent,
+                                                                    col.align ===
+                                                                        "left" && {
+                                                                        justifyContent:
+                                                                            "flex-start",
+                                                                    },
+                                                                    col.align ===
+                                                                        "right" && {
+                                                                        justifyContent:
+                                                                            "flex-end",
+                                                                    },
+                                                                    col.align ===
+                                                                        "center" && {
+                                                                        justifyContent:
+                                                                            "center",
+                                                                    },
+                                                                ]}
+                                                            >
+                                                                {col.images?.map(
+                                                                    (
+                                                                        img,
+                                                                        imgIdx,
+                                                                    ) => {
+                                                                        const rawW =
+                                                                            img.width ||
+                                                                            22;
+                                                                        const rawH =
+                                                                            img.height ||
+                                                                            15;
+                                                                        const scale =
+                                                                            Math.min(
+                                                                                fontScale,
+                                                                                1.25,
+                                                                            );
+                                                                        const w =
+                                                                            Math.round(
+                                                                                rawW *
+                                                                                    scale,
+                                                                            );
+                                                                        const h =
+                                                                            Math.round(
+                                                                                rawH *
+                                                                                    scale,
+                                                                            );
+                                                                        const imgEl =
+                                                                            (
+                                                                                <Image
+                                                                                    key={
+                                                                                        imgIdx
+                                                                                    }
+                                                                                    source={
+                                                                                        img.src
+                                                                                    }
+                                                                                    style={{
+                                                                                        width: w,
+                                                                                        height: h,
+                                                                                        marginRight: 6,
+                                                                                    }}
+                                                                                    contentFit="contain"
+                                                                                    cachePolicy="memory-disk"
+                                                                                />
+                                                                            );
+                                                                        if (
+                                                                            img.link
+                                                                        ) {
+                                                                            return (
+                                                                                <Pressable
+                                                                                    key={
+                                                                                        imgIdx
+                                                                                    }
+                                                                                    onPress={() =>
+                                                                                        onLinkPress?.(
+                                                                                            img.link!,
+                                                                                        )
+                                                                                    }
+                                                                                    hitSlop={
+                                                                                        4
+                                                                                    }
+                                                                                >
+                                                                                    {
+                                                                                        imgEl
+                                                                                    }
+                                                                                </Pressable>
+                                                                            );
+                                                                        }
+                                                                        return imgEl;
+                                                                    },
+                                                                )}
+                                                                {col.spans
+                                                                    .length >
+                                                                    0 && (
+                                                                    <RichText
+                                                                        spans={
+                                                                            col.spans
+                                                                        }
+                                                                        onLinkPress={
+                                                                            onLinkPress
+                                                                        }
+                                                                        style={[
+                                                                            styles.comparisonText,
+                                                                            {
+                                                                                fontSize:
+                                                                                    14 *
+                                                                                    fontScale,
+                                                                                lineHeight:
+                                                                                    20 *
+                                                                                    fontScale,
+                                                                                textAlign:
+                                                                                    col.align ||
+                                                                                    "center",
+                                                                            },
+                                                                        ]}
+                                                                    />
+                                                                )}
+                                                            </View>
+                                                        </View>
+                                                    ),
+                                                )}
+                                            </View>
+                                        </View>
+                                    );
+                                }
+
                                 const prevItem = block.items[index - 1];
                                 const isFollowUpRow =
-                                    prevItem && prevItem.type === "row";
+                                    prevItem &&
+                                    (prevItem.type === "row" ||
+                                        prevItem.type === "comparison");
 
                                 return (
                                     <View
@@ -247,6 +697,7 @@ const createStyles = (colors: ThemeColors) =>
         },
         headerTextWrapper: {
             flex: 1,
+            marginRight: 8,
         },
         headerTitle: {
             fontSize: 16,
@@ -287,6 +738,17 @@ const createStyles = (colors: ThemeColors) =>
             color: colors.text,
             textAlign: "center",
         },
+        subheaderContainer: {
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 16,
+            marginBottom: 6,
+        },
+        subheaderText: {
+            fontFamily: "DMSans-Regular",
+            color: colors.textSecondary,
+            textAlign: "center",
+        },
         itemsList: {
             paddingHorizontal: 12,
         },
@@ -304,6 +766,94 @@ const createStyles = (colors: ThemeColors) =>
             textTransform: "uppercase",
             letterSpacing: 0.8,
             textAlign: "center",
+        },
+        scoreCard: {
+            backgroundColor: colors.backgroundMuted,
+            borderRadius: 16,
+            paddingVertical: 10,
+            paddingHorizontal: 16,
+            marginVertical: 8,
+            alignItems: "center",
+        },
+        scoreLabel: {
+            fontFamily: "DMSans-SemiBold",
+            fontSize: 11,
+            color: colors.textMuted,
+            letterSpacing: 1,
+            marginBottom: 4,
+            textTransform: "uppercase",
+        },
+        scoreRow: {
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+        },
+        scoreCol: {
+            flex: 1,
+            alignItems: "center",
+        },
+        scoreNumber: {
+            color: colors.text,
+        },
+        scoreDash: {
+            color: colors.textMuted,
+            marginHorizontal: 12,
+            fontFamily: "DMSans-Regular",
+        },
+        portraitsRow: {
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-around",
+            marginVertical: 10,
+            gap: 12,
+        },
+        portraitCol: {
+            flex: 1,
+            alignItems: "center",
+        },
+        portraitImage: {
+            borderRadius: 12,
+            backgroundColor: colors.surfaceMuted,
+        },
+        comparisonWrapper: {
+            width: "100%",
+        },
+        comparisonLabelContainer: {
+            marginTop: 8,
+            marginBottom: 2,
+            paddingHorizontal: 4,
+            alignItems: "center",
+        },
+        comparisonLabelText: {
+            fontFamily: "DMSans-SemiBold",
+            fontSize: 11,
+            color: colors.textMuted,
+            textTransform: "uppercase",
+            letterSpacing: 0.8,
+        },
+        comparisonRow: {
+            flexDirection: "row",
+            alignItems: "flex-start",
+            paddingVertical: 8,
+            paddingHorizontal: 4,
+        },
+        comparisonCol: {
+            flex: 1,
+            paddingHorizontal: 6,
+        },
+        comparisonColBorder: {
+            borderLeftWidth: StyleSheet.hairlineWidth,
+            borderLeftColor: colors.backgroundMuted,
+        },
+        comparisonContent: {
+            flexDirection: "row",
+            alignItems: "center",
+            flexWrap: "wrap",
+        },
+        comparisonText: {
+            fontFamily: "DMSans-Regular",
+            color: colors.text,
         },
         row: {
             flexDirection: "row",

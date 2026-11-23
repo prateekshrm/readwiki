@@ -3,6 +3,7 @@ import { ThemeColors } from "@/constants/Colors";
 import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
 import type { InfoboxBlock, InfoboxImage } from "@/services/articleParser";
+import { usePreferencesStore } from "@/stores/preferences.store";
 import { Image } from "expo-image";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -23,7 +24,6 @@ import RemixIcon from "react-native-remix-icon";
 
 type InfoboxViewProps = {
     block: InfoboxBlock;
-    fontScale?: number;
     onLinkPress?: (title: string) => void;
     onImagePress?: (src: string) => void;
     articleTitle?: string;
@@ -291,12 +291,12 @@ const getSubtitle = (items: InfoboxBlock["items"]): string | null => {
 
 const InfoboxView = ({
     block,
-    fontScale = 1,
     onLinkPress,
     onImagePress,
     articleTitle,
 }: InfoboxViewProps) => {
     const { colors } = useTheme();
+    const fontScale = usePreferencesStore((state) => state.fontScale);
     const [expanded, setExpanded] = useState(false);
     const styles = useMemo(() => createStyles(colors), [colors]);
 

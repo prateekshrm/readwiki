@@ -1,13 +1,13 @@
 import { ThemeColors } from "@/constants/Colors";
 import { useTheme } from "@/hooks/useTheme";
 import type { GalleryBlock, GalleryItem } from "@/services/articleParser";
+import { usePreferencesStore } from "@/stores/preferences.store";
 import { Image } from "expo-image";
 import { memo, useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 type GalleryViewProps = {
     block: GalleryBlock;
-    fontScale?: number;
     onImagePress: (src: string) => void;
 };
 
@@ -64,10 +64,10 @@ const GalleryCard = memo(
 
 const GalleryView = ({
     block,
-    fontScale = 1,
     onImagePress,
 }: GalleryViewProps) => {
     const { colors } = useTheme();
+    const fontScale = usePreferencesStore((state) => state.fontScale);
     const styles = useMemo(() => createStyles(colors), [colors]);
 
     if (!block.images || block.images.length === 0) {

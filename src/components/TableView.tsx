@@ -6,6 +6,7 @@ import type {
     TableCell,
     TableCellImage,
 } from "@/services/articleParser";
+import { usePreferencesStore } from "@/stores/preferences.store";
 import { Image } from "expo-image";
 import { memo, useCallback, useMemo, useState } from "react";
 import {
@@ -20,7 +21,6 @@ import RemixIcon from "react-native-remix-icon";
 
 type TableViewProps = {
     block: TableBlock;
-    fontScale?: number;
     onLinkPress?: (title: string) => void;
     onImagePress?: (src: string) => void;
 };
@@ -559,11 +559,11 @@ TableRowView.displayName = "TableRowView";
 
 const TableView = ({
     block,
-    fontScale = 1,
     onLinkPress,
     onImagePress,
 }: TableViewProps) => {
     const { colors } = useTheme();
+    const fontScale = usePreferencesStore((state) => state.fontScale);
     const styles = useMemo(() => createStyles(colors), [colors]);
 
     const columnWidths = useMemo(

@@ -274,7 +274,6 @@ const ArticleBlockItem = memo(
                 return (
                     <InfoboxView
                         block={block}
-                        fontScale={fontScale}
                         onLinkPress={onLinkPress}
                         onImagePress={onImagePress}
                         articleTitle={articleTitle}
@@ -340,7 +339,6 @@ const ArticleBlockItem = memo(
                 return (
                     <GalleryView
                         block={block}
-                        fontScale={fontScale}
                         onImagePress={openImage}
                     />
                 );
@@ -349,7 +347,6 @@ const ArticleBlockItem = memo(
                 return (
                     <TableView
                         block={block}
-                        fontScale={fontScale}
                         onLinkPress={onLinkPress}
                         onImagePress={openImage}
                     />

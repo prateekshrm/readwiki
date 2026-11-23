@@ -62,10 +62,7 @@ const GalleryCard = memo(
     },
 );
 
-const GalleryView = ({
-    block,
-    onImagePress,
-}: GalleryViewProps) => {
+const GalleryView = ({ block, onImagePress }: GalleryViewProps) => {
     const { colors } = useTheme();
     const fontScale = usePreferencesStore((state) => state.fontScale);
     const styles = useMemo(() => createStyles(colors), [colors]);
@@ -118,7 +115,7 @@ const createStyles = (colors: ThemeColors) =>
             flexDirection: "column",
         },
         imageWrapper: {
-            borderRadius: 14,
+            borderRadius: 20,
             overflow: "hidden",
             backgroundColor: colors.backgroundMuted,
         },

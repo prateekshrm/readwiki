@@ -110,23 +110,44 @@ const InfoboxImagesBlock = memo(
                         {grid.map((row, rowIdx) => (
                             <View key={rowIdx} style={styles.gridRow}>
                                 {row.map((img, colIdx) => {
-                                    const flex = img.width && img.height ? img.width / img.height : 1;
+                                    const flex =
+                                        img.width && img.height
+                                            ? img.width / img.height
+                                            : 1;
                                     const aspectRatio =
                                         img.width && img.height
-                                            ? Math.max(0.4, Math.min(2.5, img.width / img.height))
+                                            ? Math.max(
+                                                  0.4,
+                                                  Math.min(
+                                                      2.5,
+                                                      img.width / img.height,
+                                                  ),
+                                              )
                                             : 4 / 3;
 
                                     return (
-                                        <View key={colIdx} style={[styles.gridCell, { flex }]}>
+                                        <View
+                                            key={colIdx}
+                                            style={[styles.gridCell, { flex }]}
+                                        >
                                             <Pressable
-                                                onPress={() => onImagePress?.(img.src)}
+                                                onPress={() =>
+                                                    onImagePress?.(img.src)
+                                                }
                                                 accessibilityRole="imagebutton"
-                                                accessibilityLabel={img.alt || img.caption || "Image"}
+                                                accessibilityLabel={
+                                                    img.alt ||
+                                                    img.caption ||
+                                                    "Image"
+                                                }
                                                 style={styles.gridPressable}
                                             >
                                                 <Image
                                                     source={img.src}
-                                                    style={[styles.gridImage, { aspectRatio }]}
+                                                    style={[
+                                                        styles.gridImage,
+                                                        { aspectRatio },
+                                                    ]}
                                                     contentFit="cover"
                                                     transition={150}
                                                     cachePolicy="memory-disk"
@@ -574,14 +595,14 @@ const InfoboxView = ({
                                         );
                                     }
 
-                                    const hasLargeImages =
-                                        item.columns.some((col) =>
+                                    const hasLargeImages = item.columns.some(
+                                        (col) =>
                                             col.images?.some(
                                                 (img) =>
                                                     (img.width ?? 0) > 40 ||
                                                     (img.height ?? 0) > 40,
                                             ),
-                                        );
+                                    );
 
                                     if (hasLargeImages) {
                                         return (
@@ -844,7 +865,7 @@ const InfoboxView = ({
                                     );
                                 }
 
-                                 const prevItem = block.items[index - 1];
+                                const prevItem = block.items[index - 1];
                                 const isFollowUpRow =
                                     prevItem &&
                                     (prevItem.type === "row" ||
@@ -870,51 +891,74 @@ const InfoboxView = ({
                                         </Text>
 
                                         <View style={styles.rowValueContainer}>
-                                            <View style={styles.rowValueContent}>
-                                                {rowImages?.map((img, imgIdx) => {
-                                                    const rawW = img.width || 22;
-                                                    const rawH = img.height || 16;
-                                                    const scale = Math.min(fontScale, 1.25);
-                                                    const w = Math.round(rawW * scale);
-                                                    const h = Math.round(rawH * scale);
-
-                                                    const imgEl = (
-                                                        <Image
-                                                            key={imgIdx}
-                                                            source={img.src}
-                                                            style={{
-                                                                width: w,
-                                                                height: h,
-                                                                marginRight: 6,
-                                                                borderRadius: 2,
-                                                            }}
-                                                            contentFit="contain"
-                                                            cachePolicy="memory-disk"
-                                                        />
-                                                    );
-
-                                                    if (img.link) {
-                                                        return (
-                                                            <Pressable
-                                                                key={imgIdx}
-                                                                onPress={() => onLinkPress?.(img.link!)}
-                                                                hitSlop={4}
-                                                            >
-                                                                {imgEl}
-                                                            </Pressable>
+                                            <View
+                                                style={styles.rowValueContent}
+                                            >
+                                                {rowImages?.map(
+                                                    (img, imgIdx) => {
+                                                        const rawW =
+                                                            img.width || 22;
+                                                        const rawH =
+                                                            img.height || 16;
+                                                        const scale = Math.min(
+                                                            fontScale,
+                                                            1.25,
                                                         );
-                                                    }
-                                                    return imgEl;
-                                                })}
+                                                        const w = Math.round(
+                                                            rawW * scale,
+                                                        );
+                                                        const h = Math.round(
+                                                            rawH * scale,
+                                                        );
+
+                                                        const imgEl = (
+                                                            <Image
+                                                                key={imgIdx}
+                                                                source={img.src}
+                                                                style={{
+                                                                    width: w,
+                                                                    height: h,
+                                                                    marginRight: 6,
+                                                                    borderRadius: 2,
+                                                                }}
+                                                                contentFit="contain"
+                                                                cachePolicy="memory-disk"
+                                                            />
+                                                        );
+
+                                                        if (img.link) {
+                                                            return (
+                                                                <Pressable
+                                                                    key={imgIdx}
+                                                                    onPress={() =>
+                                                                        onLinkPress?.(
+                                                                            img.link!,
+                                                                        )
+                                                                    }
+                                                                    hitSlop={4}
+                                                                >
+                                                                    {imgEl}
+                                                                </Pressable>
+                                                            );
+                                                        }
+                                                        return imgEl;
+                                                    },
+                                                )}
                                                 {item.values.length > 0 && (
                                                     <RichText
                                                         spans={item.values}
-                                                        onLinkPress={onLinkPress}
+                                                        onLinkPress={
+                                                            onLinkPress
+                                                        }
                                                         style={[
                                                             styles.rowValueText,
                                                             {
-                                                                fontSize: 14 * fontScale,
-                                                                lineHeight: 20 * fontScale,
+                                                                fontSize:
+                                                                    14 *
+                                                                    fontScale,
+                                                                lineHeight:
+                                                                    20 *
+                                                                    fontScale,
                                                             },
                                                         ]}
                                                     />
@@ -1066,7 +1110,7 @@ const createStyles = (colors: ThemeColors) =>
         },
         imageContainer: {
             width: "100%",
-            borderRadius: 16,
+            borderRadius: 20,
             overflow: "hidden",
             backgroundColor: colors.surfaceMuted,
             alignItems: "center",

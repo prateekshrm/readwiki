@@ -10,14 +10,11 @@ import { ThemeColors } from "@/constants/Colors";
 import { fraunces } from "@/constants/Typography";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { useTheme } from "@/hooks/useTheme";
-import { addToHistory } from "@/stores/articleHistory.store";
 import { parseArticle, type Block } from "@/services/articleParser";
-import { usePreferencesStore } from "@/stores/preferences.store";
-import {
-    toggleSavedArticle,
-    useIsSaved,
-} from "@/stores/savedArticles.store";
 import { getFullArticle } from "@/services/wikipedia";
+import { addToHistory } from "@/stores/articleHistory.store";
+import { usePreferencesStore } from "@/stores/preferences.store";
+import { toggleSavedArticle, useIsSaved } from "@/stores/savedArticles.store";
 import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
@@ -336,12 +333,7 @@ const ArticleBlockItem = memo(
             }
 
             case "gallery":
-                return (
-                    <GalleryView
-                        block={block}
-                        onImagePress={openImage}
-                    />
-                );
+                return <GalleryView block={block} onImagePress={openImage} />;
 
             case "table":
                 return (
@@ -870,7 +862,7 @@ const createStyles = (colors: ThemeColors) =>
         },
 
         imageWrapper: {
-            borderRadius: 14,
+            borderRadius: 20,
             overflow: "hidden",
             backgroundColor: colors.backgroundMuted,
         },

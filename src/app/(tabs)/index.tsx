@@ -637,7 +637,7 @@ const createStyles = (colors: ThemeColors) =>
         },
 
         imageCard: {
-            borderRadius: 16,
+            borderRadius: 20,
             overflow: "hidden",
             backgroundColor: colors.surface,
             borderWidth: 1,

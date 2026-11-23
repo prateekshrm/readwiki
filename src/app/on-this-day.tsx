@@ -1,5 +1,5 @@
+import CardSkeleton from "@/components/CardSkeleton";
 import { useScreenScroll } from "@/components/HeaderScroll";
-import Loader from "@/components/Loader";
 import NoInternetView from "@/components/NoInternetView";
 import OnThisDayEvent from "@/components/OnThisDayEvent";
 import { ThemeColors } from "@/constants/Colors";
@@ -13,19 +13,12 @@ import Animated from "react-native-reanimated";
 import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const OnThisDay = () => {
-    const insets = useSafeAreaInsets();
+export const TodaysDate = () => {
     const { colors } = useTheme();
     const styles = useMemo(() => createStyles(colors), [colors]);
 
-    const [loading, setLoading] = useState(true);
-    const [onThisDayArticles, setOnThisDayArticles] = useState<any[]>([]);
-    const onScroll = useScreenScroll();
-
-    const isConnected = useNetworkStatus();
-    const prevConnectedRef = useRef<boolean | null>(null);
-
     const date = new Date();
+
     const formattedDate = date
         .toLocaleDateString("en-GB", {
             day: "numeric",
@@ -44,6 +37,31 @@ const OnThisDay = () => {
 
             return `${n}${suffix}`;
         });
+
+    return (
+        <View style={styles.otdSectionDate}>
+            <RemixIcon
+                name="calendar-event-line"
+                size={14}
+                color={colors.textSecondary}
+                fallback={null}
+            />
+            <Text style={styles.otdSectionDateText}>{formattedDate}</Text>
+        </View>
+    );
+};
+
+const OnThisDay = () => {
+    const insets = useSafeAreaInsets();
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
+
+    const [loading, setLoading] = useState(true);
+    const [onThisDayArticles, setOnThisDayArticles] = useState<any[]>([]);
+    const onScroll = useScreenScroll();
+
+    const isConnected = useNetworkStatus();
+    const prevConnectedRef = useRef<boolean | null>(null);
 
     const loadData = useCallback(async () => {
         try {
@@ -71,8 +89,16 @@ const OnThisDay = () => {
 
     if (loading) {
         return (
-            <View style={styles.loaderContainer}>
-                <Loader />
+            <View
+                style={{
+                    paddingTop: 100,
+                    paddingHorizontal: 16,
+                    paddingBottom: 12,
+                    gap: 24,
+                }}
+            >
+                <TodaysDate />
+                <CardSkeleton isOtd={true} count={2} />
             </View>
         );
     }
@@ -118,19 +144,7 @@ const OnThisDay = () => {
                 ]}
                 onScroll={onScroll}
                 scrollEventThrottle={16}
-                ListHeaderComponent={
-                    <View style={styles.otdSectionDate}>
-                        <RemixIcon
-                            name="calendar-event-line"
-                            size={14}
-                            color={colors.textSecondary}
-                            fallback={null}
-                        />
-                        <Text style={styles.otdSectionDateText}>
-                            {formattedDate}
-                        </Text>
-                    </View>
-                }
+                ListHeaderComponent={<TodaysDate />}
                 ListHeaderComponentStyle={{
                     paddingHorizontal: 16,
                     marginBottom: 12,

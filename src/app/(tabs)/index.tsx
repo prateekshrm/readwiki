@@ -27,6 +27,7 @@ import {
 } from "react-native";
 import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { TodaysDate } from "../on-this-day";
 
 const Home = () => {
     const { colors } = useTheme();
@@ -41,26 +42,6 @@ const Home = () => {
 
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-
-    const date = new Date();
-    const formattedDate = date
-        .toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "long",
-        })
-        .replace(/^(\d+)/, (day) => {
-            const n = Number(day);
-            const suffix =
-                n % 10 === 1 && n !== 11
-                    ? "st"
-                    : n % 10 === 2 && n !== 12
-                      ? "nd"
-                      : n % 10 === 3 && n !== 13
-                        ? "rd"
-                        : "th";
-
-            return `${n}${suffix}`;
-        });
 
     const isConnected = useNetworkStatus();
     const prevConnectedRef = useRef<boolean | null>(null);
@@ -460,17 +441,7 @@ const Home = () => {
                             <Text style={[fraunces, styles.sectionTitle]}>
                                 On This Day
                             </Text>
-                            <View style={styles.otdSectionDate}>
-                                <RemixIcon
-                                    name="calendar-event-line"
-                                    size={14}
-                                    color={colors.textSecondary}
-                                    fallback={null}
-                                />
-                                <Text style={styles.otdSectionDateText}>
-                                    {formattedDate}
-                                </Text>
-                            </View>
+                            <TodaysDate />
                         </View>
                         <View style={styles.sectionContent}>
                             {onThisDayArticles.map(

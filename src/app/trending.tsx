@@ -1,6 +1,6 @@
 import ArticleCard from "@/components/ArticleCard";
+import CardSkeleton from "@/components/CardSkeleton";
 import { useScreenScroll } from "@/components/HeaderScroll";
-import Loader from "@/components/Loader";
 import NoInternetView from "@/components/NoInternetView";
 import { ThemeColors } from "@/constants/Colors";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
@@ -50,8 +50,12 @@ const Trending = () => {
 
     if (loading) {
         return (
-            <View style={styles.loaderContainer}>
-                <Loader />
+            <View
+                style={{
+                    paddingTop: 100,
+                }}
+            >
+                <CardSkeleton count={3} />
             </View>
         );
     }
@@ -146,12 +150,6 @@ const createStyles = (colors: ThemeColors) =>
     StyleSheet.create({
         container: {
             flex: 1,
-            backgroundColor: colors.background,
-        },
-        loaderContainer: {
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
             backgroundColor: colors.background,
         },
         listContent: {

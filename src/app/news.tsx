@@ -1,5 +1,5 @@
+import CardSkeleton from "@/components/CardSkeleton";
 import { useScreenScroll } from "@/components/HeaderScroll";
-import Loader from "@/components/Loader";
 import NewsCard from "@/components/NewsCard";
 import NoInternetView from "@/components/NoInternetView";
 import { ThemeColors } from "@/constants/Colors";
@@ -51,8 +51,12 @@ const News = () => {
 
     if (loading) {
         return (
-            <View style={styles.loaderContainer}>
-                <Loader />
+            <View
+                style={{
+                    paddingTop: 100,
+                }}
+            >
+                <CardSkeleton isNews={true} count={3} />
             </View>
         );
     }

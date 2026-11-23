@@ -2,7 +2,7 @@ import RichText from "@/components/RichText";
 import { ThemeColors } from "@/constants/Colors";
 import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
-import type { InfoboxBlock } from "@/services/articleParser";
+import type { InfoboxBlock, InfoboxImage } from "@/services/articleParser";
 import { Image } from "expo-image";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -28,6 +28,201 @@ type InfoboxViewProps = {
     onImagePress?: (src: string) => void;
     articleTitle?: string;
 };
+
+const InfoboxImageCard = memo(
+    ({
+        image,
+        fontScale = 1,
+        onImagePress,
+        styles,
+    }: {
+        image: InfoboxImage;
+        fontScale?: number;
+        onImagePress?: (src: string) => void;
+        styles: ReturnType<typeof createStyles>;
+    }) => {
+        const aspectRatio =
+            image.width && image.height
+                ? Math.max(0.5, Math.min(2.5, image.width / image.height))
+                : 4 / 3;
+
+        return (
+            <View style={styles.imageCard}>
+                <Pressable
+                    onPress={() => onImagePress?.(image.src)}
+                    accessibilityRole="imagebutton"
+                    accessibilityLabel={
+                        image.alt || image.caption || "Infobox image"
+                    }
+                >
+                    <View style={styles.imageContainer}>
+                        <Image
+                            source={image.src}
+                            style={[styles.image, { aspectRatio }]}
+                            contentFit="contain"
+                            transition={150}
+                            cachePolicy="memory-disk"
+                        />
+                    </View>
+                </Pressable>
+                {!!image.caption && (
+                    <Text
+                        style={[
+                            styles.imageCaption,
+                            {
+                                fontSize: 12 * fontScale,
+                                lineHeight: 16 * fontScale,
+                            },
+                        ]}
+                    >
+                        {image.caption}
+                    </Text>
+                )}
+            </View>
+        );
+    },
+);
+InfoboxImageCard.displayName = "InfoboxImageCard";
+
+const InfoboxImagesBlock = memo(
+    ({
+        images,
+        grid,
+        caption,
+        fontScale = 1,
+        onImagePress,
+        styles,
+    }: {
+        images: InfoboxImage[];
+        grid?: InfoboxImage[][];
+        caption?: string;
+        fontScale?: number;
+        onImagePress?: (src: string) => void;
+        styles: ReturnType<typeof createStyles>;
+    }) => {
+        if (!images || images.length === 0) return null;
+
+        // If structured as a grid (e.g. WWII collage or 2x3 tabular montage)
+        if (grid && grid.length > 0) {
+            return (
+                <View style={styles.gridSection}>
+                    <View style={styles.gridContainer}>
+                        {grid.map((row, rowIdx) => (
+                            <View key={rowIdx} style={styles.gridRow}>
+                                {row.map((img, colIdx) => {
+                                    const flex = img.width && img.height ? img.width / img.height : 1;
+                                    const aspectRatio =
+                                        img.width && img.height
+                                            ? Math.max(0.4, Math.min(2.5, img.width / img.height))
+                                            : 4 / 3;
+
+                                    return (
+                                        <View key={colIdx} style={[styles.gridCell, { flex }]}>
+                                            <Pressable
+                                                onPress={() => onImagePress?.(img.src)}
+                                                accessibilityRole="imagebutton"
+                                                accessibilityLabel={img.alt || img.caption || "Image"}
+                                                style={styles.gridPressable}
+                                            >
+                                                <Image
+                                                    source={img.src}
+                                                    style={[styles.gridImage, { aspectRatio }]}
+                                                    contentFit="cover"
+                                                    transition={150}
+                                                    cachePolicy="memory-disk"
+                                                />
+                                            </Pressable>
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                        ))}
+                    </View>
+                    {!!caption && (
+                        <Text
+                            style={[
+                                styles.imageCaption,
+                                {
+                                    fontSize: 12 * fontScale,
+                                    lineHeight: 16 * fontScale,
+                                },
+                            ]}
+                        >
+                            {caption}
+                        </Text>
+                    )}
+                </View>
+            );
+        }
+
+        // If exactly 2 images without lengthy captions, render side-by-side
+        const canPair =
+            images.length === 2 &&
+            images.every(
+                (img) => !img.caption || img.caption.trim().length < 35,
+            );
+
+        if (canPair) {
+            return (
+                <View style={styles.gridSection}>
+                    <View style={styles.pairedImagesRow}>
+                        {images.map((img, idx) => (
+                            <View key={idx} style={styles.pairedImageCol}>
+                                <InfoboxImageCard
+                                    image={img}
+                                    fontScale={fontScale}
+                                    onImagePress={onImagePress}
+                                    styles={styles}
+                                />
+                            </View>
+                        ))}
+                    </View>
+                    {!!caption && (
+                        <Text
+                            style={[
+                                styles.imageCaption,
+                                {
+                                    fontSize: 12 * fontScale,
+                                    lineHeight: 16 * fontScale,
+                                },
+                            ]}
+                        >
+                            {caption}
+                        </Text>
+                    )}
+                </View>
+            );
+        }
+
+        return (
+            <View style={styles.stackedImagesContainer}>
+                {images.map((img, idx) => (
+                    <InfoboxImageCard
+                        key={idx}
+                        image={img}
+                        fontScale={fontScale}
+                        onImagePress={onImagePress}
+                        styles={styles}
+                    />
+                ))}
+                {!!caption && (
+                    <Text
+                        style={[
+                            styles.imageCaption,
+                            {
+                                fontSize: 12 * fontScale,
+                                lineHeight: 16 * fontScale,
+                            },
+                        ]}
+                    >
+                        {caption}
+                    </Text>
+                )}
+            </View>
+        );
+    },
+);
+InfoboxImagesBlock.displayName = "InfoboxImagesBlock";
 
 const getSubtitle = (items: InfoboxBlock["items"]): string | null => {
     // 1. Try to find explicit section headers (type === "header")
@@ -217,8 +412,48 @@ const InfoboxView = ({
                             </View>
                         )}
 
+                        {!!block.images && block.images.length > 0 ? (
+                            <View style={styles.imageSection}>
+                                <InfoboxImagesBlock
+                                    images={block.images}
+                                    grid={block.grid}
+                                    caption={block.caption}
+                                    fontScale={fontScale}
+                                    onImagePress={onImagePress}
+                                    styles={styles}
+                                />
+                            </View>
+                        ) : !!block.image?.src ? (
+                            <View style={styles.imageSection}>
+                                <InfoboxImageCard
+                                    image={block.image}
+                                    fontScale={fontScale}
+                                    onImagePress={onImagePress}
+                                    styles={styles}
+                                />
+                            </View>
+                        ) : null}
+
                         <View style={styles.itemsList}>
                             {block.items.map((item, index) => {
+                                if (item.type === "images") {
+                                    return (
+                                        <View
+                                            key={`images-${index}`}
+                                            style={styles.inlineImagesSection}
+                                        >
+                                            <InfoboxImagesBlock
+                                                images={item.images}
+                                                grid={item.grid}
+                                                caption={item.caption}
+                                                fontScale={fontScale}
+                                                onImagePress={onImagePress}
+                                                styles={styles}
+                                            />
+                                        </View>
+                                    );
+                                }
+
                                 if (item.type === "subheader") {
                                     return (
                                         <View
@@ -609,11 +844,13 @@ const InfoboxView = ({
                                     );
                                 }
 
-                                const prevItem = block.items[index - 1];
+                                 const prevItem = block.items[index - 1];
                                 const isFollowUpRow =
                                     prevItem &&
                                     (prevItem.type === "row" ||
                                         prevItem.type === "comparison");
+
+                                const rowImages = item.images;
 
                                 return (
                                     <View
@@ -633,19 +870,56 @@ const InfoboxView = ({
                                         </Text>
 
                                         <View style={styles.rowValueContainer}>
-                                            <RichText
-                                                spans={item.values}
-                                                onLinkPress={onLinkPress}
-                                                style={[
-                                                    styles.rowValueText,
-                                                    {
-                                                        fontSize:
-                                                            14 * fontScale,
-                                                        lineHeight:
-                                                            20 * fontScale,
-                                                    },
-                                                ]}
-                                            />
+                                            <View style={styles.rowValueContent}>
+                                                {rowImages?.map((img, imgIdx) => {
+                                                    const rawW = img.width || 22;
+                                                    const rawH = img.height || 16;
+                                                    const scale = Math.min(fontScale, 1.25);
+                                                    const w = Math.round(rawW * scale);
+                                                    const h = Math.round(rawH * scale);
+
+                                                    const imgEl = (
+                                                        <Image
+                                                            key={imgIdx}
+                                                            source={img.src}
+                                                            style={{
+                                                                width: w,
+                                                                height: h,
+                                                                marginRight: 6,
+                                                                borderRadius: 2,
+                                                            }}
+                                                            contentFit="contain"
+                                                            cachePolicy="memory-disk"
+                                                        />
+                                                    );
+
+                                                    if (img.link) {
+                                                        return (
+                                                            <Pressable
+                                                                key={imgIdx}
+                                                                onPress={() => onLinkPress?.(img.link!)}
+                                                                hitSlop={4}
+                                                            >
+                                                                {imgEl}
+                                                            </Pressable>
+                                                        );
+                                                    }
+                                                    return imgEl;
+                                                })}
+                                                {item.values.length > 0 && (
+                                                    <RichText
+                                                        spans={item.values}
+                                                        onLinkPress={onLinkPress}
+                                                        style={[
+                                                            styles.rowValueText,
+                                                            {
+                                                                fontSize: 14 * fontScale,
+                                                                lineHeight: 20 * fontScale,
+                                                            },
+                                                        ]}
+                                                    />
+                                                )}
+                                            </View>
                                         </View>
                                     </View>
                                 );
@@ -737,6 +1011,77 @@ const createStyles = (colors: ThemeColors) =>
         infoboxTitle: {
             color: colors.text,
             textAlign: "center",
+        },
+        imageSection: {
+            alignItems: "center",
+            paddingHorizontal: 16,
+            marginBottom: 12,
+        },
+        inlineImagesSection: {
+            alignItems: "center",
+            paddingHorizontal: 4,
+            marginVertical: 10,
+        },
+        gridSection: {
+            width: "100%",
+            alignItems: "center",
+        },
+        gridContainer: {
+            width: "100%",
+            borderRadius: 16,
+            overflow: "hidden",
+            backgroundColor: colors.surfaceMuted,
+            gap: 2,
+        },
+        gridRow: {
+            flexDirection: "row",
+            width: "100%",
+            gap: 2,
+        },
+        gridCell: {
+            overflow: "hidden",
+            backgroundColor: colors.surfaceMuted,
+        },
+        gridPressable: {
+            width: "100%",
+        },
+        gridImage: {
+            width: "100%",
+        },
+        stackedImagesContainer: {
+            width: "100%",
+            gap: 12,
+        },
+        pairedImagesRow: {
+            flexDirection: "row",
+            width: "100%",
+            gap: 10,
+        },
+        pairedImageCol: {
+            flex: 1,
+        },
+        imageCard: {
+            width: "100%",
+            alignItems: "center",
+        },
+        imageContainer: {
+            width: "100%",
+            borderRadius: 16,
+            overflow: "hidden",
+            backgroundColor: colors.surfaceMuted,
+            alignItems: "center",
+            justifyContent: "center",
+        },
+        image: {
+            width: "100%",
+            maxHeight: 260,
+        },
+        imageCaption: {
+            fontFamily: "DMSans-Regular",
+            color: colors.textSecondary,
+            textAlign: "center",
+            marginTop: 6,
+            paddingHorizontal: 8,
         },
         subheaderContainer: {
             alignItems: "center",
@@ -873,6 +1218,11 @@ const createStyles = (colors: ThemeColors) =>
         },
         rowValueContainer: {
             flex: 1,
+        },
+        rowValueContent: {
+            flexDirection: "row",
+            alignItems: "center",
+            flexWrap: "wrap",
         },
         rowValueText: {
             fontFamily: "DMSans-Regular",

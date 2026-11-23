@@ -60,6 +60,14 @@ export type InfoboxComparativeColumn = {
     align?: "left" | "center" | "right";
 };
 
+export type InfoboxImage = {
+    src: string;
+    caption?: string;
+    width?: number;
+    height?: number;
+    alt?: string;
+};
+
 export type InfoboxItem =
     | {
           type: "header";
@@ -73,6 +81,13 @@ export type InfoboxItem =
           type: "row";
           label: string;
           values: Span[];
+          images?: TableCellImage[];
+      }
+    | {
+          type: "images";
+          images: InfoboxImage[];
+          grid?: InfoboxImage[][];
+          caption?: string;
       }
     | {
           type: "comparison";
@@ -84,10 +99,10 @@ export type InfoboxItem =
 export type InfoboxBlock = {
     type: "infobox";
     title?: string;
-    image?: {
-        src: string;
-        caption?: string;
-    };
+    image?: InfoboxImage;
+    images?: InfoboxImage[];
+    grid?: InfoboxImage[][];
+    caption?: string;
     items: InfoboxItem[];
 };
 
@@ -389,6 +404,19 @@ export const getSpans = (node: any): Span[] => {
 // Block Parsers
 // ---------------------------------------------------------------------------
 
+// Checks if an image source or element represents a dynamic/static map restricted to Wikipedia origins.
+export const isRestrictedMapImage = (src?: string, node?: any): boolean => {
+    if (src) {
+        if (src.includes("maps.wikimedia.org")) return true;
+        if (/osm-intl|mapframe|kartographer/i.test(src)) return true;
+    }
+    if (node && node.type === "tag") {
+        const cls = `${node.attribs?.class || ""} ${node.parent?.attribs?.class || ""}`;
+        if (/kartographer|locmap/i.test(cls)) return true;
+    }
+    return false;
+};
+
 // Pulls an image block out of a <figure> or <div class="thumb"> element.
 const parseFigure = (node: any): ImageBlock | null => {
     let img: any = null;
@@ -411,6 +439,8 @@ const parseFigure = (node: any): ImageBlock | null => {
     if (src.startsWith("//")) src = `https:${src}`;
 
     if (
+        isRestrictedMapImage(src, img) ||
+        isRestrictedMapImage(src, node) ||
         node?.attribs?.class?.includes("chessboard") ||
         src.includes("Chessboard480") ||
         src.includes("Chess_")
@@ -659,11 +689,404 @@ const isInfoboxNode = (node: any): boolean => {
     return /\binfobox\b/i.test(cls) || /\bib-[a-z]+\b/i.test(cls);
 };
 
+// Helper to extract large/medium illustration images and maps from an infobox row
+const parseInfoboxRowImages = (
+    tdNode: any,
+): { images: InfoboxImage[]; grid?: InfoboxImage[][]; caption?: string } => {
+    const results: InfoboxImage[] = [];
+
+    // 1. Multi-image inner or gallery in infobox (e.g. London / WWII montage)
+    let multi: any = null;
+    const findMulti = (n: any) => {
+        if (multi || !n) return;
+        if (
+            n.type === "tag" &&
+            (n.attribs?.class?.includes("multiimageinner") ||
+                (n.attribs?.class?.includes("thumb") &&
+                    n.attribs?.class?.includes("tmulti")))
+        ) {
+            multi = n;
+            return;
+        }
+        (n.children || []).forEach(findMulti);
+    };
+    findMulti(tdNode);
+
+    if (multi) {
+        // Collect caption from below multiimageinner if any
+        let sharedCaption = "";
+        const findSharedCaption = (n: any) => {
+            if (sharedCaption || !n) return;
+            if (
+                n.type === "tag" &&
+                (n.attribs?.class?.includes("infobox-caption") ||
+                    n.attribs?.class?.includes("thumbcaption") ||
+                    n.name === "figcaption")
+            ) {
+                sharedCaption = getText(n).trim();
+                return;
+            }
+            (n.children || []).forEach(findSharedCaption);
+        };
+        findSharedCaption(tdNode);
+
+        // Also check if there is an outer caption or description list (like in WWII)
+        if (!sharedCaption) {
+            const captionParts: string[] = [];
+            for (const c of tdNode.children || []) {
+                if (
+                    c === multi ||
+                    c.attribs?.class?.includes("thumb") ||
+                    c.name === "style" ||
+                    c.name === "link"
+                ) {
+                    continue;
+                }
+                const t = getText(c).trim();
+                if (t) captionParts.push(t);
+            }
+            if (captionParts.length > 0) {
+                sharedCaption = captionParts.join(" ").replace(/\s+/g, " ").trim();
+            }
+        }
+
+        // Check if structured by trow (table rows)
+        const trows: any[] = [];
+        const findTrows = (n: any) => {
+            if (!n) return;
+            if (n.type === "tag" && n.attribs?.class?.includes("trow")) {
+                trows.push(n);
+                return;
+            }
+            (n.children || []).forEach(findTrows);
+        };
+        findTrows(multi);
+
+        if (trows.length > 0) {
+            const grid: InfoboxImage[][] = [];
+            for (const trow of trows) {
+                const rowImgs: InfoboxImage[] = [];
+                const findRowImgs = (n: any) => {
+                    if (!n) return;
+                    if (n.name === "img") {
+                        let src = n.attribs?.src;
+                        if (src && src.startsWith("//")) src = `https:${src}`;
+                        if (isRestrictedMapImage(src, n)) return;
+
+                        const rawW = parseInt(n.attribs?.width, 10);
+                        const rawH = parseInt(n.attribs?.height, 10);
+                        const cls = n.attribs?.class || "";
+                        if (
+                            !cls.includes("mwe-math") &&
+                            (isNaN(rawW) || rawW > 30) &&
+                            (isNaN(rawH) || rawH > 30)
+                        ) {
+                            rowImgs.push({
+                                src,
+                                width: isNaN(rawW) ? undefined : rawW,
+                                height: isNaN(rawH) ? undefined : rawH,
+                                alt: n.attribs?.alt || undefined,
+                            });
+                        }
+                        return;
+                    }
+                    (n.children || []).forEach(findRowImgs);
+                };
+                findRowImgs(trow);
+                if (rowImgs.length > 0) {
+                    grid.push(rowImgs);
+                    results.push(...rowImgs);
+                }
+            }
+            if (results.length > 0) {
+                return {
+                    images: results,
+                    grid: grid.length > 0 ? grid : undefined,
+                    caption: sharedCaption || undefined,
+                };
+            }
+        } else {
+            const findImgs = (n: any) => {
+                if (!n) return;
+                if (n.name === "img") {
+                    let src = n.attribs?.src;
+                    if (src && src.startsWith("//")) src = `https:${src}`;
+                    if (isRestrictedMapImage(src, n)) return;
+
+                    const rawW = parseInt(n.attribs?.width, 10);
+                    const rawH = parseInt(n.attribs?.height, 10);
+                    const cls = n.attribs?.class || "";
+                    if (
+                        !cls.includes("mwe-math") &&
+                        (isNaN(rawW) || rawW > 30) &&
+                        (isNaN(rawH) || rawH > 30)
+                    ) {
+                        results.push({
+                            src,
+                            width: isNaN(rawW) ? undefined : rawW,
+                            height: isNaN(rawH) ? undefined : rawH,
+                            alt: n.attribs?.alt || undefined,
+                        });
+                    }
+                    return;
+                }
+                (n.children || []).forEach(findImgs);
+            };
+            findImgs(multi);
+            if (results.length > 0) {
+                return {
+                    images: results,
+                    caption: sharedCaption || undefined,
+                };
+            }
+        }
+    }
+
+    // 2. Switcher container (e.g. Obverse / Reverse seals, or alternative maps)
+    let switcher: any = null;
+    const findSwitcher = (n: any) => {
+        if (switcher || !n) return;
+        if (
+            n.type === "tag" &&
+            n.attribs?.class?.includes("switcher-container")
+        ) {
+            switcher = n;
+            return;
+        }
+        (n.children || []).forEach(findSwitcher);
+    };
+    findSwitcher(tdNode);
+
+    if (switcher) {
+        for (const child of switcher.children || []) {
+            if (child.type !== "tag") continue;
+            let img: any = null;
+            let label = "";
+            const scan = (n: any) => {
+                if (n.name === "img" && !img) {
+                    let src = n.attribs?.src;
+                    if (src && src.startsWith("//")) src = `https:${src}`;
+                    if (isRestrictedMapImage(src, n)) return;
+
+                    const rawW = parseInt(n.attribs?.width, 10);
+                    const rawH = parseInt(n.attribs?.height, 10);
+                    const cls = n.attribs?.class || "";
+                    if (
+                        !cls.includes("mwe-math") &&
+                        (isNaN(rawW) || rawW > 30) &&
+                        (isNaN(rawH) || rawH > 30)
+                    ) {
+                        img = {
+                            src,
+                            width: isNaN(rawW) ? undefined : rawW,
+                            height: isNaN(rawH) ? undefined : rawH,
+                            alt: n.attribs?.alt || undefined,
+                        };
+                    }
+                }
+                if (n.attribs?.class?.includes("switcher-label")) {
+                    label = getText(n).trim();
+                }
+                (n.children || []).forEach(scan);
+            };
+            scan(child);
+            if (img) {
+                results.push({ ...img, caption: label || undefined });
+            }
+        }
+        if (results.length > 0) return { images: results };
+    }
+
+    // 3. No-resize container (e.g. Flag & Coat of arms side-by-side)
+    let noresize: any = null;
+    const findNoresize = (n: any) => {
+        if (noresize || !n) return;
+        if (n.type === "tag" && n.attribs?.class?.includes("noresize")) {
+            noresize = n;
+            return;
+        }
+        (n.children || []).forEach(findNoresize);
+    };
+    findNoresize(tdNode);
+
+    if (noresize) {
+        for (const div of noresize.children || []) {
+            if (div.type !== "tag") continue;
+            let img: any = null;
+            let label = "";
+            const scan = (n: any) => {
+                if (n.name === "img" && !img) {
+                    let src = n.attribs?.src;
+                    if (src && src.startsWith("//")) src = `https:${src}`;
+                    if (isRestrictedMapImage(src, n)) return;
+
+                    const rawW = parseInt(n.attribs?.width, 10);
+                    const rawH = parseInt(n.attribs?.height, 10);
+                    const cls = n.attribs?.class || "";
+                    if (
+                        !cls.includes("mwe-math") &&
+                        (isNaN(rawW) || rawW > 30) &&
+                        (isNaN(rawH) || rawH > 30)
+                    ) {
+                        img = {
+                            src,
+                            width: isNaN(rawW) ? undefined : rawW,
+                            height: isNaN(rawH) ? undefined : rawH,
+                            alt: n.attribs?.alt || undefined,
+                        };
+                    }
+                }
+                if (
+                    n.name === "a" &&
+                    !n.attribs?.class?.includes("mw-file-description")
+                ) {
+                    label = getText(n).trim();
+                }
+                (n.children || []).forEach(scan);
+            };
+            scan(div);
+            if (img) {
+                results.push({ ...img, caption: label || undefined });
+            }
+        }
+        if (results.length > 0) return { images: results };
+    }
+
+    // 4. Sequential or single image with caption (e.g. Apollo 11 insignia & crew)
+    let currentImg: InfoboxImage | null = null;
+    let captionParts: string[] = [];
+
+    const flush = () => {
+        if (currentImg) {
+            results.push({
+                ...currentImg,
+                caption:
+                    captionParts.join(" ").replace(/\s+/g, " ").trim() ||
+                    undefined,
+            });
+            currentImg = null;
+            captionParts = [];
+        }
+    };
+
+    const findImgInNode = (n: any): any => {
+        if (!n) return null;
+        if (n.type === "tag" && n.name === "img") return n;
+        for (const c of n.children || []) {
+            const found = findImgInNode(c);
+            if (found) return found;
+        }
+        return null;
+    };
+
+    for (const child of tdNode.children || []) {
+        if (
+            child.type === "tag" &&
+            (child.attribs?.class?.includes("noprint") ||
+                child.attribs?.class?.includes("navbox") ||
+                child.name === "style")
+        ) {
+            continue;
+        }
+
+        const img = findImgInNode(child);
+        if (img) {
+            flush();
+            let src = img.attribs?.src;
+            if (src && src.startsWith("//")) src = `https:${src}`;
+            if (isRestrictedMapImage(src, img)) continue;
+
+            const rawW = parseInt(img.attribs?.width, 10);
+            const rawH = parseInt(img.attribs?.height, 10);
+            const cls = img.attribs?.class || "";
+            if (
+                !cls.includes("mwe-math") &&
+                (isNaN(rawW) || rawW > 30) &&
+                (isNaN(rawH) || rawH > 20)
+            ) {
+                currentImg = {
+                    src,
+                    width: isNaN(rawW) ? undefined : rawW,
+                    height: isNaN(rawH) ? undefined : rawH,
+                    alt: img.attribs?.alt || undefined,
+                };
+            }
+        } else if (currentImg) {
+            const t = getText(child).trim();
+            if (t) captionParts.push(t);
+        }
+    }
+    flush();
+
+    // If sequential loop didn't catch anything, try a recursive image search
+    if (results.length === 0) {
+        let singleCaption = "";
+        const findSingleCaption = (n: any) => {
+            if (singleCaption || !n) return;
+            if (
+                n.type === "tag" &&
+                (n.attribs?.class?.includes("infobox-caption") ||
+                    n.attribs?.class?.includes("thumbcaption") ||
+                    n.name === "figcaption")
+            ) {
+                singleCaption = getText(n).trim();
+                return;
+            }
+            (n.children || []).forEach(findSingleCaption);
+        };
+        findSingleCaption(tdNode);
+
+        const fallbackImgs: InfoboxImage[] = [];
+        const walkImgs = (n: any) => {
+            if (!n) return;
+            if (n.type === "tag") {
+                if (n.attribs?.class?.includes("noprint")) return;
+                if (n.name === "img") {
+                    let src = n.attribs?.src;
+                    if (src && src.startsWith("//")) src = `https:${src}`;
+                    if (isRestrictedMapImage(src, n)) return;
+
+                    const rawW = parseInt(n.attribs?.width, 10);
+                    const rawH = parseInt(n.attribs?.height, 10);
+                    const cls = n.attribs?.class || "";
+                    if (
+                        !cls.includes("mwe-math") &&
+                        (isNaN(rawW) || rawW > 30) &&
+                        (isNaN(rawH) || rawH > 20)
+                    ) {
+                        fallbackImgs.push({
+                            src,
+                            width: isNaN(rawW) ? undefined : rawW,
+                            height: isNaN(rawH) ? undefined : rawH,
+                            alt: n.attribs?.alt || undefined,
+                        });
+                    }
+                    return;
+                }
+                (n.children || []).forEach(walkImgs);
+            }
+        };
+        walkImgs(tdNode);
+
+        if (fallbackImgs.length === 1 && singleCaption) {
+            fallbackImgs[0].caption = singleCaption;
+        }
+        return {
+            images: fallbackImgs,
+            caption: singleCaption || undefined,
+        };
+    }
+
+    return { images: results };
+};
+
 // Pulls an infobox block with structured facts out of an infobox table.
 const parseInfobox = (node: any): InfoboxBlock | null => {
     const items: InfoboxItem[] = [];
     let title = "";
-    let image: { src: string; caption?: string } | undefined;
+    const topImages: InfoboxImage[] = [];
+    let topGrid: InfoboxImage[][] | undefined;
+    let topCaption: string | undefined;
 
     // Check <caption> first
     if (Array.isArray(node.children)) {
@@ -706,25 +1129,19 @@ const parseInfobox = (node: any): InfoboxBlock | null => {
             (c: any) => c.name === "td" && !shouldSkip(c),
         );
 
-        let rowHasImg = false;
-        const findImg = (n: any) => {
-            if (!n || image) return;
-            if (n.type === "tag" && n.name === "img") {
-                rowHasImg = true;
-                let src = n.attribs?.src;
-                if (src) {
-                    if (src.startsWith("//")) src = `https:${src}`;
-                    image = { src };
-                }
-                return;
-            }
-            (n.children || []).forEach(findImg);
-        };
-
         const isAbove =
             tr.attribs?.class?.includes("infobox-above") ||
-            ths.some((th: any) => th.attribs?.class?.includes("infobox-above")) ||
-            tds.some((td: any) => td.attribs?.class?.includes("infobox-above"));
+            tr.attribs?.class?.includes("summary") ||
+            ths.some(
+                (th: any) =>
+                    th.attribs?.class?.includes("infobox-above") ||
+                    th.attribs?.class?.includes("summary"),
+            ) ||
+            tds.some(
+                (td: any) =>
+                    td.attribs?.class?.includes("infobox-above") ||
+                    td.attribs?.class?.includes("summary"),
+            );
         const isHeader =
             tr.attribs?.class?.includes("infobox-header") ||
             ths.some((th: any) => th.attribs?.class?.includes("infobox-header"));
@@ -744,7 +1161,6 @@ const parseInfobox = (node: any): InfoboxBlock | null => {
                     items.push({ type: "header", title: headerText });
                 }
             }
-            if (!image) findImg(ths[0]);
             continue;
         }
 
@@ -768,6 +1184,17 @@ const parseInfobox = (node: any): InfoboxBlock | null => {
             tds[0].attribs?.class?.includes("infobox-below")
         ) {
             const td = tds[0];
+            const parsedBelow = parseInfoboxRowImages(td);
+            if (parsedBelow.images.length > 0) {
+                items.push({
+                    type: "images",
+                    images: parsedBelow.images,
+                    grid: parsedBelow.grid,
+                    caption: parsedBelow.caption,
+                });
+                continue;
+            }
+
             let leftSpans: Span[] = [];
             let rightSpans: Span[] = [];
 
@@ -912,10 +1339,24 @@ const parseInfobox = (node: any): InfoboxBlock | null => {
             continue;
         }
 
-        // Single TD cell (image or subheader)
+        // Single TD cell (images, lead photo, maps, or subheader)
         if (tds.length > 0 && ths.length === 0) {
-            if (!image) findImg(tds[0]);
-            if (rowHasImg) continue;
+            const parsedRow = parseInfoboxRowImages(tds[0]);
+            if (parsedRow.images.length > 0) {
+                if (items.length === 0 && topImages.length === 0) {
+                    topImages.push(...parsedRow.images);
+                    if (parsedRow.grid) topGrid = parsedRow.grid;
+                    if (parsedRow.caption) topCaption = parsedRow.caption;
+                } else {
+                    items.push({
+                        type: "images",
+                        images: parsedRow.images,
+                        grid: parsedRow.grid,
+                        caption: parsedRow.caption,
+                    });
+                }
+                continue;
+            }
 
             const tdText = getText(tds[0]).trim();
             if (
@@ -961,11 +1402,14 @@ const parseInfobox = (node: any): InfoboxBlock | null => {
                 .join("")
                 .trim();
 
-            if (labelText && valueText) {
+            const { images: rowCellImages } = parseCellImages(tds[0]);
+
+            if (labelText && (valueText || rowCellImages.length > 0)) {
                 items.push({
                     type: "row",
                     label: labelText,
                     values: valueSpans,
+                    images: rowCellImages.length > 0 ? rowCellImages : undefined,
                 });
             } else if (!labelText && valueText && valueText.length < 50) {
                 items.push({ type: "header", title: valueText });
@@ -973,12 +1417,15 @@ const parseInfobox = (node: any): InfoboxBlock | null => {
         }
     }
 
-    if (items.length === 0) return null;
+    if (items.length === 0 && topImages.length === 0) return null;
 
     return {
         type: "infobox",
         title: title || undefined,
-        image,
+        image: topImages.length > 0 ? topImages[0] : undefined,
+        images: topImages.length > 0 ? topImages : undefined,
+        grid: topGrid,
+        caption: topCaption,
         items,
     };
 };
@@ -1052,9 +1499,10 @@ const parseCellImages = (
                     const alt = n.attribs?.alt || undefined;
                     const cls = n.attribs?.class || "";
 
-                    // Ignore math formula fallbacks and 1px spacers
+                    // Ignore math formula fallbacks, 1px spacers, and restricted maps
                     if (
                         !cls.includes("mwe-math") &&
+                        !isRestrictedMapImage(src, n) &&
                         (width === undefined || width > 1) &&
                         (height === undefined || height > 1)
                     ) {

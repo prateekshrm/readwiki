@@ -3,7 +3,10 @@ import Loader from "@/components/Loader";
 import NoInternetView from "@/components/NoInternetView";
 import { fraunces } from "@/constants/Typography";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
-import { toggleSavedArticle, useIsSaved } from "@/services/savedArticles";
+import {
+    toggleSavedArticle,
+    useIsSaved,
+} from "@/stores/savedArticles.store";
 import { getRandomArticles } from "@/services/wikipedia";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";

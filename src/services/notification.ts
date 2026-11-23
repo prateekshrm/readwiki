@@ -3,7 +3,7 @@ import * as Notifications from "expo-notifications";
 import { Href, router } from "expo-router";
 import { Platform } from "react-native";
 
-import { getPreferences, setPreference } from "./preferences";
+import { getPreferences, setPreference } from "@/stores/preferences.store";
 import { getTomorrowFeaturedArticleTitle } from "./wikipedia";
 
 const FEATURED_NOTIFICATION_DATE_KEY = "featuredNotificationDate";

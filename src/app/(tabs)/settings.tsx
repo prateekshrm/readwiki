@@ -3,7 +3,7 @@ import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { ThemeColors } from "@/constants/Colors";
 import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
-import { clearHistory, useHistory } from "@/services/articleHistory";
+import { clearHistory, useHistory } from "@/stores/articleHistory.store";
 import {
     getNotificationPermissionStatus,
     scheduleTomorrowFeaturedNotification,
@@ -12,9 +12,12 @@ import {
 import {
     FONT_SCALES,
     setPreference,
-    usePreferences,
-} from "@/services/preferences";
-import { clearSavedArticles, useSavedArticles } from "@/services/savedArticles";
+    usePreferencesStore,
+} from "@/stores/preferences.store";
+import {
+    clearSavedArticles,
+    useSavedArticles,
+} from "@/stores/savedArticles.store";
 import { useModalStore } from "@/stores/modal.store";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -68,7 +71,7 @@ const Settings = () => {
     const { showModal } = useModalStore();
 
     const { colors, colorScheme } = useTheme();
-    const preferences = usePreferences();
+    const preferences = usePreferencesStore();
     const savedArticles = useSavedArticles();
     const history = useHistory();
     const onScroll = useScreenScroll();

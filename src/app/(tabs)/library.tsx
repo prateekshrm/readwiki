@@ -8,7 +8,7 @@ import {
     formatTimeAgo,
     removeFromHistory,
     useHistory,
-} from "@/services/articleHistory";
+} from "@/stores/articleHistory.store";
 import { router } from "expo-router";
 import { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";

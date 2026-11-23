@@ -8,7 +8,7 @@ import {
     formatTimeAgo,
     removeFromHistory,
     useHistory,
-} from "@/services/articleHistory";
+} from "@/stores/articleHistory.store";
 import { useModalStore } from "@/stores/modal.store";
 import { router, useNavigation } from "expo-router";
 import { useEffect, useMemo } from "react";

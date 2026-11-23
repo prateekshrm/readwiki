@@ -7,7 +7,7 @@ import {
     clearSavedArticles,
     removeArticle,
     useSavedArticles,
-} from "@/services/savedArticles";
+} from "@/stores/savedArticles.store";
 import { useModalStore } from "@/stores/modal.store";
 import { router, useNavigation } from "expo-router";
 import { useEffect, useMemo } from "react";

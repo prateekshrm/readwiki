@@ -7,7 +7,10 @@ import {
     registerNotificationResponseListener,
     setRouterReady,
 } from "@/services/notification";
-import { usePreferences } from "@/services/preferences";
+import {
+    loadPreferences,
+    usePreferencesStore,
+} from "@/stores/preferences.store";
 import { BottomSheetProvider } from "@swmansion/react-native-bottom-sheet";
 import { useFonts } from "expo-font";
 import * as QuickActions from "expo-quick-actions";
@@ -30,7 +33,7 @@ export default function RootLayout() {
     useQuickActionRouting();
 
     const { colors } = useTheme();
-    const preferences = usePreferences();
+    const preferences = usePreferencesStore();
     const rootNavigationState = useRootNavigationState();
     const isNavigationReady = Boolean(rootNavigationState?.key);
 
@@ -42,6 +45,11 @@ export default function RootLayout() {
         "Fraunces-Variable": require("@/assets/fonts/Fraunces-Variable.ttf"),
         "Fraunces-Variable-Italic": require("@/assets/fonts/Fraunces-Variable-Italic.ttf"),
     });
+
+    // Ensure preferences are loaded from AsyncStorage on startup.
+    useEffect(() => {
+        void loadPreferences();
+    }, []);
 
     // Configure Android app shortcuts.
     useEffect(() => {
@@ -74,7 +82,7 @@ export default function RootLayout() {
     }, []);
 
     useEffect(() => {
-        if (loaded || error) {
+        if ((loaded || error) && preferences.isLoaded) {
             // Send first-time users to onboarding before showing the app.
             if (!preferences.onboarded) {
                 router.replace("/onboarding");
@@ -82,16 +90,16 @@ export default function RootLayout() {
 
             void SplashScreen.hideAsync();
         }
-        // Only run this decision once fonts have resolved.
+        // Only run this decision once fonts and preferences have resolved.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loaded, error]);
+    }, [loaded, error, preferences.isLoaded]);
 
     useEffect(() => {
         registerNotificationResponseListener();
-        if (preferences.onboarded) {
+        if (preferences.isLoaded && preferences.onboarded) {
             void initializeNotifications();
         }
-    }, [preferences.onboarded]);
+    }, [preferences.isLoaded, preferences.onboarded]);
 
     useEffect(() => {
         if (loaded && isNavigationReady) {
@@ -99,7 +107,7 @@ export default function RootLayout() {
         }
     }, [loaded, isNavigationReady]);
 
-    if (!loaded && !error) {
+    if ((!loaded && !error) || !preferences.isLoaded) {
         return null;
     }
 

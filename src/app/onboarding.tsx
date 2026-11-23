@@ -1,5 +1,5 @@
 import { fraunces, frauncesItalic } from "@/constants/Typography";
-import { completeOnboarding } from "@/services/preferences";
+import { completeOnboarding } from "@/stores/preferences.store";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import {

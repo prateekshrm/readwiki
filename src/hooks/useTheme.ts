@@ -4,7 +4,10 @@ import {
     ThemeColors,
     ThemeMode,
 } from "@/constants/Colors";
-import { setPreference, usePreferences } from "@/services/preferences";
+import {
+    setPreference,
+    usePreferencesStore,
+} from "@/stores/preferences.store";
 import { useColorScheme } from "react-native";
 
 export interface UseThemeResult {
@@ -21,7 +24,7 @@ export interface UseThemeResult {
 }
 
 export function useTheme(): UseThemeResult {
-    const preferences = usePreferences();
+    const preferences = usePreferencesStore();
     const systemScheme = useColorScheme();
 
     const colorScheme: ColorScheme =

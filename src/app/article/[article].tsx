@@ -10,10 +10,13 @@ import { ThemeColors } from "@/constants/Colors";
 import { fraunces } from "@/constants/Typography";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { useTheme } from "@/hooks/useTheme";
-import { addToHistory } from "@/services/articleHistory";
+import { addToHistory } from "@/stores/articleHistory.store";
 import { parseArticle, type Block } from "@/services/articleParser";
-import { usePreferences } from "@/services/preferences";
-import { toggleSavedArticle, useIsSaved } from "@/services/savedArticles";
+import { usePreferencesStore } from "@/stores/preferences.store";
+import {
+    toggleSavedArticle,
+    useIsSaved,
+} from "@/stores/savedArticles.store";
 import { getFullArticle } from "@/services/wikipedia";
 import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { Image } from "expo-image";
@@ -363,7 +366,7 @@ ArticleBlockItem.displayName = "ArticleBlockItem";
 const Article = () => {
     const { article } = useLocalSearchParams<{ article: string }>();
     const navigation = useNavigation();
-    const preferences = usePreferences();
+    const preferences = usePreferencesStore();
     const insets = useSafeAreaInsets();
     const onScroll = useScreenScroll();
     const { colors } = useTheme();

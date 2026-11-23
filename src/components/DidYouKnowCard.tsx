@@ -1,16 +1,35 @@
+import RichText from "@/components/RichText";
 import { ThemeColors } from "@/constants/Colors";
 import { useTheme } from "@/hooks/useTheme";
+import { parseHtmlToSpans } from "@/utils/html";
 import { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import RemixIcon from "react-native-remix-icon";
 
 type DidYouKnowCardProps = {
-    text: string;
+    html?: string;
+    text?: string;
+    onLinkPress?: (title: string) => void;
 };
 
-export default function DidYouKnowCard({ text }: DidYouKnowCardProps) {
+export default function DidYouKnowCard({
+    html,
+    text,
+    onLinkPress,
+}: DidYouKnowCardProps) {
     const { colors } = useTheme();
     const styles = useMemo(() => createStyles(colors), [colors]);
+
+    const spans = useMemo(() => {
+        if (html) {
+            const parsed = parseHtmlToSpans(html);
+            if (parsed.length > 0) return parsed;
+        }
+        if (text) {
+            return [{ text }];
+        }
+        return [];
+    }, [html, text]);
 
     return (
         <View style={styles.card}>
@@ -23,7 +42,13 @@ export default function DidYouKnowCard({ text }: DidYouKnowCardProps) {
                 />
             </View>
 
-            <Text style={styles.fact}>{text}</Text>
+            <View style={styles.factContainer}>
+                <RichText
+                    spans={spans}
+                    style={styles.fact}
+                    onLinkPress={onLinkPress}
+                />
+            </View>
         </View>
     );
 }
@@ -46,8 +71,12 @@ const createStyles = (colors: ThemeColors) =>
             marginRight: 12,
         },
 
+        factContainer: {
+            flex: 1,
+            justifyContent: "center",
+        },
+
         fact: {
-            flexShrink: 1,
             fontSize: 16,
             lineHeight: 24,
             fontFamily: "DMSans-Regular",

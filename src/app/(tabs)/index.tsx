@@ -440,6 +440,7 @@ const Home = () => {
                             {facts.map((item: any, index: number) => {
                                 return (
                                     <DidYouKnowCard
+                                        html={item.html}
                                         text={item.text}
                                         key={index}
                                     />

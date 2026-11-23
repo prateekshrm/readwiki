@@ -99,7 +99,11 @@ const DidYouKnow = () => {
                     },
                 ]}
                 renderItem={({ item, index }) => (
-                    <DidYouKnowCard text={item.text} key={index} />
+                    <DidYouKnowCard
+                        html={item.html}
+                        text={item.text}
+                        key={index}
+                    />
                 )}
             />
         </View>

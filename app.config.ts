@@ -14,7 +14,7 @@ export default (): ExpoConfig => {
               : "ReadWiki",
 
         slug: "ReadWiki",
-        version: "1.7.0",
+        version: "2.0.0",
         orientation: "portrait",
 
         icon: "./assets/images/icon.png",
@@ -79,6 +79,20 @@ export default (): ExpoConfig => {
             ],
             "expo-localization",
             "expo-widgets",
+            "expo-audio",
+            [
+                "expo-font",
+                {
+                    fonts: [
+                        "./assets/fonts/DMSans-Regular.ttf",
+                        "./assets/fonts/DMSans-Medium.ttf",
+                        "./assets/fonts/DMSans-SemiBold.ttf",
+                        "./assets/fonts/DMSans-Bold.ttf",
+                        "./assets/fonts/Fraunces-Variable.ttf",
+                        "./assets/fonts/Fraunces-Variable-Italic.ttf",
+                    ],
+                },
+            ],
             "./plugins/withShortcutKeep",
             [
                 "expo-quick-actions",

@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import { HeaderScrollProvider } from "@/components/HeaderScroll";
+import Modal from "@/components/Modal";
 import useNetworkAlert from "@/hooks/useNetworkAlert";
 import { useTheme } from "@/hooks/useTheme";
 import {
@@ -12,19 +13,11 @@ import {
     usePreferencesStore,
 } from "@/stores/preferences.store";
 import { BottomSheetProvider } from "@swmansion/react-native-bottom-sheet";
-import { useFonts } from "expo-font";
 import * as QuickActions from "expo-quick-actions";
 import { RouterAction, useQuickActionRouting } from "expo-quick-actions/router";
 import { router, Stack, useRootNavigationState } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
-
-import { DMSans_400Regular } from "@expo-google-fonts/dm-sans/400Regular";
-import { DMSans_500Medium } from "@expo-google-fonts/dm-sans/500Medium";
-import { DMSans_600SemiBold } from "@expo-google-fonts/dm-sans/600SemiBold";
-import { DMSans_700Bold } from "@expo-google-fonts/dm-sans/700Bold";
-
-import Modal from "@/components/Modal";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -37,16 +30,6 @@ export default function RootLayout() {
     const rootNavigationState = useRootNavigationState();
     const isNavigationReady = Boolean(rootNavigationState?.key);
 
-    const [loaded, error] = useFonts({
-        "DMSans-Regular": DMSans_400Regular,
-        "DMSans-Medium": DMSans_500Medium,
-        "DMSans-SemiBold": DMSans_600SemiBold,
-        "DMSans-Bold": DMSans_700Bold,
-        "Fraunces-Variable": require("@/assets/fonts/Fraunces-Variable.ttf"),
-        "Fraunces-Variable-Italic": require("@/assets/fonts/Fraunces-Variable-Italic.ttf"),
-    });
-
-    // Ensure preferences are loaded from AsyncStorage on startup.
     useEffect(() => {
         void loadPreferences();
     }, []);
@@ -82,17 +65,14 @@ export default function RootLayout() {
     }, []);
 
     useEffect(() => {
-        if ((loaded || error) && preferences.isLoaded) {
-            // Send first-time users to onboarding before showing the app.
-            if (!preferences.onboarded) {
-                router.replace("/onboarding");
-            }
+        if (!preferences.isLoaded) return;
 
-            void SplashScreen.hideAsync();
+        if (!preferences.onboarded) {
+            router.replace("/onboarding");
         }
-        // Only run this decision once fonts and preferences have resolved.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loaded, error, preferences.isLoaded]);
+
+        void SplashScreen.hideAsync();
+    }, [preferences.isLoaded, preferences.onboarded]);
 
     useEffect(() => {
         registerNotificationResponseListener();
@@ -102,12 +82,12 @@ export default function RootLayout() {
     }, [preferences.isLoaded, preferences.onboarded]);
 
     useEffect(() => {
-        if (loaded && isNavigationReady) {
+        if (isNavigationReady) {
             setRouterReady(true);
         }
-    }, [loaded, isNavigationReady]);
+    }, [isNavigationReady]);
 
-    if ((!loaded && !error) || !preferences.isLoaded) {
+    if (!preferences.isLoaded) {
         return null;
     }
 

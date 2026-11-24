@@ -12,6 +12,7 @@ import { fraunces } from "@/constants/Typography";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { useTheme } from "@/hooks/useTheme";
 import { getFeaturedData } from "@/services/wikipedia";
+import { useArticleCacheStore } from "@/stores/articleCache.store";
 import { stripHtml } from "@/utils/html";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -33,31 +34,36 @@ const Home = () => {
     const { colors } = useTheme();
     const styles = useMemo(() => createStyles(colors), [colors]);
 
-    const [featuredArticle, setFeaturedArticle] = useState<any>(null);
-    const [trendingArticles, setTrendingArticles] = useState<any>([]);
-    const [imageOfTheDay, setImageOfTheDay] = useState<any>([]);
-    const [news, setNews] = useState<any[]>([]);
-    const [onThisDayArticles, setOnThisDayArticles] = useState<any[]>([]);
-    const [facts, setFacts] = useState<any[]>([]);
+    const featuredData = useArticleCacheStore((state) => state.featuredData);
 
-    const [loading, setLoading] = useState(true);
+    const featuredArticle = featuredData?.tfa ?? null;
+    const trendingArticles = useMemo(
+        () => featuredData?.mostread?.articles.slice(0, 3) || [],
+        [featuredData],
+    );
+    const imageOfTheDay = featuredData?.image ?? null;
+    const news = useMemo(
+        () => featuredData?.news?.slice(0, 3) || [],
+        [featuredData],
+    );
+    const onThisDayArticles = useMemo(
+        () => featuredData?.onthisday?.slice(0, 3) || [],
+        [featuredData],
+    );
+    const facts = useMemo(
+        () => featuredData?.dyk?.slice(0, 3) || [],
+        [featuredData],
+    );
+
+    const [loading, setLoading] = useState(!featuredData);
     const [refreshing, setRefreshing] = useState(false);
 
     const isConnected = useNetworkStatus();
     const prevConnectedRef = useRef<boolean | null>(null);
 
-    const loadData = useCallback(async (forceRefresh = false) => {
+    const loadData = useCallback(async () => {
         try {
-            const data = await getFeaturedData(forceRefresh);
-
-            if (data) {
-                setFeaturedArticle(data.tfa ?? null);
-                setTrendingArticles(data.mostread?.articles.slice(0, 3) || []);
-                setImageOfTheDay(data.image ?? null);
-                setNews(data.news?.slice(0, 3) || []);
-                setOnThisDayArticles(data.onthisday?.slice(0, 3) || []);
-                setFacts(data.dyk?.slice(0, 3) || []);
-            }
+            await getFeaturedData();
         } catch (error) {
             console.error(error);
         } finally {
@@ -66,27 +72,33 @@ const Home = () => {
     }, []);
 
     useEffect(() => {
-        loadData();
-    }, [loadData]);
+        if (!featuredData) {
+            loadData();
+        } else {
+            setLoading(false);
+        }
+    }, [loadData, featuredData]);
 
     const handleRefresh = useCallback(async () => {
         setRefreshing(true);
 
         try {
-            await loadData(true);
+            await getFeaturedData();
         } finally {
             setRefreshing(false);
         }
-    }, [loadData]);
+    }, []);
 
     // Refetch when internet arrives
     useEffect(() => {
         if (prevConnectedRef.current === false && isConnected === true) {
-            setLoading(true);
-            loadData(true);
+            if (!featuredData) {
+                setLoading(true);
+            }
+            getFeaturedData().finally(() => setLoading(false));
         }
         prevConnectedRef.current = isConnected;
-    }, [isConnected, loadData]);
+    }, [isConnected, featuredData]);
 
     const insets = useSafeAreaInsets();
 
@@ -120,7 +132,7 @@ const Home = () => {
                     <NoInternetView
                         onRetry={() => {
                             setLoading(true);
-                            loadData(true);
+                            loadData();
                         }}
                     />
                 </View>
@@ -135,7 +147,7 @@ const Home = () => {
                     description="Something went wrong while fetching the latest content. Please try again."
                     onRetry={() => {
                         setLoading(true);
-                        loadData(true);
+                        loadData();
                     }}
                 />
             </View>

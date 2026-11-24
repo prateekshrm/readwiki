@@ -1,5 +1,5 @@
 import ArticleCard from "@/components/ArticleCard";
-import CardSkeleton from "@/components/CardSkeleton";
+import ArticleCardSkeleton from "@/components/ArticleCardSkeleton";
 import { useStaticHeader } from "@/components/HeaderScroll";
 import { ThemeColors } from "@/constants/Colors";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
@@ -126,7 +126,7 @@ const Search = () => {
 
             {loading ? (
                 <>
-                    <CardSkeleton count={3} />
+                    <ArticleCardSkeleton count={3} />
                 </>
             ) : (
                 <FlatList

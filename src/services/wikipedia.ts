@@ -1,22 +1,11 @@
-import {
-    ArticleData,
-    useArticleCacheStore,
-} from "@/stores/articleCache.store";
+import { ArticleData, useArticleCacheStore } from "@/stores/articleCache.store";
 
 export type { ArticleData };
 
 const BASE_URL = "https://api.wikimedia.org";
 
-export const getFeaturedData = async (forceRefresh = false) => {
+export const getFeaturedData = async () => {
     try {
-        if (!forceRefresh) {
-            const cachedData = useArticleCacheStore.getState().featuredData;
-
-            if (cachedData) {
-                return cachedData;
-            }
-        }
-
         const today = new Date();
 
         const year = today.getFullYear();
@@ -43,9 +32,7 @@ export const getFeaturedData = async (forceRefresh = false) => {
         return data;
     } catch (error) {
         console.log(error);
-        if (forceRefresh) {
-            return useArticleCacheStore.getState().featuredData;
-        }
+        return null;
     }
 };
 
@@ -96,8 +83,9 @@ export const getFullArticle = async (
 ): Promise<ArticleData | null> => {
     try {
         if (!forceRefresh) {
-            const cachedData =
-                useArticleCacheStore.getState().getCachedArticle(title);
+            const cachedData = useArticleCacheStore
+                .getState()
+                .getCachedArticle(title);
 
             if (cachedData) {
                 return cachedData;
@@ -218,8 +206,9 @@ export const getFullArticle = async (
     } catch (error) {
         console.log(error);
         if (forceRefresh) {
-            const cached =
-                useArticleCacheStore.getState().getCachedArticle(title);
+            const cached = useArticleCacheStore
+                .getState()
+                .getCachedArticle(title);
             if (cached) {
                 return cached;
             }

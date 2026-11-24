@@ -1,13 +1,12 @@
-import CardSkeleton from "@/components/CardSkeleton";
 import { useScreenScroll } from "@/components/HeaderScroll";
 import NoInternetView from "@/components/NoInternetView";
 import OnThisDayEvent from "@/components/OnThisDayEvent";
 import { ThemeColors } from "@/constants/Colors";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
 import useTheme from "@/hooks/useTheme";
-import { getFeaturedData } from "@/services/wikipedia";
+import { useArticleCacheStore } from "@/stores/articleCache.store";
 import { router } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import RemixIcon from "react-native-remix-icon";
@@ -55,64 +54,25 @@ const OnThisDay = () => {
     const insets = useSafeAreaInsets();
     const { colors } = useTheme();
     const styles = useMemo(() => createStyles(colors), [colors]);
-
-    const [loading, setLoading] = useState(true);
-    const [onThisDayArticles, setOnThisDayArticles] = useState<any[]>([]);
     const onScroll = useScreenScroll();
 
     const isConnected = useNetworkStatus();
-    const prevConnectedRef = useRef<boolean | null>(null);
+    const featuredData = useArticleCacheStore((state) => state.featuredData);
+    const onThisDayArticles = featuredData?.onthisday || [];
 
-    const loadData = useCallback(async () => {
-        try {
-            const data = await getFeaturedData();
-            setOnThisDayArticles(data?.onthisday || []);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
+    const handleRetry = () => {
+        if (router.canGoBack()) {
+            router.back();
+        } else {
+            router.replace("/(tabs)");
         }
-    }, []);
-
-    useEffect(() => {
-        loadData();
-    }, [loadData]);
-
-    // Refetch when internet arrives
-    useEffect(() => {
-        if (prevConnectedRef.current === false && isConnected === true) {
-            setLoading(true);
-            loadData();
-        }
-        prevConnectedRef.current = isConnected;
-    }, [isConnected, loadData]);
-
-    if (loading) {
-        return (
-            <View
-                style={{
-                    paddingTop: 100,
-                    paddingHorizontal: 16,
-                    paddingBottom: 12,
-                    gap: 24,
-                }}
-            >
-                <TodaysDate />
-                <CardSkeleton isOtd={true} count={2} />
-            </View>
-        );
-    }
+    };
 
     if (onThisDayArticles.length === 0) {
         if (!isConnected) {
             return (
                 <View style={styles.container}>
-                    <NoInternetView
-                        onRetry={() => {
-                            setLoading(true);
-                            loadData();
-                        }}
-                    />
+                    <NoInternetView onRetry={handleRetry} />
                 </View>
             );
         }
@@ -123,10 +83,7 @@ const OnThisDay = () => {
                     iconName="refresh-line"
                     title="No Events Available"
                     description="Could not load historical events. Please try again."
-                    onRetry={() => {
-                        setLoading(true);
-                        loadData();
-                    }}
+                    onRetry={handleRetry}
                 />
             </View>
         );

@@ -1,13 +1,12 @@
 import ArticleCard from "@/components/ArticleCard";
-import CardSkeleton from "@/components/CardSkeleton";
 import { useScreenScroll } from "@/components/HeaderScroll";
 import NoInternetView from "@/components/NoInternetView";
 import { ThemeColors } from "@/constants/Colors";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { useTheme } from "@/hooks/useTheme";
-import { getFeaturedData } from "@/services/wikipedia";
+import { useArticleCacheStore } from "@/stores/articleCache.store";
 import { router } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,60 +15,25 @@ const Trending = () => {
     const insets = useSafeAreaInsets();
     const { colors } = useTheme();
     const styles = useMemo(() => createStyles(colors), [colors]);
-
-    const [loading, setLoading] = useState(true);
-    const [trendingArticles, setTrendingArticles] = useState<any[]>([]);
     const onScroll = useScreenScroll();
 
     const isConnected = useNetworkStatus();
-    const prevConnectedRef = useRef<boolean | null>(null);
+    const featuredData = useArticleCacheStore((state) => state.featuredData);
+    const trendingArticles = featuredData?.mostread?.articles || [];
 
-    const loadData = useCallback(async () => {
-        try {
-            const data = await getFeaturedData();
-            setTrendingArticles(data?.mostread?.articles || []);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
+    const handleRetry = () => {
+        if (router.canGoBack()) {
+            router.back();
+        } else {
+            router.replace("/(tabs)");
         }
-    }, []);
-
-    useEffect(() => {
-        loadData();
-    }, [loadData]);
-
-    // Refetch when internet arrives
-    useEffect(() => {
-        if (prevConnectedRef.current === false && isConnected === true) {
-            setLoading(true);
-            loadData();
-        }
-        prevConnectedRef.current = isConnected;
-    }, [isConnected, loadData]);
-
-    if (loading) {
-        return (
-            <View
-                style={{
-                    paddingTop: 100,
-                }}
-            >
-                <CardSkeleton count={3} />
-            </View>
-        );
-    }
+    };
 
     if (trendingArticles.length === 0) {
         if (!isConnected) {
             return (
                 <View style={styles.container}>
-                    <NoInternetView
-                        onRetry={() => {
-                            setLoading(true);
-                            loadData();
-                        }}
-                    />
+                    <NoInternetView onRetry={handleRetry} />
                 </View>
             );
         }
@@ -80,10 +44,7 @@ const Trending = () => {
                     iconName="refresh-line"
                     title="No Articles Available"
                     description="Could not load trending articles. Please try again."
-                    onRetry={() => {
-                        setLoading(true);
-                        loadData();
-                    }}
+                    onRetry={handleRetry}
                 />
             </View>
         );

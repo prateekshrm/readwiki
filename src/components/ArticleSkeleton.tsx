@@ -1,7 +1,7 @@
 import { ThemeColors } from "@/constants/Colors";
 import useTheme from "@/hooks/useTheme";
 import { useEffect, useMemo } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, {
     interpolateColor,
     useAnimatedStyle,
@@ -32,19 +32,22 @@ const ArticleSkeleton = () => {
     }));
 
     return (
-        <ScrollView
-            style={styles.articleSkeletonContainter}
-            contentContainerStyle={{
-                gap: 32,
-                paddingBottom: insets.bottom + 40,
-            }}
-            showsVerticalScrollIndicator={false}
+        <View
+            style={[
+                styles.articleSkeletonContainter,
+                {
+                    paddingBottom: insets.bottom + 40,
+                },
+            ]}
         >
-            <View style={styles.articleSkeletonTop}>
-                <Animated.View
-                    style={[styles.articleSkeletonImage, shimmerStyle]}
-                />
-
+            <View
+                style={[
+                    styles.articleSkeletonTop,
+                    {
+                        paddingTop: insets.top + 52,
+                    },
+                ]}
+            >
                 <Animated.View
                     style={[
                         styles.articleTitleSkeleton,
@@ -63,7 +66,29 @@ const ArticleSkeleton = () => {
                     ]}
                 />
             </View>
-            <View style={styles.articleSkeletonBottom}>
+            <View style={styles.articleSkeletonSection}>
+                {[...Array(10)].map((_, index) => (
+                    <Animated.View
+                        key={index}
+                        style={[styles.articleSubtitleSkeleton, shimmerStyle]}
+                    />
+                ))}
+                <Animated.View
+                    style={[
+                        styles.articleSubtitleSkeleton,
+                        { width: "80%" },
+                        shimmerStyle,
+                    ]}
+                />
+                <Animated.View
+                    style={[
+                        styles.articleSubtitleSkeleton,
+                        { width: "70%" },
+                        shimmerStyle,
+                    ]}
+                />
+            </View>
+            <View style={styles.articleSkeletonSection}>
                 {[...Array(6)].map((_, index) => (
                     <Animated.View
                         key={index}
@@ -85,7 +110,7 @@ const ArticleSkeleton = () => {
                     ]}
                 />
             </View>
-        </ScrollView>
+        </View>
     );
 };
 
@@ -94,18 +119,13 @@ export default ArticleSkeleton;
 const createStyles = (colors: ThemeColors) =>
     StyleSheet.create({
         articleSkeletonContainter: {
-            position: "relative",
             flex: 1,
             backgroundColor: colors.background,
+            gap: 32,
         },
 
         articleSkeletonTop: {
             gap: 8,
-        },
-
-        articleSkeletonImage: {
-            width: "100%",
-            height: 450,
         },
 
         articleTitleSkeleton: {
@@ -122,8 +142,16 @@ const createStyles = (colors: ThemeColors) =>
             height: 14,
         },
 
-        articleSkeletonBottom: {
+        articleSkeletonSection: {
             flex: 1,
             gap: 6,
+        },
+
+        articleSkeletonSectionTitle: {
+            marginTop: 32,
+            marginHorizontal: 16,
+            marginBottom: 6,
+            borderRadius: 999,
+            height: 32,
         },
     });

@@ -1,4 +1,5 @@
 import { ArticleData, useArticleCacheStore } from "@/stores/articleCache.store";
+import { fetch } from "react-native-nitro-fetch";
 
 export type { ArticleData };
 

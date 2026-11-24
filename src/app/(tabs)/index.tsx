@@ -2,7 +2,7 @@ import ArticleCard from "@/components/ArticleCard";
 import Button from "@/components/Button";
 import DidYouKnowCard from "@/components/DidYouKnowCard";
 import { useSolidHeader } from "@/components/HeaderScroll";
-import Loader from "@/components/Loader";
+import HomeSkeleton from "@/components/HomeSkeleton";
 import NewsCard from "@/components/NewsCard";
 import NoInternetView from "@/components/NoInternetView";
 import OnThisDayEvent from "@/components/OnThisDayEvent";
@@ -116,13 +116,7 @@ const Home = () => {
     );
 
     if (loading) {
-        return (
-            <View style={styles.container}>
-                <View style={styles.loaderContainer}>
-                    <Loader />
-                </View>
-            </View>
-        );
+        return <HomeSkeleton />;
     }
 
     if (!hasData) {
@@ -511,10 +505,6 @@ const createStyles = (colors: ThemeColors) =>
             backgroundColor: colors.background,
         },
 
-        content: {
-            paddingBottom: 16,
-        },
-
         loaderContainer: {
             flex: 1,
             justifyContent: "center",
@@ -622,9 +612,7 @@ const createStyles = (colors: ThemeColors) =>
         imageCard: {
             borderRadius: 20,
             overflow: "hidden",
-            backgroundColor: colors.surface,
-            borderWidth: 1,
-            borderColor: colors.border,
+            backgroundColor: colors.backgroundMuted,
             marginTop: 12,
             marginHorizontal: 16,
             height: 300,

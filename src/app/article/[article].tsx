@@ -1,8 +1,8 @@
 import ArticlePreviewSheet from "@/components/ArticlePreviewSheet";
+import ArticleSkeleton from "@/components/ArticleSkeleton";
 import GalleryView from "@/components/GalleryView";
 import { useScreenScroll } from "@/components/HeaderScroll";
 import InfoboxView from "@/components/InfoboxView";
-import Loader from "@/components/Loader";
 import NoInternetView from "@/components/NoInternetView";
 import RichText from "@/components/RichText";
 import TableView from "@/components/TableView";
@@ -513,11 +513,7 @@ const Article = () => {
     }, [isConnected, loadArticle]);
 
     if (loading) {
-        return (
-            <View style={styles.loader}>
-                <Loader />
-            </View>
-        );
+        return <ArticleSkeleton />;
     }
 
     if (!meta && blocks.length === 0) {

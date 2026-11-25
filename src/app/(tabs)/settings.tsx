@@ -9,6 +9,7 @@ import {
     sendTestNotification,
 } from "@/services/notification";
 import { clearHistory, useHistory } from "@/stores/articleHistory.store";
+import { useLayoutStore } from "@/stores/layout.store";
 import { useModalStore } from "@/stores/modal.store";
 import {
     FONT_SCALES,
@@ -77,6 +78,8 @@ const Settings = () => {
     const onScroll = useScreenScroll();
 
     const styles = useMemo(() => createStyles(colors), [colors]);
+
+    const tabBarHeight = useLayoutStore((state) => state.tabBarHeight);
 
     const [permissionStatus, setPermissionStatus] = useState<
         "granted" | "denied" | "undetermined" | "unsupported" | "loading"
@@ -580,7 +583,7 @@ const Settings = () => {
             contentContainerStyle={[
                 styles.content,
                 {
-                    paddingBottom: insets.bottom + 80,
+                    paddingBottom: tabBarHeight + 16,
                 },
             ]}
             showsVerticalScrollIndicator={false}

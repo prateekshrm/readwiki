@@ -5,6 +5,7 @@ import { ThemeColors } from "@/constants/Colors";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { useTheme } from "@/hooks/useTheme";
 import { searchArticles } from "@/services/wikipedia";
+import { useLayoutStore } from "@/stores/layout.store";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -24,6 +25,8 @@ const Search = () => {
         () => createStyles(colors, isDark),
         [colors, isDark],
     );
+
+    const tabBarHeight = useLayoutStore((state) => state.tabBarHeight);
 
     const isConnected = useNetworkStatus();
     const [query, setQuery] = useState("");
@@ -135,7 +138,7 @@ const Search = () => {
                     contentContainerStyle={[
                         styles.listContent,
                         {
-                            paddingBottom: insets.bottom + 80,
+                            paddingBottom: tabBarHeight + 16,
                         },
                     ]}
                     showsVerticalScrollIndicator={false}

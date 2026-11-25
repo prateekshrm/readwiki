@@ -13,6 +13,7 @@ import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { useTheme } from "@/hooks/useTheme";
 import { getFeaturedData } from "@/services/wikipedia";
 import { useArticleCacheStore } from "@/stores/articleCache.store";
+import { useLayoutStore } from "@/stores/layout.store";
 import { stripHtml } from "@/utils/html";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -33,6 +34,8 @@ import { TodaysDate } from "../on-this-day";
 const Home = () => {
     const { colors } = useTheme();
     const styles = useMemo(() => createStyles(colors), [colors]);
+
+    const tabBarHeight = useLayoutStore((state) => state.tabBarHeight);
 
     const featuredData = useArticleCacheStore((state) => state.featuredData);
 
@@ -155,7 +158,7 @@ const Home = () => {
                     styles.sectionContainer,
                     !featuredArticle && { paddingTop: insets.top + 60 },
                     {
-                        paddingBottom: insets.bottom + 80,
+                        paddingBottom: tabBarHeight + 16,
                     },
                 ]}
                 showsVerticalScrollIndicator={false}

@@ -1,8 +1,17 @@
+import { Colors } from "@/constants/Colors";
 import { useTheme } from "@/hooks/useTheme";
+import { useLayoutStore } from "@/stores/layout.store";
 import { LinearGradient } from "expo-linear-gradient";
 import type { BottomTabBarProps } from "expo-router/js-tabs";
-import { useEffect } from "react";
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+    LayoutChangeEvent,
+    Pressable,
+    StyleSheet,
+    Text,
+    useWindowDimensions,
+    View,
+} from "react-native";
 import Animated, {
     Easing,
     useAnimatedStyle,
@@ -11,8 +20,19 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const HORIZONTAL_MARGIN = 32;
-const CONTAINER_PADDING = 4;
+const TAB_BAR_PADDING = 4;
+const OUTER_PADDING = 16;
+const MAX_TAB_BAR_WIDTH = 360;
+
+const TIMING_CONFIG = {
+    duration: 400,
+    easing: Easing.bezier(0.22, 1, 0.36, 1),
+};
+
+type TabLayout = {
+    x: number;
+    width: number;
+};
 
 export default function TabBar({
     state,
@@ -21,26 +41,72 @@ export default function TabBar({
     navigateToTab,
 }: BottomTabBarProps) {
     const insets = useSafeAreaInsets();
-    const { colors } = useTheme();
-
+    const { colors, isDark } = useTheme();
     const { width: windowWidth } = useWindowDimensions();
 
-    const tabWidth =
-        (windowWidth -
-            HORIZONTAL_MARGIN * 2 -
-            CONTAINER_PADDING * 2) /
-        (state.routes.length || 1);
+    const setTabBarHeight = useLayoutStore((state) => state.setTabBarHeight);
 
-    const translateX = useSharedValue(state.index * tabWidth);
+    const currentRoute = state.routes[state.index];
+    const isFlow = currentRoute?.name === "flow";
+    const activeColors = isFlow ? Colors.dark : colors;
+    const activeIsDark = isFlow ? true : isDark;
+
+    const [tabLayouts, setTabLayouts] = useState<Record<string, TabLayout>>({});
+    const hasInitialized = useRef(false);
+
+    const containerWidth = Math.min(
+        windowWidth - OUTER_PADDING * 2,
+        MAX_TAB_BAR_WIDTH,
+    );
+    const fallbackTabWidth =
+        (containerWidth - TAB_BAR_PADDING * 2) / (state.routes.length || 1);
+
+    const translateX = useSharedValue(
+        TAB_BAR_PADDING + state.index * fallbackTabWidth,
+    );
+    const indicatorWidth = useSharedValue(fallbackTabWidth);
 
     useEffect(() => {
-        translateX.value = withTiming(state.index * tabWidth, {
-            duration: 400,
-            easing: Easing.bezier(0.22, 1, 0.36, 1),
-        });
-    }, [state.index, tabWidth, translateX]);
+        const activeKey = currentRoute?.key;
+        const activeLayout = activeKey ? tabLayouts[activeKey] : undefined;
+        const targetX = activeLayout
+            ? activeLayout.x
+            : TAB_BAR_PADDING + state.index * fallbackTabWidth;
+        const targetWidth = activeLayout
+            ? activeLayout.width
+            : fallbackTabWidth;
 
-    const indicatorStyle = useAnimatedStyle(() => ({
+        if (!hasInitialized.current && activeLayout) {
+            hasInitialized.current = true;
+            translateX.value = targetX;
+            indicatorWidth.value = targetWidth;
+            return;
+        }
+
+        translateX.value = withTiming(targetX, TIMING_CONFIG);
+        indicatorWidth.value = withTiming(targetWidth, TIMING_CONFIG);
+    }, [
+        state.index,
+        currentRoute?.key,
+        tabLayouts,
+        fallbackTabWidth,
+        translateX,
+        indicatorWidth,
+    ]);
+
+    const handleTabLayout = (routeKey: string, event: LayoutChangeEvent) => {
+        const { x, width } = event.nativeEvent.layout;
+        setTabLayouts((prev) => {
+            const existing = prev[routeKey];
+            if (existing && existing.x === x && existing.width === width) {
+                return prev;
+            }
+            return { ...prev, [routeKey]: { x, width } };
+        });
+    };
+
+    const activeTabIndicatorStyle = useAnimatedStyle(() => ({
+        width: indicatorWidth.value,
         transform: [
             {
                 translateX: translateX.value,
@@ -50,17 +116,28 @@ export default function TabBar({
 
     return (
         <View
+            onLayout={(e) => {
+                const height = Math.round(e.nativeEvent.layout.height);
+                if (height > 0) {
+                    setTabBarHeight(height);
+                }
+            }}
+            pointerEvents="box-none"
             style={[
-                styles.wrapper,
+                styles.tabBarWrapper,
                 {
-                    paddingBottom: insets.bottom,
+                    paddingTop: OUTER_PADDING,
+                    paddingHorizontal: OUTER_PADDING,
+                    paddingBottom: insets.bottom + OUTER_PADDING,
                 },
             ]}
         >
             <LinearGradient
-                colors={["transparent", "rgba(0,0,0,0.5)"]}
+                pointerEvents="none"
+                colors={["transparent", activeColors.background]}
+                locations={[0, 0.7]}
                 style={[
-                    styles.gradient,
+                    styles.tabBarGradient,
                     {
                         height: insets.bottom + 80,
                     },
@@ -69,20 +146,20 @@ export default function TabBar({
 
             <View
                 style={[
-                    styles.container,
+                    styles.tabBar,
                     {
-                        backgroundColor: colors.surface,
+                        backgroundColor: activeColors.surface,
+                        shadowOpacity: activeIsDark ? 0.35 : 0.12,
                     },
                 ]}
             >
                 <Animated.View
                     style={[
-                        styles.indicator,
+                        styles.activeTabIndicator,
                         {
-                            width: tabWidth,
-                            backgroundColor: colors.primary,
+                            backgroundColor: activeColors.primary,
                         },
-                        indicatorStyle,
+                        activeTabIndicatorStyle,
                     ]}
                 />
 
@@ -95,8 +172,8 @@ export default function TabBar({
                             ? options.tabBarIcon({
                                   focused: isFocused,
                                   color: isFocused
-                                      ? colors.textInverse
-                                      : colors.textMuted,
+                                      ? activeColors.textInverse
+                                      : activeColors.textMuted,
                                   size: 24,
                               })
                             : null;
@@ -117,6 +194,9 @@ export default function TabBar({
                         <Pressable
                             key={route.key}
                             onPress={onPress}
+                            onLayout={(event) =>
+                                handleTabLayout(route.key, event)
+                            }
                             style={styles.tab}
                         >
                             {route.name === "flow" ? (
@@ -125,8 +205,8 @@ export default function TabBar({
                                         styles.tabLabel,
                                         {
                                             color: isFocused
-                                                ? colors.textInverse
-                                                : colors.textMuted,
+                                                ? activeColors.textInverse
+                                                : activeColors.textMuted,
                                         },
                                     ]}
                                 >
@@ -144,34 +224,42 @@ export default function TabBar({
 }
 
 const styles = StyleSheet.create({
-    wrapper: {
+    tabBarWrapper: {
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        alignItems: "center",
+    },
+
+    tabBarGradient: {
         position: "absolute",
         bottom: 0,
         left: 0,
         right: 0,
     },
 
-    gradient: {
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-    },
-
-    container: {
+    tabBar: {
         flexDirection: "row",
+        width: "100%",
+        maxWidth: MAX_TAB_BAR_WIDTH,
         borderRadius: 999,
-        padding: CONTAINER_PADDING,
-        marginHorizontal: HORIZONTAL_MARGIN,
-        marginBottom: 16,
+        padding: TAB_BAR_PADDING,
         position: "relative",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowRadius: 12,
+        elevation: 10,
     },
 
-    indicator: {
+    activeTabIndicator: {
         position: "absolute",
-        top: CONTAINER_PADDING,
-        bottom: CONTAINER_PADDING,
-        left: CONTAINER_PADDING,
+        top: TAB_BAR_PADDING,
+        bottom: TAB_BAR_PADDING,
+        left: 0,
         borderRadius: 999,
     },
 
@@ -179,7 +267,7 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
-        paddingVertical: 10,
+        paddingVertical: 12,
         zIndex: 1,
     },
 

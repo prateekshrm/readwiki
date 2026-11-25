@@ -9,6 +9,7 @@ import {
     removeFromHistory,
     useHistory,
 } from "@/stores/articleHistory.store";
+import { useLayoutStore } from "@/stores/layout.store";
 import { router } from "expo-router";
 import { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -23,6 +24,8 @@ const Library = () => {
     const onScroll = useScreenScroll();
     const insets = useSafeAreaInsets();
 
+    const tabBarHeight = useLayoutStore((state) => state.tabBarHeight);
+
     const latestHistory = history.slice(0, 3);
 
     return (
@@ -30,7 +33,7 @@ const Library = () => {
             <Animated.ScrollView
                 contentContainerStyle={[
                     styles.content,
-                    { paddingBottom: insets.bottom + 80 },
+                    { paddingBottom: tabBarHeight + 16 },
                 ]}
                 showsVerticalScrollIndicator={false}
                 onScroll={onScroll}

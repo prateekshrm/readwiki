@@ -9,14 +9,7 @@ import type {
 import { usePreferencesStore } from "@/stores/preferences.store";
 import { Image } from "expo-image";
 import { memo, useCallback, useMemo, useState } from "react";
-import {
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import RemixIcon from "react-native-remix-icon";
 
 type TableViewProps = {
@@ -27,17 +20,17 @@ type TableViewProps = {
 
 const MIN_COL_WIDTH = 60;
 const MAX_COL_WIDTH = 280;
-const INITIAL_ROW_LIMIT = 25;
+const INITIAL_ROW_LIMIT = 10;
 
 // Computes initial column widths based on maximum text length and image sizes in cells,
 // capping horizontal width at MAX_COL_WIDTH (280px) to prevent excessive width.
 const computeInitialWidths = (
-    block: TableBlock,
+    rows: TableBlock["blocks"],
     fontScale: number,
 ): number[] => {
     const widths: number[] = [];
 
-    for (const logicalRow of block.blocks) {
+    for (const logicalRow of rows) {
         let colIdx = 0;
         for (const col of logicalRow.columns) {
             while (widths[colIdx] === undefined) {
@@ -143,7 +136,7 @@ const TableCellImageItem = memo(
                         marginRight: isLast ? 0 : 6,
                     }}
                     contentFit="contain"
-                    transition={150}
+                    transition={0}
                     cachePolicy="memory-disk"
                     recyclingKey={image.src}
                 />
@@ -239,8 +232,7 @@ const TableCellContent = memo(
             [hasImages, cell.images],
         );
 
-        const textAlign =
-            cell.align ?? (cell.isHeader ? "center" : "left");
+        const textAlign = cell.align ?? (cell.isHeader ? "center" : "left");
 
         const textStyle = useMemo(
             () => [
@@ -261,6 +253,7 @@ const TableCellContent = memo(
                     spans={cell.spans}
                     onLinkPress={onLinkPress}
                     style={textStyle}
+                    linkColor={colors.link}
                 />
             );
         }
@@ -319,6 +312,7 @@ const TableCellContent = memo(
                         spans={cell.spans}
                         onLinkPress={onLinkPress}
                         style={textStyle}
+                        linkColor={colors.link}
                     />
                 </View>
             );
@@ -343,6 +337,7 @@ const TableCellContent = memo(
                 spans={cell.spans}
                 onLinkPress={onLinkPress}
                 style={textStyle}
+                linkColor={colors.link}
             />
         );
 
@@ -420,17 +415,15 @@ const TableCellView = memo(
 
         return (
             <View style={cellContainerStyle}>
-                <View style={styles.cellInner}>
-                    <TableCellContent
-                        cell={cell}
-                        colWidth={colWidth}
-                        fontScale={fontScale}
-                        onLinkPress={onLinkPress}
-                        onImagePress={onImagePress}
-                        colors={colors}
-                        styles={styles}
-                    />
-                </View>
+                <TableCellContent
+                    cell={cell}
+                    colWidth={colWidth}
+                    fontScale={fontScale}
+                    onLinkPress={onLinkPress}
+                    onImagePress={onImagePress}
+                    colors={colors}
+                    styles={styles}
+                />
             </View>
         );
     },
@@ -493,10 +486,7 @@ const TableRowView = memo(
 
         return (
             <View
-                style={[
-                    styles.logicalRow,
-                    blockIndex > 0 && styles.rowDivider,
-                ]}
+                style={[styles.logicalRow, blockIndex > 0 && styles.rowDivider]}
             >
                 {rowCols.map(({ col, colWidth, isLastColumn }, colIndex) => {
                     // Single cell spanning full logical row height
@@ -557,21 +547,13 @@ const TableRowView = memo(
 
 TableRowView.displayName = "TableRowView";
 
-const TableView = ({
-    block,
-    onLinkPress,
-    onImagePress,
-}: TableViewProps) => {
+const TableView = ({ block, onLinkPress, onImagePress }: TableViewProps) => {
     const { colors } = useTheme();
     const fontScale = usePreferencesStore((state) => state.fontScale);
     const styles = useMemo(() => createStyles(colors), [colors]);
 
-    const columnWidths = useMemo(
-        () => computeInitialWidths(block, fontScale),
-        [block, fontScale],
-    );
-
-    const [expanded, setExpanded] = useState(false);
+    const [expandedBlock, setExpandedBlock] = useState<TableBlock | null>(null);
+    const expanded = expandedBlock === block;
     const hasMoreRows = block.blocks.length > INITIAL_ROW_LIMIT;
 
     const visibleBlocks = useMemo(() => {
@@ -579,9 +561,14 @@ const TableView = ({
         return block.blocks.slice(0, INITIAL_ROW_LIMIT);
     }, [block.blocks, expanded, hasMoreRows]);
 
+    const columnWidths = useMemo(
+        () => computeInitialWidths(visibleBlocks, fontScale),
+        [visibleBlocks, fontScale],
+    );
+
     const handleToggleExpand = useCallback(() => {
-        setExpanded((prev) => !prev);
-    }, []);
+        setExpandedBlock((prev) => (prev === block ? null : block));
+    }, [block]);
 
     return (
         <View style={styles.outerContainer}>
@@ -595,7 +582,6 @@ const TableView = ({
                 contentContainerStyle={styles.scrollContent}
                 nestedScrollEnabled={true}
                 directionalLockEnabled={true}
-                removeClippedSubviews={Platform.OS === "android"}
                 scrollEventThrottle={16}
             >
                 <View style={styles.table}>
@@ -639,9 +625,7 @@ const TableView = ({
                     </Text>
                     <RemixIcon
                         name={
-                            expanded
-                                ? "arrow-up-s-line"
-                                : "arrow-down-s-line"
+                            expanded ? "arrow-up-s-line" : "arrow-down-s-line"
                         }
                         size={18}
                         color={colors.accent}
@@ -686,10 +670,6 @@ const createStyles = (colors: ThemeColors) =>
             paddingHorizontal: 10,
             paddingVertical: 8,
             justifyContent: "center",
-        },
-        cellInner: {
-            alignSelf: "flex-start",
-            width: "100%",
         },
         rowLayout: {
             flexDirection: "row",

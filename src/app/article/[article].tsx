@@ -86,11 +86,11 @@ const openOnWikipedia = async (item: ArticleMeta) => {
 const HeaderRight = ({
     meta,
     onMorePress,
-    loading,
+    disabled,
 }: {
     meta: ArticleMeta;
     onMorePress: () => void;
-    loading: boolean;
+    disabled: boolean;
 }) => {
     const saved = useIsSaved(meta.title);
     const { colors } = useTheme();
@@ -101,8 +101,8 @@ const HeaderRight = ({
                 style={({ pressed }) => [
                     styles.headerRightButton,
                     { backgroundColor: colors.backgroundMuted },
-                    pressed && styles.headerRightButtonPressed,
-                    loading && {
+                    !disabled && pressed && styles.headerRightButtonPressed,
+                    disabled && {
                         opacity: 0.6,
                     },
                 ]}
@@ -113,7 +113,7 @@ const HeaderRight = ({
                         savedAt: Date.now(),
                     })
                 }
-                disabled={loading}
+                disabled={disabled}
             >
                 <RemixIcon
                     name={saved ? "bookmark-fill" : "bookmark-line"}
@@ -126,13 +126,13 @@ const HeaderRight = ({
                 style={({ pressed }) => [
                     styles.headerRightButton,
                     { backgroundColor: colors.backgroundMuted },
-                    pressed && styles.headerRightButtonPressed,
-                    loading && {
+                    !disabled && pressed && styles.headerRightButtonPressed,
+                    disabled && {
                         opacity: 0.6,
                     },
                 ]}
                 onPress={onMorePress}
-                disabled={loading}
+                disabled={disabled}
             >
                 <RemixIcon
                     name="more-fill"
@@ -433,6 +433,10 @@ const Article = () => {
         [],
     );
 
+    const getItemType = useCallback((item: Block) => item.type, []);
+
+    const headerRightDisabled = loading || !meta;
+
     useEffect(() => {
         if (activeMeta) {
             navigation.setOptions({
@@ -440,12 +444,12 @@ const Article = () => {
                     <HeaderRight
                         meta={activeMeta}
                         onMorePress={handleOpenMenu}
-                        loading={loading}
+                        disabled={headerRightDisabled}
                     />
                 ),
             });
         }
-    }, [navigation, activeMeta, handleOpenMenu, loading]);
+    }, [navigation, activeMeta, handleOpenMenu, headerRightDisabled]);
 
     const loadArticle = useCallback(
         async (forceRefresh = false) => {
@@ -550,6 +554,7 @@ const Article = () => {
             <AnimatedLegendList
                 data={blocks}
                 keyExtractor={keyExtractor}
+                getItemType={getItemType}
                 renderItem={renderItem}
                 contentContainerStyle={[
                     styles.content,

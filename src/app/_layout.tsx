@@ -13,6 +13,7 @@ import {
     usePreferencesStore,
 } from "@/stores/preferences.store";
 import { BottomSheetProvider } from "@swmansion/react-native-bottom-sheet";
+import { NavigationBar } from "expo-navigation-bar";
 import * as QuickActions from "expo-quick-actions";
 import { RouterAction, useQuickActionRouting } from "expo-quick-actions/router";
 import { router, Stack, useRootNavigationState } from "expo-router";
@@ -25,7 +26,7 @@ export default function RootLayout() {
     useNetworkAlert();
     useQuickActionRouting();
 
-    const { colors } = useTheme();
+    const { colors, isDark } = useTheme();
     const preferences = usePreferencesStore();
     const rootNavigationState = useRootNavigationState();
     const isNavigationReady = Boolean(rootNavigationState?.key);
@@ -95,6 +96,8 @@ export default function RootLayout() {
         <BottomSheetProvider>
             <HeaderScrollProvider>
                 <Modal />
+                <NavigationBar style={isDark ? "light" : "dark"} />
+
                 <Stack
                     screenOptions={{
                         headerTransparent: true,

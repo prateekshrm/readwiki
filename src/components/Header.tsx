@@ -3,8 +3,9 @@ import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { ReactNode, useState } from "react";
-import { Pressable, StatusBar, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import Animated, {
     interpolateColor,
     runOnJS,
@@ -57,13 +58,8 @@ const Header = ({ title, canGoBack = false, rightComponent }: HeaderProps) => {
             }}
         >
             <StatusBar
-                barStyle={
-                    isDark
-                        ? "light-content"
-                        : scrolled
-                          ? "light-content"
-                          : "dark-content"
-                }
+                style={isDark ? "light" : scrolled ? "light" : "dark"}
+                animated
             />
 
             <Animated.View

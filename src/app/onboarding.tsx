@@ -2,14 +2,8 @@ import { fraunces, frauncesItalic } from "@/constants/Typography";
 import { completeOnboarding } from "@/stores/preferences.store";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import {
-    Image,
-    Pressable,
-    StatusBar,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -28,7 +22,7 @@ const Onboarding = () => {
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" />
+            <StatusBar style="light" />
 
             <Image
                 source={require("@/assets/onboarding.png")}

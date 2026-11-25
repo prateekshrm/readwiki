@@ -1,4 +1,3 @@
-import { Colors } from "@/constants/Colors";
 import { useTheme } from "@/hooks/useTheme";
 import { useLayoutStore } from "@/stores/layout.store";
 import { LinearGradient } from "expo-linear-gradient";
@@ -22,7 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const TAB_BAR_PADDING = 4;
 const OUTER_PADDING = 16;
-const MAX_TAB_BAR_WIDTH = 360;
+const MAX_TAB_BAR_WIDTH = 400;
 
 const TIMING_CONFIG = {
     duration: 400,
@@ -41,18 +40,18 @@ export default function TabBar({
     navigateToTab,
 }: BottomTabBarProps) {
     const insets = useSafeAreaInsets();
-    const { colors, isDark } = useTheme();
+    const { colors } = useTheme();
     const { width: windowWidth } = useWindowDimensions();
 
     const setTabBarHeight = useLayoutStore((state) => state.setTabBarHeight);
 
     const currentRoute = state.routes[state.index];
     const isFlow = currentRoute?.name === "flow";
-    const activeColors = isFlow ? Colors.dark : colors;
-    const activeIsDark = isFlow ? true : isDark;
 
     const [tabLayouts, setTabLayouts] = useState<Record<string, TabLayout>>({});
     const hasInitialized = useRef(false);
+
+    const isBigScreen = windowWidth > MAX_TAB_BAR_WIDTH + OUTER_PADDING * 2;
 
     const containerWidth = Math.min(
         windowWidth - OUTER_PADDING * 2,
@@ -122,7 +121,6 @@ export default function TabBar({
                     setTabBarHeight(height);
                 }
             }}
-            pointerEvents="box-none"
             style={[
                 styles.tabBarWrapper,
                 {
@@ -132,14 +130,28 @@ export default function TabBar({
                 },
             ]}
         >
+            <View
+                style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: insets.bottom,
+                    width: windowWidth,
+                    backgroundColor: isFlow ? "black" : colors.background,
+                }}
+            />
             <LinearGradient
-                pointerEvents="none"
-                colors={["transparent", activeColors.background]}
-                locations={[0, 0.7]}
+                pointerEvents={isBigScreen ? "none" : "auto"}
+                colors={[
+                    "transparent",
+                    isFlow ? "rgba(0, 0, 0, 0.5)" : colors.background,
+                ]}
                 style={[
                     styles.tabBarGradient,
                     {
-                        height: insets.bottom + 80,
+                        height: "100%",
+                        bottom: insets.bottom,
                     },
                 ]}
             />
@@ -148,8 +160,7 @@ export default function TabBar({
                 style={[
                     styles.tabBar,
                     {
-                        backgroundColor: activeColors.surface,
-                        shadowOpacity: activeIsDark ? 0.35 : 0.12,
+                        backgroundColor: colors.surface,
                     },
                 ]}
             >
@@ -157,7 +168,7 @@ export default function TabBar({
                     style={[
                         styles.activeTabIndicator,
                         {
-                            backgroundColor: activeColors.primary,
+                            backgroundColor: colors.primary,
                         },
                         activeTabIndicatorStyle,
                     ]}
@@ -172,8 +183,8 @@ export default function TabBar({
                             ? options.tabBarIcon({
                                   focused: isFocused,
                                   color: isFocused
-                                      ? activeColors.textInverse
-                                      : activeColors.textMuted,
+                                      ? colors.textInverse
+                                      : colors.textMuted,
                                   size: 24,
                               })
                             : null;
@@ -205,8 +216,8 @@ export default function TabBar({
                                         styles.tabLabel,
                                         {
                                             color: isFocused
-                                                ? activeColors.textInverse
-                                                : activeColors.textMuted,
+                                                ? colors.textInverse
+                                                : colors.textMuted,
                                         },
                                     ]}
                                 >
@@ -234,7 +245,6 @@ const styles = StyleSheet.create({
 
     tabBarGradient: {
         position: "absolute",
-        bottom: 0,
         left: 0,
         right: 0,
     },
@@ -246,12 +256,13 @@ const styles = StyleSheet.create({
         borderRadius: 999,
         padding: TAB_BAR_PADDING,
         position: "relative",
-        shadowColor: "#000",
+        shadowColor: "#000000",
         shadowOffset: {
             width: 0,
-            height: 4,
+            height: 5,
         },
-        shadowRadius: 12,
+        shadowRadius: 10,
+        shadowOpacity: 0.3,
         elevation: 10,
     },
 

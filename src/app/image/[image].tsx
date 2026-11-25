@@ -4,8 +4,9 @@ import useTheme from "@/hooks/useTheme";
 import { Image as ExpoImage } from "expo-image";
 import * as Linking from "expo-linking";
 import { useLocalSearchParams, useNavigation } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { Pressable, Share, StatusBar, StyleSheet, View } from "react-native";
+import { Pressable, Share, StyleSheet, View } from "react-native";
 import {
     GestureDetector,
     GestureHandlerRootView,
@@ -202,7 +203,7 @@ const ImageScreen = () => {
 
     return (
         <GestureHandlerRootView style={styles.container}>
-            <StatusBar barStyle="light-content" />
+            <StatusBar style="light" />
             <ExpoImage
                 source={image}
                 style={styles.backgroundImage}

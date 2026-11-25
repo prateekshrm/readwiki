@@ -15,6 +15,7 @@ import { getFullArticle } from "@/services/wikipedia";
 import { addToHistory } from "@/stores/articleHistory.store";
 import { usePreferencesStore } from "@/stores/preferences.store";
 import { toggleSavedArticle, useIsSaved } from "@/stores/savedArticles.store";
+import { AnimatedLegendList } from "@legendapp/list/reanimated";
 import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
@@ -30,7 +31,6 @@ import {
     Text,
     View,
 } from "react-native";
-import Animated from "react-native-reanimated";
 import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -547,9 +547,10 @@ const Article = () => {
 
     return (
         <View style={styles.container}>
-            <Animated.FlatList
+            <AnimatedLegendList
                 data={blocks}
                 keyExtractor={keyExtractor}
+                renderItem={renderItem}
                 contentContainerStyle={[
                     styles.content,
                     // With no hero image the title would sit under the transparent
@@ -559,12 +560,8 @@ const Article = () => {
                 ]}
                 onScroll={onScroll}
                 scrollEventThrottle={16}
-                renderItem={renderItem}
-                removeClippedSubviews={Platform.OS === "android"}
-                maxToRenderPerBatch={10}
-                windowSize={7}
-                initialNumToRender={8}
-                updateCellsBatchingPeriod={50}
+                estimatedItemSize={100}
+                recycleItems
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}

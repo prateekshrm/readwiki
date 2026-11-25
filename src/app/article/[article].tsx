@@ -181,7 +181,7 @@ const ArticleBlockItem = memo(
                           ? 24
                           : block.level === 4
                             ? 20
-                            : 17) * fontScale;
+                            : 16) * fontScale;
 
                 return (
                     <Text
@@ -204,8 +204,8 @@ const ArticleBlockItem = memo(
                         style={[
                             styles.paragraph,
                             {
-                                fontSize: 17 * fontScale,
-                                lineHeight: 28 * fontScale,
+                                fontSize: 16 * fontScale,
+                                lineHeight: 26 * fontScale,
                             },
                         ]}
                     />
@@ -293,8 +293,8 @@ const ArticleBlockItem = memo(
                                         {
                                             flex: 1,
                                             marginBottom: 0,
-                                            fontSize: 17 * fontScale,
-                                            lineHeight: 28 * fontScale,
+                                            fontSize: 16 * fontScale,
+                                            lineHeight: 26 * fontScale,
                                         },
                                     ]}
                                 />
@@ -848,7 +848,7 @@ const createStyles = (colors: ThemeColors) =>
         bullet: {
             fontFamily: "DMSans-SemiBold",
             color: colors.textSecondary,
-            fontSize: 17,
+            fontSize: 16,
             lineHeight: 28,
         },
 

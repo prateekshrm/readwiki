@@ -3,12 +3,13 @@ import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { ThemeColors } from "@/constants/Colors";
 import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
-import { clearHistory, useHistory } from "@/stores/articleHistory.store";
 import {
     getNotificationPermissionStatus,
     scheduleTomorrowFeaturedNotification,
     sendTestNotification,
 } from "@/services/notification";
+import { clearHistory, useHistory } from "@/stores/articleHistory.store";
+import { useModalStore } from "@/stores/modal.store";
 import {
     FONT_SCALES,
     setPreference,
@@ -18,7 +19,6 @@ import {
     clearSavedArticles,
     useSavedArticles,
 } from "@/stores/savedArticles.store";
-import { useModalStore } from "@/stores/modal.store";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -514,8 +514,8 @@ const Settings = () => {
                                 style={[
                                     styles.paragraphPreview,
                                     {
-                                        fontSize: 17 * preferences.fontScale,
-                                        lineHeight: 28 * preferences.fontScale,
+                                        fontSize: 16 * preferences.fontScale,
+                                        lineHeight: 26 * preferences.fontScale,
                                     },
                                 ]}
                             >

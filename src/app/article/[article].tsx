@@ -414,6 +414,11 @@ const Article = () => {
         openOnWikipedia(activeMeta);
     }, [activeMeta]);
 
+    const extraData = useMemo(
+        () => ({ styles, fontScale }),
+        [styles, fontScale],
+    );
+
     const renderItem = useCallback(
         ({ item }: { item: Block }) => (
             <ArticleBlockItem
@@ -553,6 +558,7 @@ const Article = () => {
         <View style={styles.container}>
             <AnimatedLegendList
                 data={blocks}
+                extraData={extraData}
                 keyExtractor={keyExtractor}
                 getItemType={getItemType}
                 renderItem={renderItem}
@@ -565,6 +571,7 @@ const Article = () => {
                 ]}
                 onScroll={onScroll}
                 scrollEventThrottle={16}
+                drawDistance={1500}
                 estimatedItemSize={100}
                 recycleItems
                 refreshControl={

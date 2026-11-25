@@ -17,12 +17,13 @@ import { useLayoutStore } from "@/stores/layout.store";
 import { stripHtml } from "@/utils/html";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useScrollToTop } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Pressable,
     RefreshControl,
     ScrollView,
+    ScrollViewInstance,
     StyleSheet,
     Text,
     View,
@@ -36,6 +37,9 @@ const Home = () => {
     const styles = useMemo(() => createStyles(colors), [colors]);
 
     const tabBarHeight = useLayoutStore((state) => state.tabBarHeight);
+
+    const scrollViewRef = useRef<ScrollViewInstance>(null);
+    useScrollToTop(scrollViewRef);
 
     const featuredData = useArticleCacheStore((state) => state.featuredData);
 
@@ -154,6 +158,7 @@ const Home = () => {
     return (
         <View style={styles.container}>
             <ScrollView
+                ref={scrollViewRef}
                 contentContainerStyle={[
                     styles.sectionContainer,
                     !featuredArticle && { paddingTop: insets.top + 60 },

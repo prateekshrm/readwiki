@@ -10,27 +10,35 @@ import {
     useHistory,
 } from "@/stores/articleHistory.store";
 import { useLayoutStore } from "@/stores/layout.store";
-import { router } from "expo-router";
-import { useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { router, useScrollToTop } from "expo-router";
+import { useMemo, useRef } from "react";
+import {
+    Pressable,
+    ScrollViewInstance,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 import Animated from "react-native-reanimated";
 import RemixIcon from "react-native-remix-icon";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Library = () => {
     const { colors, isDark } = useTheme();
     const styles = useMemo(() => createStyles(colors), [colors]);
     const history = useHistory();
     const onScroll = useScreenScroll();
-    const insets = useSafeAreaInsets();
 
     const tabBarHeight = useLayoutStore((state) => state.tabBarHeight);
+
+    const scrollViewRef = useRef<ScrollViewInstance>(null);
+    useScrollToTop(scrollViewRef);
 
     const latestHistory = history.slice(0, 3);
 
     return (
         <View style={styles.container}>
             <Animated.ScrollView
+                ref={scrollViewRef}
                 contentContainerStyle={[
                     styles.content,
                     { paddingBottom: tabBarHeight + 16 },

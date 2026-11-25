@@ -20,12 +20,13 @@ import {
     clearSavedArticles,
     useSavedArticles,
 } from "@/stores/savedArticles.store";
-import { router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { router, useScrollToTop } from "expo-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     AppState,
     Linking,
     Pressable,
+    ScrollViewInstance,
     Share,
     StyleSheet,
     Text,
@@ -33,7 +34,6 @@ import {
 } from "react-native";
 import Animated from "react-native-reanimated";
 import RemixIcon, { IconName } from "react-native-remix-icon";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Types
 
@@ -67,8 +67,6 @@ type SettingsSection = {
 };
 
 const Settings = () => {
-    const insets = useSafeAreaInsets();
-
     const { showModal } = useModalStore();
 
     const { colors, colorScheme } = useTheme();
@@ -80,6 +78,9 @@ const Settings = () => {
     const styles = useMemo(() => createStyles(colors), [colors]);
 
     const tabBarHeight = useLayoutStore((state) => state.tabBarHeight);
+
+    const scrollViewRef = useRef<ScrollViewInstance>(null);
+    useScrollToTop(scrollViewRef);
 
     const [permissionStatus, setPermissionStatus] = useState<
         "granted" | "denied" | "undetermined" | "unsupported" | "loading"
@@ -579,6 +580,7 @@ const Settings = () => {
 
     return (
         <Animated.ScrollView
+            ref={scrollViewRef}
             style={styles.container}
             contentContainerStyle={[
                 styles.content,

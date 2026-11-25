@@ -6,10 +6,11 @@ import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { useTheme } from "@/hooks/useTheme";
 import { searchArticles } from "@/services/wikipedia";
 import { useLayoutStore } from "@/stores/layout.store";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useScrollToTop } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     FlatList,
+    FlatListInstance,
     Pressable,
     StyleSheet,
     Text,
@@ -27,6 +28,10 @@ const Search = () => {
     );
 
     const tabBarHeight = useLayoutStore((state) => state.tabBarHeight);
+
+    const flatListRef = useRef<FlatListInstance>(null);
+
+    useScrollToTop(flatListRef);
 
     const isConnected = useNetworkStatus();
     const [query, setQuery] = useState("");
@@ -133,6 +138,7 @@ const Search = () => {
                 </>
             ) : (
                 <FlatList
+                    ref={flatListRef}
                     data={searchResults}
                     keyExtractor={(item) => item.title}
                     contentContainerStyle={[

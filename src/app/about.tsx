@@ -1,3 +1,4 @@
+import Button from "@/components/Button";
 import { useScreenScroll } from "@/components/HeaderScroll";
 import { ThemeColors } from "@/constants/Colors";
 import { fraunces, frauncesItalic } from "@/constants/Typography";
@@ -51,7 +52,7 @@ export default function About() {
                     Version: {Application.nativeApplicationVersion}
                 </Text>
 
-                <Pressable
+                {/* <Pressable
                     style={styles.linkChip}
                     onPress={() => Linking.openURL(REPOSITORY_URL)}
                 >
@@ -61,7 +62,15 @@ export default function About() {
                         color={colors.text}
                     />
                     <Text style={styles.linkChipText}>GitHub</Text>
-                </Pressable>
+                </Pressable> */}
+
+                <Button
+                    text="Github"
+                    iconName="github-fill"
+                    onPress={() => Linking.openURL(REPOSITORY_URL)}
+                    variant="secondary"
+                    iconPosition="left"
+                />
             </View>
 
             <Text style={styles.sectionTitle}>Author</Text>
@@ -78,13 +87,16 @@ export default function About() {
 
                     <View style={styles.authorLinks}>
                         <Pressable
-                            style={styles.authorLink}
+                            style={({ pressed }) => [
+                                styles.authorLink,
+                                pressed && styles.authorLinkPressed,
+                            ]}
                             onPress={() => Linking.openURL(AUTHOR_PORTFOLIO)}
                         >
                             <RemixIcon
                                 name="global-line"
                                 size={16}
-                                color={colors.accent}
+                                color={colors.text}
                             />
 
                             <Text style={styles.authorLinksText}>
@@ -93,13 +105,16 @@ export default function About() {
                         </Pressable>
 
                         <Pressable
-                            style={styles.authorLink}
+                            style={({ pressed }) => [
+                                styles.authorLink,
+                                pressed && styles.authorLinkPressed,
+                            ]}
                             onPress={() => Linking.openURL(AUTHOR_GITHUB)}
                         >
                             <RemixIcon
                                 name="github-fill"
                                 size={16}
-                                color={colors.accent}
+                                color={colors.text}
                             />
 
                             <Text style={styles.authorLinksText}>
@@ -228,20 +243,7 @@ const createStyles = (colors: ThemeColors) =>
         version: {
             fontFamily: "DMSans-Medium",
             color: colors.textSecondary,
-        },
-        linkChip: {
-            marginTop: 16,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 6,
-            backgroundColor: colors.backgroundMuted,
-            paddingHorizontal: 14,
-            paddingVertical: 8,
-            borderRadius: 999,
-        },
-        linkChipText: {
-            fontFamily: "DMSans-Medium",
-            color: colors.text,
+            marginBottom: 16,
         },
         sectionTitle: {
             fontSize: 14,
@@ -279,16 +281,25 @@ const createStyles = (colors: ThemeColors) =>
         authorLinks: {
             flexDirection: "row",
             flexWrap: "wrap",
-            gap: 12,
+            gap: 6,
             marginTop: 8,
         },
         authorLink: {
             flexDirection: "row",
-            alignItems: "center",
             gap: 6,
+            alignItems: "center",
+            paddingVertical: 6,
+            paddingHorizontal: 12,
+            borderRadius: 100,
+            backgroundColor: colors.backgroundMuted,
+        },
+
+        authorLinkPressed: {
+            filter: "brightness(0.9)",
+            transform: [{ scale: 0.98 }],
         },
         authorLinksText: {
-            color: colors.accent,
+            color: colors.text,
             fontFamily: "DMSans-Medium",
         },
         link: {

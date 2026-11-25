@@ -46,6 +46,7 @@ const Modal = () => {
                 },
             ]}
             scrimColor="rgba(0, 0, 0, 0.4)"
+            maxWidth={392}
             lazy
             surface={
                 <View

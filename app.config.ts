@@ -80,6 +80,8 @@ export default (): ExpoConfig => {
             "expo-localization",
             "expo-widgets",
             "expo-audio",
+            "expo-status-bar",
+            "expo-navigation-bar",
             [
                 "expo-font",
                 {

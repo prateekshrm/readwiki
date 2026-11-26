@@ -20,7 +20,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const TAB_BAR_PADDING = 4;
-const OUTER_PADDING = 16;
+const OUTER_PADDING = 32;
 const MAX_TAB_BAR_WIDTH = 400;
 
 const TIMING_CONFIG = {
@@ -126,7 +126,7 @@ export default function TabBar({
                 {
                     paddingTop: OUTER_PADDING,
                     paddingHorizontal: OUTER_PADDING,
-                    paddingBottom: insets.bottom + OUTER_PADDING,
+                    paddingBottom: insets.bottom + OUTER_PADDING / 2,
                 },
             ]}
         >

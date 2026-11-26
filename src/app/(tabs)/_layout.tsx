@@ -8,7 +8,7 @@ import type { BottomTabBarProps } from "expo-router/js-tabs";
 const renderTabBar = (props: BottomTabBarProps) => <TabBar {...props} />;
 
 export default function RootLayout() {
-    const TAB_ICON_SIZE = 20;
+    const TAB_ICON_SIZE = 18;
     return (
         <Tabs
             tabBar={renderTabBar}

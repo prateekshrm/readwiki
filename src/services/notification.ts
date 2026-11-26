@@ -78,73 +78,118 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
     }
 };
 
+let schedulePromise: Promise<void> | null = null;
+
+const getNonTestScheduledNotifications = async (): Promise<
+    Notifications.NotificationRequest[]
+> => {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    return scheduled.filter((req) => req.content?.data?.type !== "test");
+};
+
+const cancelNotificationIds = async (identifiers: string[]) => {
+    await Promise.allSettled(
+        identifiers.map((id) =>
+            Notifications.cancelScheduledNotificationAsync(id),
+        ),
+    );
+};
+
 export const scheduleTomorrowFeaturedNotification = async () => {
-    try {
-        const status = await getNotificationPermissionStatus();
-        if (status !== Notifications.PermissionStatus.GRANTED) {
-            return;
-        }
-
-        const tomorrowDate = getTomorrow9AM();
-        const tomorrowStr = getLocalYYYYMMDD(tomorrowDate);
-
-        const storedDate = await AsyncStorage.getItem(
-            FEATURED_NOTIFICATION_DATE_KEY,
-        );
-
-        // Case 2: Stored date is tomorrow -> Do nothing (idempotent)
-        if (storedDate === tomorrowStr) {
-            console.log(
-                "Tomorrow's featured article notification is already scheduled.",
-            );
-            return;
-        }
-
-        // Case 1 (no date), Case 3 (storedDate === todayStr), Case 4 (storedDate < todayStr):
-        // Cancel existing scheduled featured-article notification as safety measure
-        try {
-            await Notifications.cancelScheduledNotificationAsync(
-                FEATURED_NOTIFICATION_ID,
-            );
-        } catch {
-            // Ignore if identifier not found
-        }
-
-        const title = await getTomorrowFeaturedArticleTitle();
-
-        if (!title) {
-            console.log(
-                "No tomorrow featured article title received from API.",
-            );
-            return;
-        }
-
-        await Notifications.scheduleNotificationAsync({
-            identifier: FEATURED_NOTIFICATION_ID,
-            content: {
-                title: title,
-                body: "Tap to read today's featured article.",
-                data: {
-                    type: "featured-article",
-                    href: `/article/${encodeURIComponent(title)}`,
-                },
-            },
-            trigger: {
-                type: Notifications.SchedulableTriggerInputTypes.DATE,
-                date: tomorrowDate,
-            },
-        });
-
-        await AsyncStorage.setItem(FEATURED_NOTIFICATION_DATE_KEY, tomorrowStr);
-        console.log(
-            `Scheduled notification for tomorrow (${tomorrowStr} 9:00 AM) with title: ${title}`,
-        );
-    } catch (error) {
-        console.warn(
-            "Failed to schedule tomorrow featured notification:",
-            error,
-        );
+    if (schedulePromise) {
+        return schedulePromise;
     }
+
+    schedulePromise = (async () => {
+        try {
+            const status = await getNotificationPermissionStatus();
+            if (status !== Notifications.PermissionStatus.GRANTED) {
+                return;
+            }
+
+            const tomorrowDate = getTomorrow9AM();
+            const tomorrowStr = getLocalYYYYMMDD(tomorrowDate);
+
+            const storedDate = await AsyncStorage.getItem(
+                FEATURED_NOTIFICATION_DATE_KEY,
+            );
+
+            const nonTestScheduled = await getNonTestScheduledNotifications();
+
+            // Case 2: Stored date is tomorrow -> ensure no orphaned duplicates exist
+            if (storedDate === tomorrowStr) {
+                const duplicates = nonTestScheduled
+                    .filter(
+                        (req) => req.identifier !== FEATURED_NOTIFICATION_ID,
+                    )
+                    .map((req) => req.identifier);
+
+                if (duplicates.length > 0) {
+                    await cancelNotificationIds(duplicates);
+                }
+
+                const hasCurrent = nonTestScheduled.some(
+                    (req) => req.identifier === FEATURED_NOTIFICATION_ID,
+                );
+                if (hasCurrent) {
+                    console.log(
+                        "Tomorrow's featured article notification is already scheduled.",
+                    );
+                    return;
+                }
+            }
+
+            // Cancel all existing non-test scheduled notifications to prevent
+            // orphaned or duplicate daily notifications from older builds
+            const idsToCancel = new Set(
+                nonTestScheduled.map((req) => req.identifier),
+            );
+            idsToCancel.add(FEATURED_NOTIFICATION_ID);
+            await cancelNotificationIds(Array.from(idsToCancel));
+
+            const title = await getTomorrowFeaturedArticleTitle();
+
+            if (!title) {
+                console.log(
+                    "No tomorrow featured article title received from API.",
+                );
+                return;
+            }
+
+            await Notifications.scheduleNotificationAsync({
+                identifier: FEATURED_NOTIFICATION_ID,
+                content: {
+                    title: title,
+                    body: "Tap to read today's featured article.",
+                    data: {
+                        type: "featured-article",
+                        href: `/article/${encodeURIComponent(title)}`,
+                    },
+                },
+                trigger: {
+                    type: Notifications.SchedulableTriggerInputTypes.DATE,
+                    date: tomorrowDate,
+                },
+            });
+
+            await AsyncStorage.setItem(
+                FEATURED_NOTIFICATION_DATE_KEY,
+                tomorrowStr,
+            );
+            console.log(
+                `Scheduled notification for tomorrow (${tomorrowStr} 9:00 AM) with title: ${title}`,
+            );
+        } catch (error) {
+            console.warn(
+                "Failed to schedule tomorrow featured notification:",
+                error,
+            );
+        } finally {
+            schedulePromise = null;
+        }
+    })();
+
+    return schedulePromise;
 };
 
 let isInitializing = false;

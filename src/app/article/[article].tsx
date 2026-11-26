@@ -2,7 +2,7 @@ import ArticlePreviewSheet from "@/components/ArticlePreviewSheet";
 import ArticleSkeleton from "@/components/ArticleSkeleton";
 import GalleryView from "@/components/GalleryView";
 import { useScreenScroll } from "@/components/HeaderScroll";
-import InfoboxView from "@/components/InfoboxView";
+import InfoboxSheet from "@/components/InfoboxSheet";
 import NoInternetView from "@/components/NoInternetView";
 import RichText from "@/components/RichText";
 import TableView from "@/components/TableView";
@@ -269,7 +269,7 @@ const ArticleBlockItem = memo(
 
             case "infobox":
                 return (
-                    <InfoboxView
+                    <InfoboxSheet
                         block={block}
                         onLinkPress={onLinkPress}
                         onImagePress={onImagePress}
@@ -651,6 +651,9 @@ const Article = () => {
                 }}
                 settleDuration={300}
             >
+                <View style={styles.sheetHandleContainer}>
+                    <View style={styles.sheetHandle} />
+                </View>
                 <View
                     style={[
                         styles.menuSheetContent,
@@ -882,6 +885,19 @@ const createStyles = (colors: ThemeColors) =>
             fontFamily: "DMSans-Regular",
             color: colors.textMuted,
             marginTop: 8,
+        },
+
+        sheetHandleContainer: {
+            alignItems: "center",
+            paddingTop: 10,
+            paddingBottom: 6,
+        },
+
+        sheetHandle: {
+            width: 36,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: colors.textSecondary,
         },
 
         menuSheetContent: {

@@ -121,6 +121,9 @@ const ArticlePreviewSheet = ({
             }}
             settleDuration={300}
         >
+            <View style={styles.sheetHandleContainer}>
+                <View style={styles.sheetHandle} />
+            </View>
             {loading ? (
                 <View
                     style={[
@@ -238,6 +241,20 @@ const createStyles = (colors: ThemeColors) =>
             gap: 12,
             padding: 16,
         },
+
+        sheetHandleContainer: {
+            alignItems: "center",
+            paddingTop: 10,
+            paddingBottom: 6,
+        },
+
+        sheetHandle: {
+            width: 36,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: colors.textSecondary,
+        },
+
         contentContainer: {
             padding: 16,
         },

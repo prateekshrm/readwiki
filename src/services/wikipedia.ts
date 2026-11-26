@@ -137,57 +137,65 @@ export const getFullArticle = async (
             }
         }
 
-        // Hero image from page_image prop or first prominent image in the HTML
-        const pageImageName: string | undefined = properties.find(
-            (p: any) => p.name === "page_image_free" || p.name === "page_image",
-        )?.["*"];
+        // Hero image strictly from MediaWiki's page_image_free / page_image properties
+        // (avoids promoting unrelated navbox logos, maintenance icons, etc.)
+        const pageImageName: string | undefined =
+            properties.find((p: any) => p.name === "page_image_free")?.[
+                "*"
+            ] ?? properties.find((p: any) => p.name === "page_image")?.["*"];
 
         let heroImage: string | undefined;
         let heroWidth: number | undefined;
         let heroHeight: number | undefined;
 
-        const imgRegex = /<img\b([^>]+)>/gi;
-        let match;
+        if (pageImageName) {
+            const rawName = pageImageName.replace(/ /g, "_");
+            const cleanName = encodeURIComponent(rawName);
+            const imgRegex = /<img\b([^>]+)>/gi;
+            let match;
 
-        while ((match = imgRegex.exec(html)) !== null) {
-            const attrs = match[1];
-            const srcMatch = attrs.match(/src="([^">]+)"/i);
-            if (!srcMatch) continue;
+            while ((match = imgRegex.exec(html)) !== null) {
+                const attrs = match[1];
+                const srcMatch = attrs.match(/src="([^">]+)"/i);
+                if (!srcMatch) continue;
 
-            let src = srcMatch[1];
-            if (src.startsWith("//")) src = "https:" + src;
+                let src = srcMatch[1].replace(/&amp;/g, "&");
+                if (src.startsWith("//")) src = "https:" + src;
 
-            const widthMatch = attrs.match(/width="(\d+)"/i);
-            const heightMatch = attrs.match(/height="(\d+)"/i);
-            const classMatch = attrs.match(/class="([^">]+)"/i);
-
-            const w = widthMatch ? parseInt(widthMatch[1], 10) : undefined;
-            const h = heightMatch ? parseInt(heightMatch[1], 10) : undefined;
-            const cls = classMatch ? classMatch[1] : "";
-
-            if (cls.includes("mwe-math") || cls.includes("mw-file-icon")) {
-                continue;
-            }
-            if (w && w < 50 && h && h < 50) continue;
-
-            if (pageImageName) {
-                const cleanName = encodeURIComponent(
-                    pageImageName.replace(/ /g, "_"),
-                );
-                const rawName = pageImageName.replace(/ /g, "_");
-                if (src.includes(cleanName) || src.includes(rawName)) {
-                    heroImage = src;
-                    heroWidth = w;
-                    heroHeight = h;
-                    break;
+                let decodedSrc = src;
+                try {
+                    decodedSrc = decodeURIComponent(src);
+                } catch {
+                    // Keep original src if malformed percent-encoding
                 }
-            }
 
-            if (!heroImage) {
+                if (
+                    !src.includes(cleanName) &&
+                    !src.includes(rawName) &&
+                    !decodedSrc.includes(rawName)
+                ) {
+                    continue;
+                }
+
+                const widthMatch = attrs.match(/width="(\d+)"/i);
+                const heightMatch = attrs.match(/height="(\d+)"/i);
+                const classMatch = attrs.match(/class="([^">]+)"/i);
+
+                const w = widthMatch ? parseInt(widthMatch[1], 10) : undefined;
+                const h = heightMatch
+                    ? parseInt(heightMatch[1], 10)
+                    : undefined;
+                const cls = classMatch ? classMatch[1] : "";
+
+                if (cls.includes("mwe-math") || cls.includes("mw-file-icon")) {
+                    continue;
+                }
+                if ((w && w < 50) || (h && h < 50)) continue;
+
                 heroImage = src;
                 heroWidth = w;
                 heroHeight = h;
-                if (!pageImageName) break;
+                break;
             }
         }
 

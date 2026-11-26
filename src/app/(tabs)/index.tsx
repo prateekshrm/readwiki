@@ -3,7 +3,7 @@ import Button from "@/components/Button";
 import DidYouKnowCard from "@/components/DidYouKnowCard";
 import { useSolidHeader } from "@/components/HeaderScroll";
 import HomeSkeleton from "@/components/HomeSkeleton";
-import NewsCard from "@/components/NewsCard";
+import NewsStory from "@/components/NewsStory";
 import NoInternetView from "@/components/NoInternetView";
 import OnThisDayEvent from "@/components/OnThisDayEvent";
 import SectionButton from "@/components/SectionButton";
@@ -332,21 +332,11 @@ const Home = () => {
                                 const article = item.links?.[0];
 
                                 return (
-                                    <NewsCard
+                                    <NewsStory
                                         key={`${item.story}-${index}`}
                                         story={stripHtml(item.story)}
-                                        title={article?.normalizedtitle}
                                         image={article?.thumbnail?.source}
-                                        onPress={() =>
-                                            article &&
-                                            router.navigate({
-                                                pathname: "/article/[article]",
-                                                params: {
-                                                    article:
-                                                        article.normalizedtitle,
-                                                },
-                                            })
-                                        }
+                                        links={item.links}
                                     />
                                 );
                             })}

@@ -1,5 +1,5 @@
 import { useScreenScroll } from "@/components/HeaderScroll";
-import NewsCard from "@/components/NewsCard";
+import NewsStory from "@/components/NewsStory";
 import NoInternetView from "@/components/NoInternetView";
 import { ThemeColors } from "@/constants/Colors";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
@@ -67,19 +67,10 @@ const News = () => {
                     const article = item.links?.[0];
 
                     return (
-                        <NewsCard
+                        <NewsStory
                             story={stripHtml(item.story)}
-                            title={article?.normalizedtitle}
                             image={article?.thumbnail?.source}
-                            onPress={() =>
-                                article &&
-                                router.navigate({
-                                    pathname: "/article/[article]",
-                                    params: {
-                                        article: article.normalizedtitle,
-                                    },
-                                })
-                            }
+                            links={item.links}
                         />
                     );
                 }}

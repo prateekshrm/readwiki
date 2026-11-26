@@ -261,7 +261,7 @@ export const searchArticles = async (query: string) => {
         const encodedQuery = encodeURIComponent(query);
 
         const response = await fetch(
-            `https://en.wikipedia.org/w/api.php?action=query&generator=prefixsearch&description&prop=pageprops%7Cpageimages%7Cdescription&piprop=thumbnail&pithumbsize=128&gpslimit=6&format=json&formatversion=2&maxage=900&smaxage=900&gpssearch=${encodedQuery}`,
+            `https://en.wikipedia.org/w/api.php?action=query&generator=prefixsearch&description&prop=pageprops%7Cpageimages%7Cdescription&piprop=thumbnail&pithumbsize=128&format=json&formatversion=2&maxage=900&smaxage=900&gpssearch=${encodedQuery}`,
             {
                 headers: {
                     "User-Agent": "ReadWiki/2.0.0",

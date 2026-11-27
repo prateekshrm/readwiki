@@ -1,7 +1,8 @@
 import { ThemeColors } from "@/constants/Colors";
 import useTheme from "@/hooks/useTheme";
-import { useEffect, useMemo } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { useScrollToTop } from "expo-router";
+import { useEffect, useMemo, useRef } from "react";
+import { ScrollView, ScrollViewInstance, StyleSheet, View } from "react-native";
 import Animated, {
     interpolateColor,
     useAnimatedStyle,
@@ -17,6 +18,9 @@ const HomeSkeleton = () => {
     const styles = useMemo(() => createStyles(colors), [colors]);
 
     const insets = useSafeAreaInsets();
+
+    const scrollViewRef = useRef<ScrollViewInstance>(null);
+    useScrollToTop(scrollViewRef);
 
     const shimmer = useSharedValue(0);
 
@@ -35,6 +39,7 @@ const HomeSkeleton = () => {
     return (
         <ScrollView
             style={styles.homeSkeletonContainter}
+            ref={scrollViewRef}
             contentContainerStyle={{
                 gap: 32,
                 paddingBottom: insets.bottom + 80,

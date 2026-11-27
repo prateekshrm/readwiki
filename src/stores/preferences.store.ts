@@ -46,7 +46,7 @@ export const FONT_SCALES = [
     { label: "Small", value: 0.9 },
     { label: "Default", value: 1 },
     { label: "Large", value: 1.15 },
-    { label: "Extra Large", value: 1.3 },
+    { label: "XL", value: 1.3 },
 ];
 
 const syncAppearance = (theme: ThemeMode) => {
@@ -107,7 +107,8 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
             };
 
             AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toPersist)).catch(
-                (error) => console.warn("Failed to persist preferences:", error),
+                (error) =>
+                    console.warn("Failed to persist preferences:", error),
             );
 
             return { [key]: value };

@@ -79,7 +79,7 @@ export function ThemeSwitcher() {
             {OPTIONS.map((option, index) => {
                 const isActive = index === safeActiveIndex;
                 const activeColor = isDark ? "#000000" : "#FFFFFF";
-                const iconColor = isActive ? activeColor : colors.textMuted;
+                const iconColor = isActive ? activeColor : colors.textSecondary;
 
                 return (
                     <Pressable

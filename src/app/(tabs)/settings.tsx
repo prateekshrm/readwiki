@@ -1,4 +1,5 @@
 import { useScreenScroll } from "@/components/HeaderScroll";
+import { TextSizeSwitcher } from "@/components/TextSizeSwitcher";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { ThemeColors } from "@/constants/Colors";
 import { fraunces } from "@/constants/Typography";
@@ -12,7 +13,6 @@ import { clearHistory, useHistory } from "@/stores/articleHistory.store";
 import { useLayoutStore } from "@/stores/layout.store";
 import { useModalStore } from "@/stores/modal.store";
 import {
-    FONT_SCALES,
     setPreference,
     usePreferencesStore,
 } from "@/stores/preferences.store";
@@ -40,27 +40,27 @@ import RemixIcon, { IconName } from "react-native-remix-icon";
 
 type SettingsItem =
     | {
-          type: "theme";
-          title: string;
-          description: string;
-          icon: IconName;
-      }
+        type: "theme";
+        title: string;
+        description: string;
+        icon: IconName;
+    }
     | {
-          type: "textSize";
-          title: string;
-          description: string;
-          icon: IconName;
-      }
+        type: "textSize";
+        title: string;
+        description: string;
+        icon: IconName;
+    }
     | {
-          type: "navigation";
-          title: string;
-          description: string;
-          icon: IconName;
-          onPress: () => void;
-          disabled?: boolean;
-          rightIcon?: IconName;
-          rightIconColor?: string;
-      };
+        type: "navigation";
+        title: string;
+        description: string;
+        icon: IconName;
+        onPress: () => void;
+        disabled?: boolean;
+        rightIcon?: IconName;
+        rightIconColor?: string;
+    };
 
 type SettingsSection = {
     title: string;
@@ -273,8 +273,8 @@ const Settings = () => {
                         preferences.theme === "system"
                             ? `System (${colorScheme === "dark" ? "Dark" : "Light"})`
                             : preferences.theme === "dark"
-                              ? "Dark"
-                              : "Light",
+                                ? "Dark"
+                                : "Light",
                     icon: "palette-line",
                 },
             ],
@@ -307,8 +307,8 @@ const Settings = () => {
                         permissionStatus === "granted"
                             ? "checkbox-circle-fill"
                             : permissionStatus === "unsupported"
-                              ? undefined
-                              : "arrow-right-s-line",
+                                ? undefined
+                                : "arrow-right-s-line",
                     rightIconColor:
                         permissionStatus === "granted"
                             ? colors.accent
@@ -337,8 +337,8 @@ const Settings = () => {
                         savedArticles.length === 0
                             ? "No saved articles"
                             : savedArticles.length === 1
-                              ? `${savedArticles.length} article`
-                              : `${savedArticles.length} articles`,
+                                ? `${savedArticles.length} article`
+                                : `${savedArticles.length} articles`,
                     icon: "delete-bin-line",
                     onPress: confirmClearSaved,
                     disabled: savedArticles.length === 0,
@@ -350,8 +350,8 @@ const Settings = () => {
                         history.length === 0
                             ? "No reading history"
                             : history.length === 1
-                              ? `${history.length} article`
-                              : `${history.length} articles`,
+                                ? `${history.length} article`
+                                : `${history.length} articles`,
                     icon: "delete-bin-line",
                     onPress: confirmClearHistory,
                     disabled: history.length === 0,
@@ -470,36 +470,8 @@ const Settings = () => {
                         </View>
 
                         {/* Text size options */}
-                        <View style={styles.chips}>
-                            {FONT_SCALES.map((option) => {
-                                const active =
-                                    preferences.fontScale === option.value;
-
-                                return (
-                                    <Pressable
-                                        key={option.label}
-                                        style={[
-                                            styles.chip,
-                                            active && styles.chipActive,
-                                        ]}
-                                        onPress={() =>
-                                            setPreference(
-                                                "fontScale",
-                                                option.value,
-                                            )
-                                        }
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.chipText,
-                                                active && styles.chipTextActive,
-                                            ]}
-                                        >
-                                            {option.label}
-                                        </Text>
-                                    </Pressable>
-                                );
-                            })}
+                        <View style={styles.textSizeSwitcherWrapper}>
+                            <TextSizeSwitcher />
                         </View>
 
                         {/* Preview */}
@@ -650,32 +622,11 @@ const createStyles = (colors: ThemeColors) =>
             fontFamily: "DMSans-Regular",
             color: colors.text,
         },
-        chips: {
-            flexDirection: "row",
-            flexWrap: "wrap",
-            gap: 8,
+        textSizeSwitcherWrapper: {
             marginVertical: 12,
             paddingTop: 12,
             borderTopWidth: 1,
             borderTopColor: colors.backgroundMuted,
-        },
-        chip: {
-            paddingVertical: 6,
-            paddingHorizontal: 12,
-            borderRadius: 999,
-            backgroundColor: colors.backgroundMuted,
-        },
-        chipActive: {
-            backgroundColor: colors.primary,
-            borderColor: colors.primary,
-        },
-        chipText: {
-            fontSize: 14,
-            fontFamily: "DMSans-Medium",
-            color: colors.text,
-        },
-        chipTextActive: {
-            color: colors.textInverse,
         },
         setting: {
             flexDirection: "row",

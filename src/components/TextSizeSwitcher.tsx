@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
         height: SWITCHER_HEIGHT,
         borderRadius: 999,
         padding: PADDING,
+        gap: PADDING,
         position: "relative",
     },
     indicator: {

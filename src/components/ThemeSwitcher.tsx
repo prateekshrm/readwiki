@@ -22,12 +22,14 @@ const OPTIONS: ThemeOption[] = [
     { mode: "dark", icon: "moon-line", accessibilityLabel: "Dark theme" },
 ];
 
-const SEGMENT_WIDTH = 34;
-const INDICATOR_SIZE = 32;
-const SWITCHER_HEIGHT = 36;
+const SEGMENT_SIZE = 32;
+const INDICATOR_SIZE = SEGMENT_SIZE;
 const PADDING = 2;
-const SWITCHER_WIDTH = SEGMENT_WIDTH * 3 + PADDING * 2; // 106
-const INDICATOR_OFFSET = PADDING + (SEGMENT_WIDTH - INDICATOR_SIZE) / 2; // 4
+const GAP = PADDING;
+const SWITCHER_HEIGHT = SEGMENT_SIZE + PADDING * 2; // 36
+const SWITCHER_WIDTH =
+    SEGMENT_SIZE * OPTIONS.length + PADDING * 2 + GAP * (OPTIONS.length - 1); // 104
+const SEGMENT_STEP = SEGMENT_SIZE + GAP; // 34
 
 export function ThemeSwitcher() {
     const { theme, setTheme, colors, isDark } = useTheme();
@@ -35,13 +37,11 @@ export function ThemeSwitcher() {
     const activeIndex = OPTIONS.findIndex((opt) => opt.mode === theme);
     const safeActiveIndex = activeIndex >= 0 ? activeIndex : 0;
 
-    const translateX = useSharedValue(
-        INDICATOR_OFFSET + safeActiveIndex * SEGMENT_WIDTH,
-    );
+    const translateX = useSharedValue(PADDING + safeActiveIndex * SEGMENT_STEP);
 
     useEffect(() => {
         translateX.value = withTiming(
-            INDICATOR_OFFSET + safeActiveIndex * SEGMENT_WIDTH,
+            PADDING + safeActiveIndex * SEGMENT_STEP,
             {
                 duration: 250,
                 easing: Easing.bezier(0.25, 1, 0.5, 1),
@@ -112,8 +112,8 @@ const styles = StyleSheet.create({
         height: SWITCHER_HEIGHT,
         width: SWITCHER_WIDTH,
         borderRadius: 999,
-        paddingLeft: PADDING,
-        paddingRight: PADDING,
+        padding: PADDING,
+        gap: GAP,
         position: "relative",
     },
     indicator: {
@@ -122,8 +122,8 @@ const styles = StyleSheet.create({
         left: 0,
     },
     segment: {
-        width: SEGMENT_WIDTH,
-        height: "100%",
+        width: SEGMENT_SIZE,
+        height: SEGMENT_SIZE,
         alignItems: "center",
         justifyContent: "center",
         zIndex: 1,

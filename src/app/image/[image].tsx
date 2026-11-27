@@ -1,6 +1,7 @@
 import { useSolidHeader } from "@/components/HeaderScroll";
 import Loader from "@/components/Loader";
 import useTheme from "@/hooks/useTheme";
+import { toast } from "@/stores/toast.store";
 import { Image as ExpoImage } from "expo-image";
 import * as Linking from "expo-linking";
 import { useLocalSearchParams, useNavigation } from "expo-router";
@@ -32,6 +33,10 @@ const HeaderRight = ({ image }: { image?: string }) => {
             await Linking.openURL(image);
         } catch (err) {
             console.log("Failed to open image in browser:", err);
+            toast.error(
+                "Couldn't Open Image",
+                "Unable to open the image in your browser.",
+            );
         }
     };
 

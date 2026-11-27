@@ -3,12 +3,12 @@ import { useScreenScroll } from "@/components/HeaderScroll";
 import { ThemeColors } from "@/constants/Colors";
 import { fraunces } from "@/constants/Typography";
 import useTheme from "@/hooks/useTheme";
+import { useModalStore } from "@/stores/modal.store";
 import {
     clearSavedArticles,
     removeArticle,
     useSavedArticles,
 } from "@/stores/savedArticles.store";
-import { useModalStore } from "@/stores/modal.store";
 import { router, useNavigation } from "expo-router";
 import { useEffect, useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";

@@ -14,6 +14,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { getFeaturedData } from "@/services/wikipedia";
 import { useArticleCacheStore } from "@/stores/articleCache.store";
 import { useLayoutStore } from "@/stores/layout.store";
+import { toast } from "@/stores/toast.store";
 import { stripHtml } from "@/utils/html";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -73,6 +74,7 @@ const Home = () => {
             await getFeaturedData();
         } catch (error) {
             console.error(error);
+            toast.error("Failed to Load", "Could not load featured articles.");
         } finally {
             setLoading(false);
         }
@@ -91,6 +93,12 @@ const Home = () => {
 
         try {
             await getFeaturedData();
+        } catch (error) {
+            console.error(error);
+            toast.error(
+                "Couldn't Refresh",
+                "Failed to load featured articles.",
+            );
         } finally {
             setRefreshing(false);
         }

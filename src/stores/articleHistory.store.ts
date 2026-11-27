@@ -1,4 +1,5 @@
 import db from "@/services/database";
+import { toast } from "@/stores/toast.store";
 import { create } from "zustand";
 
 // Shape of a single history entry. We keep just enough to render a
@@ -42,7 +43,10 @@ export const useArticleHistoryStore = create<ArticleHistoryState>((set) => ({
                 [article.title, article.thumbnail ?? null, article.readAt],
             );
         } catch (error) {
-            console.warn("Failed to add article to history in database:", error);
+            console.warn(
+                "Failed to add article to history in database:",
+                error,
+            );
         }
 
         set((state) => ({
@@ -57,7 +61,10 @@ export const useArticleHistoryStore = create<ArticleHistoryState>((set) => ({
         try {
             db.runSync("DELETE FROM article_history WHERE title = ?", [title]);
         } catch (error) {
-            console.warn("Failed to remove article from history in database:", error);
+            console.warn(
+                "Failed to remove article from history in database:",
+                error,
+            );
         }
 
         set((state) => ({
@@ -75,6 +82,7 @@ export const useArticleHistoryStore = create<ArticleHistoryState>((set) => ({
         }
 
         set({ articles: [] });
+        toast.show("History Cleared", undefined, "delete-bin-line");
     },
 }));
 
@@ -92,8 +100,7 @@ export const removeFromHistory = (title: string) =>
 export const clearHistory = () =>
     useArticleHistoryStore.getState().clearHistory();
 
-export const getHistory = () =>
-    useArticleHistoryStore.getState().articles;
+export const getHistory = () => useArticleHistoryStore.getState().articles;
 
 /**
  * Format a timestamp into a human-friendly relative time string.

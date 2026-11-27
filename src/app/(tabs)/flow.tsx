@@ -3,11 +3,9 @@ import Loader from "@/components/Loader";
 import NoInternetView from "@/components/NoInternetView";
 import { fraunces } from "@/constants/Typography";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
-import {
-    toggleSavedArticle,
-    useIsSaved,
-} from "@/stores/savedArticles.store";
 import { getRandomArticles } from "@/services/wikipedia";
+import { toggleSavedArticle, useIsSaved } from "@/stores/savedArticles.store";
+import { toast } from "@/stores/toast.store";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -149,6 +147,7 @@ const Flow = () => {
             }
         } catch (error) {
             console.error("Failed to load flow articles:", error);
+            toast.error("Failed to Load", "Could not load articles right now.");
         } finally {
             setLoading(false);
         }
@@ -167,6 +166,7 @@ const Flow = () => {
             }
         } catch (error) {
             console.error("Failed to load more flow articles:", error);
+            toast.error("Failed to Load", "Could not load more articles.");
         } finally {
             setLoadingMore(false);
         }

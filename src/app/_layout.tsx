@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import { HeaderScrollProvider } from "@/components/HeaderScroll";
 import Modal from "@/components/Modal";
+import Toast from "@/components/Toast";
 import useNetworkAlert from "@/hooks/useNetworkAlert";
 import { useTheme } from "@/hooks/useTheme";
 import {
@@ -96,6 +97,7 @@ export default function RootLayout() {
         <BottomSheetProvider>
             <HeaderScrollProvider>
                 <Modal />
+                <Toast />
                 <NavigationBar style={isDark ? "light" : "dark"} />
 
                 <Stack

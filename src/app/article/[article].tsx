@@ -15,6 +15,7 @@ import { getFullArticle } from "@/services/wikipedia";
 import { addToHistory } from "@/stores/articleHistory.store";
 import { usePreferencesStore } from "@/stores/preferences.store";
 import { toggleSavedArticle, useIsSaved } from "@/stores/savedArticles.store";
+import { toast } from "@/stores/toast.store";
 import { AnimatedLegendList } from "@legendapp/list/reanimated";
 import { ModalBottomSheet } from "@swmansion/react-native-bottom-sheet";
 import { Image } from "expo-image";
@@ -79,6 +80,10 @@ const openOnWikipedia = async (item: ArticleMeta) => {
         await Linking.openURL(articleUrl(item));
     } catch (error) {
         console.log("Failed to open article on Wikipedia:", error);
+        toast.error(
+            "Couldn't Open Wikipedia",
+            "Unable to open the link in your browser.",
+        );
     }
 };
 
@@ -491,6 +496,10 @@ const Article = () => {
                 }
             } catch (error) {
                 console.log("Failed to load article:", error);
+                toast.error(
+                    "Failed to Load Article",
+                    "Please check your connection and try again.",
+                );
             } finally {
                 setLoading(false);
             }

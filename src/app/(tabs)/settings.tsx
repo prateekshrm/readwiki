@@ -20,6 +20,7 @@ import {
     clearSavedArticles,
     useSavedArticles,
 } from "@/stores/savedArticles.store";
+import { toast } from "@/stores/toast.store";
 import { router, useScrollToTop } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -236,6 +237,7 @@ const Settings = () => {
             });
         } catch (error) {
             console.error("Failed to share app:", error);
+            toast.error("Share Failed", "Unable to open the share sheet.");
         }
     };
 

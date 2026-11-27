@@ -7,6 +7,7 @@ import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { useTheme } from "@/hooks/useTheme";
 import { searchArticles } from "@/services/wikipedia";
 import { useLayoutStore } from "@/stores/layout.store";
+import { toast } from "@/stores/toast.store";
 import { Platform } from "expo";
 import { router, useNavigation } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -91,6 +92,10 @@ const Search = () => {
             } catch (error) {
                 if (!cancelled) {
                     console.error(error);
+                    toast.error(
+                        "Search Failed",
+                        "Unable to search Wikipedia right now.",
+                    );
                 }
             } finally {
                 if (!cancelled) {

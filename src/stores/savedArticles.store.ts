@@ -1,4 +1,5 @@
 import db from "@/services/database";
+import { toast } from "@/stores/toast.store";
 import { create } from "zustand";
 
 // Shape of a single saved article. We store only title + thumbnail
@@ -64,15 +65,19 @@ export const useSavedArticlesStore = create<SavedArticlesState>((set, get) => ({
         }
 
         set((state) => ({
-            articles: state.articles.filter((article) => article.title !== title),
+            articles: state.articles.filter(
+                (article) => article.title !== title,
+            ),
         }));
     },
 
     toggleSavedArticle: (article: SavedArticle) => {
         if (get().isArticleSaved(article.title)) {
             get().removeArticle(article.title);
+            toast.show("Removed from Saved", article.title, "bookmark-line");
         } else {
             get().saveArticle(article);
+            toast.show("Article Saved", article.title, "bookmark-fill");
         }
     },
 
@@ -84,6 +89,7 @@ export const useSavedArticlesStore = create<SavedArticlesState>((set, get) => ({
         }
 
         set({ articles: [] });
+        toast.show("Saved Articles Cleared", undefined, "bookmark-2-line");
     },
 }));
 
@@ -113,5 +119,4 @@ export const toggleSavedArticle = (article: SavedArticle) =>
 export const clearSavedArticles = () =>
     useSavedArticlesStore.getState().clearSavedArticles();
 
-export const getSavedArticles = () =>
-    useSavedArticlesStore.getState().articles;
+export const getSavedArticles = () => useSavedArticlesStore.getState().articles;

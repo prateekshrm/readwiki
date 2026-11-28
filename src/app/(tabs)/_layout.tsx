@@ -27,7 +27,7 @@ export default function RootLayout() {
                     />
                 ),
                 sceneStyle: { backgroundColor: colors.background },
-                animation: "shift",
+                animation: "fade",
             }}
         >
             <Tabs.Screen

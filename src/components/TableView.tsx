@@ -15,6 +15,7 @@ import RemixIcon from "react-native-remix-icon";
 type TableViewProps = {
     block: TableBlock;
     onLinkPress?: (title: string) => void;
+    onRefPress?: (refId: string, label: string) => void;
     onImagePress?: (src: string) => void;
 };
 
@@ -206,6 +207,7 @@ type TableCellContentProps = {
     colWidth: number;
     fontScale: number;
     onLinkPress?: (title: string) => void;
+    onRefPress?: (refId: string, label: string) => void;
     onImagePress?: (src: string) => void;
     colors: ThemeColors;
     styles: ReturnType<typeof createStyles>;
@@ -217,6 +219,7 @@ const TableCellContent = memo(
         colWidth,
         fontScale,
         onLinkPress,
+        onRefPress,
         onImagePress,
         colors,
         styles,
@@ -252,6 +255,7 @@ const TableCellContent = memo(
                 <RichText
                     spans={cell.spans}
                     onLinkPress={onLinkPress}
+                    onRefPress={onRefPress}
                     style={textStyle}
                     linkColor={colors.link}
                 />
@@ -311,6 +315,7 @@ const TableCellContent = memo(
                     <RichText
                         spans={cell.spans}
                         onLinkPress={onLinkPress}
+                        onRefPress={onRefPress}
                         style={textStyle}
                         linkColor={colors.link}
                     />
@@ -336,6 +341,7 @@ const TableCellContent = memo(
             <RichText
                 spans={cell.spans}
                 onLinkPress={onLinkPress}
+                onRefPress={onRefPress}
                 style={textStyle}
                 linkColor={colors.link}
             />
@@ -375,6 +381,7 @@ type TableCellViewProps = {
     subRowSpan?: number;
     subIndex?: number;
     onLinkPress?: (title: string) => void;
+    onRefPress?: (refId: string, label: string) => void;
     onImagePress?: (src: string) => void;
     colors: ThemeColors;
     styles: ReturnType<typeof createStyles>;
@@ -389,6 +396,7 @@ const TableCellView = memo(
         subRowSpan,
         subIndex,
         onLinkPress,
+        onRefPress,
         onImagePress,
         colors,
         styles,
@@ -420,6 +428,7 @@ const TableCellView = memo(
                     colWidth={colWidth}
                     fontScale={fontScale}
                     onLinkPress={onLinkPress}
+                    onRefPress={onRefPress}
                     onImagePress={onImagePress}
                     colors={colors}
                     styles={styles}
@@ -438,6 +447,7 @@ type TableRowViewProps = {
     numCols: number;
     fontScale: number;
     onLinkPress?: (title: string) => void;
+    onRefPress?: (refId: string, label: string) => void;
     onImagePress?: (src: string) => void;
     colors: ThemeColors;
     styles: ReturnType<typeof createStyles>;
@@ -451,6 +461,7 @@ const TableRowView = memo(
         numCols,
         fontScale,
         onLinkPress,
+        onRefPress,
         onImagePress,
         colors,
         styles,
@@ -502,6 +513,7 @@ const TableRowView = memo(
                                 fontScale={fontScale}
                                 isLastColumn={isLastColumn}
                                 onLinkPress={onLinkPress}
+                                onRefPress={onRefPress}
                                 onImagePress={onImagePress}
                                 colors={colors}
                                 styles={styles}
@@ -532,6 +544,7 @@ const TableRowView = memo(
                                     subRowSpan={subCell.subRowSpan}
                                     subIndex={subIndex}
                                     onLinkPress={onLinkPress}
+                                    onRefPress={onRefPress}
                                     onImagePress={onImagePress}
                                     colors={colors}
                                     styles={styles}
@@ -547,7 +560,12 @@ const TableRowView = memo(
 
 TableRowView.displayName = "TableRowView";
 
-const TableView = ({ block, onLinkPress, onImagePress }: TableViewProps) => {
+const TableView = ({
+    block,
+    onLinkPress,
+    onRefPress,
+    onImagePress,
+}: TableViewProps) => {
     const { colors } = useTheme();
     const fontScale = usePreferencesStore((state) => state.fontScale);
     const styles = useMemo(() => createStyles(colors), [colors]);
@@ -594,6 +612,7 @@ const TableView = ({ block, onLinkPress, onImagePress }: TableViewProps) => {
                             numCols={block.numCols}
                             fontScale={fontScale}
                             onLinkPress={onLinkPress}
+                            onRefPress={onRefPress}
                             onImagePress={onImagePress}
                             colors={colors}
                             styles={styles}

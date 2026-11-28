@@ -336,6 +336,7 @@ const ArticleBlockItem = memo(
                     <InfoboxSheet
                         block={block}
                         onLinkPress={onLinkPress}
+                        onRefPress={onRefPress}
                         onImagePress={onImagePress}
                         articleTitle={articleTitle}
                     />
@@ -405,6 +406,7 @@ const ArticleBlockItem = memo(
                     <TableView
                         block={block}
                         onLinkPress={onLinkPress}
+                        onRefPress={onRefPress}
                         onImagePress={openImage}
                     />
                 );

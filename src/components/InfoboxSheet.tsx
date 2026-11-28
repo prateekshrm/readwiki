@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 type InfoboxSheetProps = {
     block: InfoboxBlock;
     onLinkPress?: (title: string) => void;
+    onRefPress?: (refId: string, label: string) => void;
     onImagePress?: (src: string) => void;
     articleTitle?: string;
 };
@@ -302,6 +303,7 @@ const getSubtitle = (items: InfoboxBlock["items"]): string | null => {
 const InfoboxSheet = ({
     block,
     onLinkPress,
+    onRefPress,
     onImagePress,
     articleTitle,
 }: InfoboxSheetProps) => {
@@ -328,6 +330,14 @@ const InfoboxSheet = ({
             onLinkPress?.(title);
         },
         [onLinkPress],
+    );
+
+    const handleSheetRefPress = useCallback(
+        (refId: string, label: string) => {
+            setSheetIndex(0);
+            onRefPress?.(refId, label);
+        },
+        [onRefPress],
     );
 
     const handleSheetImagePress = useCallback(
@@ -484,6 +494,11 @@ const InfoboxSheet = ({
                                         <RichText
                                             spans={item.values}
                                             onLinkPress={handleSheetLinkPress}
+                                            onRefPress={
+                                                onRefPress
+                                                    ? handleSheetRefPress
+                                                    : undefined
+                                            }
                                             style={[
                                                 styles.subheaderText,
                                                 {
@@ -531,6 +546,11 @@ const InfoboxSheet = ({
                                                         onLinkPress={
                                                             handleSheetLinkPress
                                                         }
+                                                        onRefPress={
+                                                            onRefPress
+                                                                ? handleSheetRefPress
+                                                                : undefined
+                                                        }
                                                         style={[
                                                             fraunces,
                                                             styles.scoreNumber,
@@ -561,6 +581,11 @@ const InfoboxSheet = ({
                                                         }
                                                         onLinkPress={
                                                             handleSheetLinkPress
+                                                        }
+                                                        onRefPress={
+                                                            onRefPress
+                                                                ? handleSheetRefPress
+                                                                : undefined
                                                         }
                                                         style={[
                                                             fraunces,
@@ -808,6 +833,11 @@ const InfoboxSheet = ({
                                                                 onLinkPress={
                                                                     handleSheetLinkPress
                                                                 }
+                                                                onRefPress={
+                                                                    onRefPress
+                                                                        ? handleSheetRefPress
+                                                                        : undefined
+                                                                }
                                                                 style={[
                                                                     styles.comparisonText,
                                                                     {
@@ -910,6 +940,11 @@ const InfoboxSheet = ({
                                                     spans={item.values}
                                                     onLinkPress={
                                                         handleSheetLinkPress
+                                                    }
+                                                    onRefPress={
+                                                        onRefPress
+                                                            ? handleSheetRefPress
+                                                            : undefined
                                                     }
                                                     style={[
                                                         styles.rowValueText,

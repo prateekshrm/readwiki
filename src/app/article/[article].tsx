@@ -4,13 +4,20 @@ import GalleryView from "@/components/GalleryView";
 import { useScreenScroll } from "@/components/HeaderScroll";
 import InfoboxSheet from "@/components/InfoboxSheet";
 import NoInternetView from "@/components/NoInternetView";
+import ReferenceSheet, {
+    type ActiveReference,
+} from "@/components/ReferenceSheet";
 import RichText from "@/components/RichText";
 import TableView from "@/components/TableView";
 import { ThemeColors } from "@/constants/Colors";
 import { fraunces } from "@/constants/Typography";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { useTheme } from "@/hooks/useTheme";
-import { parseArticle, type Block } from "@/services/articleParser";
+import {
+    parseArticleContent,
+    type Block,
+    type Span,
+} from "@/services/articleParser";
 import { getFullArticle } from "@/services/wikipedia";
 import { addToHistory } from "@/stores/articleHistory.store";
 import { usePreferencesStore } from "@/stores/preferences.store";
@@ -159,6 +166,7 @@ type ArticleBlockItemProps = {
     fontScale: number;
     styles: ReturnType<typeof createStyles>;
     onLinkPress: (title: string) => void;
+    onRefPress?: (refId: string, label: string) => void;
     onImagePress?: (src: string) => void;
     articleTitle?: string;
 };
@@ -173,6 +181,7 @@ const ArticleBlockItem = memo(
         fontScale,
         styles,
         onLinkPress,
+        onRefPress,
         onImagePress,
         articleTitle,
     }: ArticleBlockItemProps) => {
@@ -254,6 +263,7 @@ const ArticleBlockItem = memo(
                     <RichText
                         spans={block.spans}
                         onLinkPress={onLinkPress}
+                        onRefPress={onRefPress}
                         style={[
                             styles.paragraph,
                             {
@@ -270,6 +280,7 @@ const ArticleBlockItem = memo(
                         <RichText
                             spans={block.spans}
                             onLinkPress={onLinkPress}
+                            onRefPress={onRefPress}
                             style={[
                                 styles.quoteText,
                                 {
@@ -341,6 +352,7 @@ const ArticleBlockItem = memo(
                                 <RichText
                                     spans={item}
                                     onLinkPress={onLinkPress}
+                                    onRefPress={onRefPress}
                                     style={[
                                         styles.paragraph,
                                         {
@@ -415,6 +427,7 @@ const Article = () => {
     const styles = useMemo(() => createStyles(colors), [colors]);
 
     const [blocks, setBlocks] = useState<Block[]>([]);
+    const [references, setReferences] = useState<Record<string, Span[]>>({});
     const [collapsedHeadings, setCollapsedHeadings] = useState<Set<number>>(
         () => new Set(),
     );
@@ -429,6 +442,7 @@ const Article = () => {
     const fontScale = preferences.fontScale;
 
     const [previewTitle, setPreviewTitle] = useState<string | null>(null);
+    const [activeRef, setActiveRef] = useState<ActiveReference | null>(null);
     const [menuIndex, setMenuIndex] = useState(0);
 
     const activeMeta = useMemo(
@@ -448,6 +462,21 @@ const Article = () => {
 
     const handleDismissPreview = useCallback(() => {
         setPreviewTitle(null);
+    }, []);
+
+    const handleRefPress = useCallback(
+        (refId: string, label: string) => {
+            setActiveRef({
+                id: refId,
+                label,
+                spans: references[refId],
+            });
+        },
+        [references],
+    );
+
+    const handleDismissRef = useCallback(() => {
+        setActiveRef(null);
     }, []);
 
     const handleOpenMenu = useCallback(() => {
@@ -534,6 +563,7 @@ const Article = () => {
                 fontScale={fontScale}
                 styles={styles}
                 onLinkPress={handleLinkPress}
+                onRefPress={handleRefPress}
                 onImagePress={openImage}
                 articleTitle={activeMeta?.title || article}
             />
@@ -542,9 +572,10 @@ const Article = () => {
             fontScale,
             styles,
             handleLinkPress,
+            handleRefPress,
             handleToggleHeading,
             collapsedHeadings,
-            colors.textMuted,
+            colors.text,
             activeMeta,
             article,
         ],
@@ -603,9 +634,10 @@ const Article = () => {
                     });
 
                     if (data.html) {
-                        const parsed = parseArticle(data.html, {
-                            hasHeroImage: !!articleMeta.heroImage,
-                        });
+                        const { blocks: parsed, references: parsedRefs } =
+                            parseArticleContent(data.html, {
+                                hasHeroImage: !!articleMeta.heroImage,
+                            });
                         const initialCollapsed = new Set<number>();
                         for (let i = 0; i < parsed.length; i++) {
                             const b = parsed[i];
@@ -614,6 +646,7 @@ const Article = () => {
                             }
                         }
                         setBlocks(parsed);
+                        setReferences(parsedRefs);
                         setCollapsedHeadings(initialCollapsed);
                     }
                 }
@@ -761,6 +794,13 @@ const Article = () => {
             <ArticlePreviewSheet
                 title={previewTitle}
                 onDismiss={handleDismissPreview}
+            />
+
+            <ReferenceSheet
+                activeRef={activeRef}
+                onDismiss={handleDismissRef}
+                onLinkPress={handleLinkPress}
+                onRefPress={handleRefPress}
             />
 
             <ModalBottomSheet

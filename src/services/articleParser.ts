@@ -11,6 +11,7 @@ export type Span = {
     bold?: boolean;
     italic?: boolean;
     link?: string;
+    refId?: string;
 };
 
 export type TableCellImage = {
@@ -175,9 +176,6 @@ export type Block =
 const SKIP_TAGS = new Set(["style", "script", "noscript", "template"]);
 
 const SKIP_CLASSES = new Set([
-    "reference",
-    "reflist",
-    "mw-references-wrap",
     "navbox",
     "vertical-navbox",
     "navbox-styles",
@@ -213,21 +211,6 @@ const SKIP_CLASSES = new Set([
     "chess-pieces",
     "chess-board",
 ]);
-
-// Top-level h2 headings after which the rest of the page is references / links.
-const STOP_HEADINGS = [
-    "references",
-    "notes",
-    "citations",
-    "footnotes",
-    "sources",
-    "bibliography",
-    "further reading",
-    "external links",
-    "works cited",
-    "explanatory notes",
-    "notes and references",
-];
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -301,7 +284,9 @@ const getText = (node: any): string => {
             let text = getText(child);
             if (
                 child.type === "tag" &&
-                (child.name === "li" || child.name === "br" || child.name === "dd")
+                (child.name === "li" ||
+                    child.name === "br" ||
+                    child.name === "dd")
             ) {
                 text = " " + text;
             }
@@ -324,7 +309,8 @@ const mergeSpans = (spans: Span[]): Span[] => {
             last &&
             !!last.bold === !!span.bold &&
             !!last.italic === !!span.italic &&
-            last.link === span.link
+            last.link === span.link &&
+            last.refId === span.refId
         ) {
             last.text += span.text;
         } else {
@@ -344,17 +330,26 @@ const mergeSpans = (spans: Span[]): Span[] => {
     return merged.filter((span) => span.text.length > 0);
 };
 
-// Collects inline spans inside a block element, carrying bold / italic / link
-// formatting down through nested tags, handling MathML and code.
+// Collects inline spans inside a block element, carrying bold / italic / link /
+// reference formatting down through nested tags, handling MathML and code.
 export const getSpans = (node: any): Span[] => {
     const spans: Span[] = [];
 
-    const walkInline = (n: any, ctx: Omit<Span, "text">) => {
+    type WalkContext = Omit<Span, "text"> & { inReference?: boolean };
+
+    const walkInline = (n: any, ctx: WalkContext) => {
         if (!n) return;
 
         if (n.type === "text") {
             const text = (n.data ?? "").replace(/\s+/g, " ");
-            if (text) spans.push({ text, ...ctx });
+            if (text) {
+                const span: Span = { text };
+                if (ctx.bold) span.bold = true;
+                if (ctx.italic) span.italic = true;
+                if (ctx.link) span.link = ctx.link;
+                if (ctx.refId) span.refId = ctx.refId;
+                spans.push(span);
+            }
             return;
         }
 
@@ -374,14 +369,25 @@ export const getSpans = (node: any): Span[] => {
             }
         }
 
-        const next = { ...ctx };
+        const next: WalkContext = { ...ctx };
 
         if (n.name === "b" || n.name === "strong") next.bold = true;
         if (n.name === "i" || n.name === "em") next.italic = true;
+        if (n.name === "sup" && getClasses(n).includes("reference")) {
+            next.inReference = true;
+        }
         if (n.name === "a") {
             const href = n.attribs?.href;
             if (href) {
-                if (href.startsWith("http://") || href.startsWith("https://")) {
+                if (
+                    href.startsWith("#cite_note-") ||
+                    (ctx.inReference && href.startsWith("#"))
+                ) {
+                    next.refId = href.slice(1);
+                } else if (
+                    href.startsWith("http://") ||
+                    href.startsWith("https://")
+                ) {
                     next.link = href;
                 } else if (href.startsWith("//")) {
                     next.link = `https:${href}`;
@@ -746,7 +752,10 @@ const parseInfoboxRowImages = (
                 if (t) captionParts.push(t);
             }
             if (captionParts.length > 0) {
-                sharedCaption = captionParts.join(" ").replace(/\s+/g, " ").trim();
+                sharedCaption = captionParts
+                    .join(" ")
+                    .replace(/\s+/g, " ")
+                    .trim();
             }
         }
 
@@ -1144,7 +1153,9 @@ const parseInfobox = (node: any): InfoboxBlock | null => {
             );
         const isHeader =
             tr.attribs?.class?.includes("infobox-header") ||
-            ths.some((th: any) => th.attribs?.class?.includes("infobox-header"));
+            ths.some((th: any) =>
+                th.attribs?.class?.includes("infobox-header"),
+            );
 
         // Header / Title row (th only)
         if (ths.length > 0 && tds.length === 0) {
@@ -1224,7 +1235,10 @@ const parseInfobox = (node: any): InfoboxBlock | null => {
                 if (spans.length) {
                     items.push({
                         type: "header",
-                        title: spans.map((s) => s.text).join("").trim(),
+                        title: spans
+                            .map((s) => s.text)
+                            .join("")
+                            .trim(),
                     });
                 }
             }
@@ -1303,17 +1317,15 @@ const parseInfobox = (node: any): InfoboxBlock | null => {
                     hasLargeImg &&
                     spans.length === 1 &&
                     images.some(
-                        (i) =>
-                            i.alt && i.alt.trim() === spans[0].text.trim(),
+                        (i) => i.alt && i.alt.trim() === spans[0].text.trim(),
                     )
                 ) {
                     colSpans = [];
                 }
 
                 const alignAttr = td.attribs?.align;
-                const styleAlign = td.attribs?.style?.match(
-                    /text-align:\s*(\w+)/,
-                )?.[1];
+                const styleAlign =
+                    td.attribs?.style?.match(/text-align:\s*(\w+)/)?.[1];
                 let align: "left" | "center" | "right" = "center";
                 const rawAlign = (alignAttr || styleAlign || "").toLowerCase();
                 if (
@@ -1409,7 +1421,8 @@ const parseInfobox = (node: any): InfoboxBlock | null => {
                     type: "row",
                     label: labelText,
                     values: valueSpans,
-                    images: rowCellImages.length > 0 ? rowCellImages : undefined,
+                    images:
+                        rowCellImages.length > 0 ? rowCellImages : undefined,
                 });
             } else if (!labelText && valueText && valueText.length < 50) {
                 items.push({ type: "header", title: valueText });
@@ -1431,13 +1444,23 @@ const parseInfobox = (node: any): InfoboxBlock | null => {
 };
 
 // Pulls a list block out of a <ul>/<ol> element.
-const parseList = (node: any, ordered: boolean): ListBlock | null => {
+const parseList = (
+    node: any,
+    ordered: boolean,
+    references?: Record<string, Span[]>,
+): ListBlock | null => {
     const items: Span[][] = [];
 
     for (const child of node.children ?? []) {
         if (child.type === "tag" && child.name === "li" && !shouldSkip(child)) {
             const spans = getSpans(child);
-            if (spans.length) items.push(spans);
+            if (spans.length) {
+                items.push(spans);
+                const id = child.attribs?.id;
+                if (id && references) {
+                    references[id] = spans;
+                }
+            }
         }
     }
 
@@ -1596,9 +1619,8 @@ const parseTable = (node: any): TableBlock | null => {
                 !isNaN(rawColspan) && rawColspan > 0 ? rawColspan : 1;
 
             const alignAttr = child.attribs?.align;
-            const styleAlign = child.attribs?.style?.match(
-                /text-align:\s*(\w+)/,
-            )?.[1];
+            const styleAlign =
+                child.attribs?.style?.match(/text-align:\s*(\w+)/)?.[1];
             let align: "left" | "center" | "right" | undefined;
             const rawAlign = (alignAttr || styleAlign || "").toLowerCase();
             if (
@@ -1804,17 +1826,21 @@ const isLayoutTable = (node: any): boolean => {
 // Main entry point
 // ---------------------------------------------------------------------------
 
-export const parseArticle = (
+export type ParsedArticle = {
+    blocks: Block[];
+    references: Record<string, Span[]>;
+};
+
+export const parseArticleContent = (
     html: string,
     options?: { hasHeroImage?: boolean },
-): Block[] => {
+): ParsedArticle => {
     const document = parseDocument(html);
     const blocks: Block[] = [];
-
-    let stopped = false;
+    const references: Record<string, Span[]> = {};
 
     const walk = (node: any) => {
-        if (stopped || !node || node.type !== "tag" || shouldSkip(node)) return;
+        if (!node || node.type !== "tag" || shouldSkip(node)) return;
 
         // Infobox check
         if (isInfoboxNode(node)) {
@@ -1861,15 +1887,6 @@ export const parseArticle = (
             case "h6": {
                 const text = getText(node).replace(/\s+/g, " ").trim();
                 const level = Number(node.name.slice(1));
-
-                // Only stop on level 2 reference headings at the end
-                if (
-                    level === 2 &&
-                    STOP_HEADINGS.includes(text.toLowerCase())
-                ) {
-                    stopped = true;
-                    return;
-                }
 
                 if (text) {
                     blocks.push({ type: "heading", level, text });
@@ -1952,7 +1969,7 @@ export const parseArticle = (
                     }
                 }
 
-                const block = parseList(node, node.name === "ol");
+                const block = parseList(node, node.name === "ol", references);
                 if (block) blocks.push(block);
                 return;
             }
@@ -2057,5 +2074,10 @@ export const parseArticle = (
         }
     }
 
-    return blocks;
+    return { blocks, references };
 };
+
+export const parseArticle = (
+    html: string,
+    options?: { hasHeroImage?: boolean },
+): Block[] => parseArticleContent(html, options).blocks;

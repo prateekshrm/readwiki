@@ -1,4 +1,7 @@
-import { useHeaderProgress } from "@/components/HeaderScroll";
+import {
+    useHeaderProgress,
+    useHeaderScrolled,
+} from "@/components/HeaderScroll";
 import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
 import { LinearGradient } from "expo-linear-gradient";
@@ -24,15 +27,16 @@ interface HeaderProps {
 const Header = ({ title, canGoBack = false, rightComponent }: HeaderProps) => {
     const insets = useSafeAreaInsets();
     const progress = useHeaderProgress();
+    const isScrolled = useHeaderScrolled();
     const { colors, isDark } = useTheme();
 
     // Dark status bar icons while the header is light (top); light once scrolled over dark gradient.
     const [scrolled, setScrolled] = useState(false);
     useAnimatedReaction(
-        () => progress.value > 0.5,
-        (isScrolled, previous) => {
-            if (isScrolled !== previous) {
-                runOnJS(setScrolled)(isScrolled);
+        () => isScrolled.value,
+        (next, previous) => {
+            if (next !== previous) {
+                runOnJS(setScrolled)(next);
             }
         },
     );
@@ -57,10 +61,7 @@ const Header = ({ title, canGoBack = false, rightComponent }: HeaderProps) => {
                 paddingTop: insets.top + 8,
             }}
         >
-            <StatusBar
-                style={isDark ? "light" : scrolled ? "light" : "dark"}
-                animated
-            />
+            <StatusBar style={isDark || scrolled ? "light" : "dark"} />
 
             <Animated.View
                 style={[
@@ -70,7 +71,10 @@ const Header = ({ title, canGoBack = false, rightComponent }: HeaderProps) => {
                 ]}
             >
                 <LinearGradient
-                    colors={["rgba(0,0,0,0.5)", "transparent"]}
+                    colors={[
+                        isDark ? "rgba(0, 0, 0, 0.7)" : "rgba(0,0,0,0.5)",
+                        "transparent",
+                    ]}
                     style={StyleSheet.absoluteFill}
                 />
             </Animated.View>

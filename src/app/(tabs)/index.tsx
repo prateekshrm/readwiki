@@ -1,7 +1,7 @@
 import ArticleCard from "@/components/ArticleCard";
 import Button from "@/components/Button";
 import DidYouKnowCard from "@/components/DidYouKnowCard";
-import { useSolidHeader } from "@/components/HeaderScroll";
+import { useScreenScroll } from "@/components/HeaderScroll";
 import HomeSkeleton from "@/components/HomeSkeleton";
 import NewsStory from "@/components/NewsStory";
 import NoInternetView from "@/components/NoInternetView";
@@ -23,12 +23,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Pressable,
     RefreshControl,
-    ScrollView,
     ScrollViewInstance,
     StyleSheet,
     Text,
     View,
 } from "react-native";
+import Animated from "react-native-reanimated";
 import RemixIcon from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TodaysDate } from "../on-this-day";
@@ -117,10 +117,6 @@ const Home = () => {
 
     const insets = useSafeAreaInsets();
 
-    // The home screen leads with a full-bleed featured image, so keep the header
-    // in its scrolled state (white logo + gradient + light status bar) always.
-    useSolidHeader();
-
     const hasData = Boolean(
         featuredArticle ||
         trendingArticles.length > 0 ||
@@ -129,6 +125,12 @@ const Home = () => {
         onThisDayArticles.length > 0 ||
         facts.length > 0,
     );
+
+    // Keep the header solid when a full-bleed featured article is shown;
+    // otherwise let the ScrollView drive the header transition.
+    const onScroll = useScreenScroll({
+        solid: Boolean(featuredArticle) && !loading && hasData,
+    });
 
     if (loading) {
         return <HomeSkeleton />;
@@ -165,8 +167,9 @@ const Home = () => {
 
     return (
         <View style={styles.container}>
-            <ScrollView
+            <Animated.ScrollView
                 ref={scrollViewRef}
+                onScroll={onScroll}
                 contentContainerStyle={[
                     styles.sectionContainer,
                     !featuredArticle && { paddingTop: insets.top + 60 },
@@ -495,7 +498,7 @@ const Home = () => {
                         />
                     </View>
                 )}
-            </ScrollView>
+            </Animated.ScrollView>
         </View>
     );
 };

@@ -1186,7 +1186,7 @@ const createStyles = (colors: ThemeColors) =>
             paddingHorizontal: 6,
         },
         comparisonColBorder: {
-            borderLeftWidth: 1,
+            borderLeftWidth: 2,
             borderLeftColor: colors.backgroundMuted,
         },
         comparisonContent: {
@@ -1206,7 +1206,7 @@ const createStyles = (colors: ThemeColors) =>
             gap: 12,
         },
         rowDivider: {
-            borderTopWidth: 1,
+            borderTopWidth: 2,
             borderTopColor: colors.backgroundMuted,
         },
         rowLabel: {

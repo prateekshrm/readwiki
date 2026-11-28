@@ -152,6 +152,10 @@ const HeaderRight = ({
 
 type ArticleBlockItemProps = {
     block: Block;
+    blockIndex: number;
+    isCollapsed?: boolean;
+    onToggleHeading?: (index: number) => void;
+    iconColor: string;
     fontScale: number;
     styles: ReturnType<typeof createStyles>;
     onLinkPress: (title: string) => void;
@@ -162,6 +166,10 @@ type ArticleBlockItemProps = {
 const ArticleBlockItem = memo(
     ({
         block,
+        blockIndex,
+        isCollapsed = false,
+        onToggleHeading,
+        iconColor,
         fontScale,
         styles,
         onLinkPress,
@@ -181,23 +189,63 @@ const ArticleBlockItem = memo(
 
                 const headingSize =
                     (block.level === 2
-                        ? 30
+                        ? 28
                         : block.level === 3
                           ? 24
                           : block.level === 4
                             ? 20
                             : 16) * fontScale;
 
+                if (block.level !== 2) {
+                    return (
+                        <Text
+                            style={[
+                                fraunces,
+                                headingStyle,
+                                {
+                                    color: styles.headingText.color,
+                                    paddingHorizontal: 16,
+                                    fontSize: headingSize,
+                                },
+                            ]}
+                        >
+                            {block.text}
+                        </Text>
+                    );
+                }
+
                 return (
-                    <Text
-                        style={[
-                            fraunces,
+                    <Pressable
+                        onPress={() => onToggleHeading?.(blockIndex)}
+                        accessibilityRole="button"
+                        accessibilityLabel={block.text}
+                        accessibilityState={{ expanded: !isCollapsed }}
+                        style={({ pressed }) => [
+                            styles.headingRow,
                             headingStyle,
-                            { fontSize: headingSize },
+                            pressed && styles.headingPressed,
                         ]}
                     >
-                        {block.text}
-                    </Text>
+                        <RemixIcon
+                            name={
+                                isCollapsed
+                                    ? "arrow-down-s-line"
+                                    : "arrow-up-s-line"
+                            }
+                            size={24}
+                            color={iconColor}
+                            fallback={null}
+                        />
+                        <Text
+                            style={[
+                                fraunces,
+                                styles.headingText,
+                                { fontSize: headingSize },
+                            ]}
+                        >
+                            {block.text}
+                        </Text>
+                    </Pressable>
                 );
             }
 
@@ -367,6 +415,9 @@ const Article = () => {
     const styles = useMemo(() => createStyles(colors), [colors]);
 
     const [blocks, setBlocks] = useState<Block[]>([]);
+    const [collapsedHeadings, setCollapsedHeadings] = useState<Set<number>>(
+        () => new Set(),
+    );
     const [meta, setMeta] = useState<ArticleMeta | null>(null);
 
     const [loading, setLoading] = useState(true);
@@ -419,15 +470,67 @@ const Article = () => {
         openOnWikipedia(activeMeta);
     }, [activeMeta]);
 
+    const handleToggleHeading = useCallback((index: number) => {
+        setCollapsedHeadings((prev) => {
+            const next = new Set(prev);
+            if (next.has(index)) {
+                next.delete(index);
+            } else {
+                next.add(index);
+            }
+            return next;
+        });
+    }, []);
+
+    const visibleBlocks = useMemo(() => {
+        const result: { block: Block; index: number }[] = [];
+        let collapsedLevel: number | null = null;
+
+        for (let i = 0; i < blocks.length; i++) {
+            const block = blocks[i];
+            if (block.type === "heading") {
+                if (collapsedLevel !== null) {
+                    if (block.level <= collapsedLevel) {
+                        collapsedLevel = collapsedHeadings.has(i)
+                            ? block.level
+                            : null;
+                        result.push({ block, index: i });
+                    }
+                } else {
+                    result.push({ block, index: i });
+                    if (collapsedHeadings.has(i)) {
+                        collapsedLevel = block.level;
+                    }
+                }
+            } else if (collapsedLevel === null) {
+                result.push({ block, index: i });
+            }
+        }
+
+        return result;
+    }, [blocks, collapsedHeadings]);
+
     const extraData = useMemo(
-        () => ({ styles, fontScale }),
-        [styles, fontScale],
+        () => ({
+            styles,
+            fontScale,
+            collapsedHeadings,
+            iconColor: colors.textMuted,
+        }),
+        [styles, fontScale, collapsedHeadings, colors.textMuted],
     );
 
     const renderItem = useCallback(
-        ({ item }: { item: Block }) => (
+        ({ item }: { item: { block: Block; index: number } }) => (
             <ArticleBlockItem
-                block={item}
+                block={item.block}
+                blockIndex={item.index}
+                isCollapsed={
+                    item.block.type === "heading" &&
+                    collapsedHeadings.has(item.index)
+                }
+                onToggleHeading={handleToggleHeading}
+                iconColor={colors.text}
                 fontScale={fontScale}
                 styles={styles}
                 onLinkPress={handleLinkPress}
@@ -435,15 +538,28 @@ const Article = () => {
                 articleTitle={activeMeta?.title || article}
             />
         ),
-        [fontScale, styles, handleLinkPress, activeMeta, article],
+        [
+            fontScale,
+            styles,
+            handleLinkPress,
+            handleToggleHeading,
+            collapsedHeadings,
+            colors.textMuted,
+            activeMeta,
+            article,
+        ],
     );
 
     const keyExtractor = useCallback(
-        (item: Block, index: number) => `${item.type}-${index}`,
+        (item: { block: Block; index: number }) =>
+            `${item.block.type}-${item.index}`,
         [],
     );
 
-    const getItemType = useCallback((item: Block) => item.type, []);
+    const getItemType = useCallback(
+        (item: { block: Block; index: number }) => item.block.type,
+        [],
+    );
 
     const headerRightDisabled = loading || !meta;
 
@@ -487,11 +603,18 @@ const Article = () => {
                     });
 
                     if (data.html) {
-                        setBlocks(
-                            parseArticle(data.html, {
-                                hasHeroImage: !!articleMeta.heroImage,
-                            }),
-                        );
+                        const parsed = parseArticle(data.html, {
+                            hasHeroImage: !!articleMeta.heroImage,
+                        });
+                        const initialCollapsed = new Set<number>();
+                        for (let i = 0; i < parsed.length; i++) {
+                            const b = parsed[i];
+                            if (b.type === "heading" && b.level === 2) {
+                                initialCollapsed.add(i);
+                            }
+                        }
+                        setBlocks(parsed);
+                        setCollapsedHeadings(initialCollapsed);
                     }
                 }
             } catch (error) {
@@ -566,7 +689,7 @@ const Article = () => {
     return (
         <View style={styles.container}>
             <AnimatedLegendList
-                data={blocks}
+                data={visibleBlocks}
                 extraData={extraData}
                 keyExtractor={keyExtractor}
                 getItemType={getItemType}
@@ -581,7 +704,7 @@ const Article = () => {
                 onScroll={onScroll}
                 scrollEventThrottle={16}
                 drawDistance={1500}
-                estimatedItemSize={100}
+                estimatedItemSize={55}
                 recycleItems
                 refreshControl={
                     <RefreshControl
@@ -768,38 +891,50 @@ const createStyles = (colors: ThemeColors) =>
         },
 
         divider: {
-            height: 1,
+            height: 2,
             backgroundColor: colors.border,
+            borderRadius: 99,
             marginTop: 20,
             marginHorizontal: 16,
         },
 
-        heading2: {
-            color: colors.text,
-            marginTop: 28,
-            marginBottom: 12,
+        headingRow: {
+            width: "100%",
+            flexDirection: "row",
+            alignItems: "center",
+            // justifyContent: "space-between",
+            gap: 12,
             paddingHorizontal: 16,
+            paddingVertical: 12,
+            backgroundColor: colors.background,
+        },
+
+        headingPressed: {
+            backgroundColor: colors.backgroundMuted,
+        },
+
+        headingText: {
+            flexShrink: 1,
+            color: colors.text,
+        },
+
+        heading2: {
+            marginBottom: 12,
         },
 
         heading3: {
-            color: colors.text,
             marginTop: 20,
             marginBottom: 10,
-            paddingHorizontal: 16,
         },
 
         heading4: {
-            color: colors.text,
             marginTop: 18,
             marginBottom: 8,
-            paddingHorizontal: 16,
         },
 
         heading5: {
-            color: colors.text,
             marginTop: 14,
             marginBottom: 6,
-            paddingHorizontal: 16,
         },
 
         paragraph: {

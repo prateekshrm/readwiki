@@ -1,13 +1,14 @@
 import Header from "@/components/Header";
 import TabBar from "@/components/TabBar";
+import useTheme from "@/hooks/useTheme";
 import { Tabs } from "expo-router";
-import RemixIcon from "react-native-remix-icon";
-
 import type { BottomTabBarProps } from "expo-router/js-tabs";
+import RemixIcon from "react-native-remix-icon";
 
 const renderTabBar = (props: BottomTabBarProps) => <TabBar {...props} />;
 
 export default function RootLayout() {
+    const { colors } = useTheme();
     const TAB_ICON_SIZE = 18;
     return (
         <Tabs
@@ -25,6 +26,8 @@ export default function RootLayout() {
                         }
                     />
                 ),
+                sceneStyle: { backgroundColor: colors.background },
+                animation: "shift",
             }}
         >
             <Tabs.Screen

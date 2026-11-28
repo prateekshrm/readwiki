@@ -65,12 +65,14 @@ const useHeaderScrollContext = () => {
 // Smoothly transitions as soon as scrolling starts or returns to the top.
 export const useHeaderProgress = () => {
     const { scrollY } = useHeaderScrollContext();
-    const progress = useSharedValue(scrollY.value > 0 ? 1 : 0);
+    const progress = useSharedValue(0);
 
     useAnimatedReaction(
         () => scrollY.value > 0,
         (scrolled, previous) => {
-            if (scrolled !== previous) {
+            if (previous === null) {
+                progress.value = scrolled ? 1 : 0;
+            } else if (scrolled !== previous) {
                 progress.value = withTiming(scrolled ? 1 : 0, {
                     duration: HEADER_TRANSITION_MS,
                 });

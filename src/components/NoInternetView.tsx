@@ -1,5 +1,5 @@
 import Button from "@/components/Button";
-import { ThemeColors } from "@/constants/Colors";
+import Colors, { ThemeColors } from "@/constants/Colors";
 import { fraunces } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
 import { useMemo } from "react";
@@ -12,6 +12,7 @@ interface NoInternetViewProps {
     title?: string;
     description?: string;
     iconName?: string;
+    forceDark?: boolean;
 }
 
 export default function NoInternetView({
@@ -19,9 +20,11 @@ export default function NoInternetView({
     title = "No Internet Connection",
     description = "Please check your Wi-Fi or mobile data connection and try again.",
     iconName = "wifi-off-line",
+    forceDark = false,
 }: NoInternetViewProps) {
     const insets = useSafeAreaInsets();
-    const { colors } = useTheme();
+    const { colors: themeColors } = useTheme();
+    const colors = forceDark ? Colors.dark : themeColors;
     const styles = useMemo(() => createStyles(colors), [colors]);
 
     return (

@@ -1,7 +1,8 @@
 import Header from "@/components/Header";
 import TabBar from "@/components/TabBar";
+import Colors from "@/constants/Colors";
 import useTheme from "@/hooks/useTheme";
-import { Tabs } from "expo-router";
+import { Tabs, usePathname } from "expo-router";
 import type { BottomTabBarProps } from "expo-router/js-tabs";
 import RemixIcon from "react-native-remix-icon";
 
@@ -10,6 +11,9 @@ const renderTabBar = (props: BottomTabBarProps) => <TabBar {...props} />;
 export default function RootLayout() {
     const { colors } = useTheme();
     const TAB_ICON_SIZE = 18;
+
+    const pathname = usePathname();
+    const isFlow = pathname === "/flow";
     return (
         <Tabs
             tabBar={renderTabBar}
@@ -26,7 +30,11 @@ export default function RootLayout() {
                         }
                     />
                 ),
-                sceneStyle: { backgroundColor: colors.background },
+                sceneStyle: {
+                    backgroundColor: isFlow
+                        ? Colors.dark.background
+                        : colors.background,
+                },
                 animation: "fade",
             }}
         >

@@ -1,3 +1,4 @@
+import Colors from "@/constants/Colors";
 import { useTheme } from "@/hooks/useTheme";
 import { useLayoutStore } from "@/stores/layout.store";
 import { LinearGradient } from "expo-linear-gradient";
@@ -40,13 +41,14 @@ export default function TabBar({
     navigateToTab,
 }: BottomTabBarProps) {
     const insets = useSafeAreaInsets();
-    const { colors } = useTheme();
+    const { colors: themeColors } = useTheme();
     const { width: windowWidth } = useWindowDimensions();
 
     const setTabBarHeight = useLayoutStore((state) => state.setTabBarHeight);
 
     const currentRoute = state.routes[state.index];
     const isFlow = currentRoute?.name === "flow";
+    const colors = isFlow ? Colors.dark : themeColors;
 
     const [tabLayouts, setTabLayouts] = useState<Record<string, TabLayout>>({});
     const hasInitialized = useRef(false);

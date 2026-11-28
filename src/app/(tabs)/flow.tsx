@@ -1,11 +1,15 @@
+import FlowSkeleton from "@/components/FlowSkeleton";
 import { useSolidHeader } from "@/components/HeaderScroll";
-import Loader from "@/components/Loader";
 import NoInternetView from "@/components/NoInternetView";
+import Colors from "@/constants/Colors";
 import { fraunces } from "@/constants/Typography";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
 import { getRandomArticles } from "@/services/wikipedia";
+import { useLayoutStore } from "@/stores/layout.store";
 import { toggleSavedArticle, useIsSaved } from "@/stores/savedArticles.store";
 import { toast } from "@/stores/toast.store";
+import { MaskedView } from "@expo/ui/community/masked-view";
+import NetInfo from "@react-native-community/netinfo";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -13,6 +17,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
     Dimensions,
     FlatList,
+    FlatListProps,
     Pressable,
     Share,
     StyleSheet,
@@ -27,10 +32,24 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 import RemixIcon from "react-native-remix-icon";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { height } = Dimensions.get("screen");
+const darkColors = Colors.dark;
 
-const BATCH_SIZE = 20;
+const BATCH_SIZE = 50;
+const MAX_FETCH_ATTEMPTS = 3;
+const INITIAL_PREFETCH_COUNT = 2;
+const PREFETCH_AHEAD = 4;
+const PREFETCH_CONCURRENCY = 2;
+const IMAGE_HEADERS = { "User-Agent": "ReadWiki/2.0.0" };
+
+const hasThumbnail = (item: any): boolean =>
+    typeof item?.thumbnail?.source === "string" &&
+    item.thumbnail.source.length > 0;
+
+const hasExtract = (item: any): boolean =>
+    typeof item?.extract === "string" && item.extract.trim().length > 0;
 
 // Build a canonical Wikipedia URL for sharing. The random-article query returns
 // `fullurl`, but fall back to constructing one from the title just in case.
@@ -60,7 +79,7 @@ const CircleButton = ({
         <RemixIcon
             name={icon as any}
             size={22}
-            color="#F8F9FA"
+            color={darkColors.text}
             fallback={null}
         />
     </Pressable>
@@ -85,9 +104,10 @@ const SaveButton = ({ item }: { item: any }) => {
     );
 };
 
-// Gently bobbing "swipe up" hint shown on the first card only.
-const SwipeHint = () => {
+// Gently bobbing "swipe up" pill hint shown on the first card until the user swipes.
+const SwipeHint = ({ topOffset }: { topOffset: number }) => {
     const offset = useSharedValue(0);
+    const pulse = useSharedValue(1);
 
     useEffect(() => {
         offset.value = withRepeat(
@@ -98,21 +118,33 @@ const SwipeHint = () => {
             -1,
             true,
         );
-    }, [offset]);
+        pulse.value = withRepeat(
+            withTiming(0.7, {
+                duration: 900,
+                easing: Easing.inOut(Easing.quad),
+            }),
+            -1,
+            true,
+        );
+    }, [offset, pulse]);
 
     const style = useAnimatedStyle(() => ({
         transform: [{ translateY: offset.value }],
+        opacity: pulse.value,
     }));
 
     return (
-        <Animated.View style={[styles.hint, style]} pointerEvents="none">
+        <Animated.View
+            style={[styles.hint, { top: topOffset }, style]}
+            pointerEvents="none"
+        >
             <RemixIcon
                 name="arrow-up-double-line"
-                size={18}
-                color="rgba(255,255,255,0.85)"
+                size={16}
+                color={darkColors.text}
                 fallback={null}
             />
-            <Text style={styles.hintText}>Swipe for more</Text>
+            <Text style={styles.hintText}>Swipe up for more</Text>
         </Animated.View>
     );
 };
@@ -121,56 +153,189 @@ const Flow = () => {
     const [articles, setArticles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [loadMoreError, setLoadMoreError] = useState(false);
+    const [hasSwiped, setHasSwiped] = useState(false);
 
+    const insets = useSafeAreaInsets();
+    const tabBarHeight = useLayoutStore((state) => state.tabBarHeight);
     const isConnected = useNetworkStatus();
+    const isConnectedRef = useRef(isConnected);
+    isConnectedRef.current = isConnected;
     const prevConnectedRef = useRef<boolean | null>(null);
+    const prefetchedUrlsRef = useRef<Set<string>>(new Set());
+    const articlesRef = useRef<any[]>([]);
+    articlesRef.current = articles;
 
     // Flow is a full-screen dark pager, so keep the header in its white state.
     useSolidHeader();
 
-    const preloadImages = async (items: any[]) => {
-        const urls = items
-            .map((item) => item.thumbnail?.source)
-            .filter(Boolean);
+    const preloadImages = useCallback(async (items: any[]) => {
+        if (!isConnectedRef.current) return;
 
-        if (urls.length) {
-            await Image.prefetch(urls);
+        const urls = items
+            .map((item) => item?.thumbnail?.source)
+            .filter(
+                (url): url is string =>
+                    typeof url === "string" &&
+                    url.length > 0 &&
+                    !prefetchedUrlsRef.current.has(url),
+            );
+
+        if (!urls.length) return;
+
+        for (const url of urls) {
+            prefetchedUrlsRef.current.add(url);
         }
-    };
+
+        // Prefetch with bounded concurrency so Wikimedia CDN doesn't rate-limit (429)
+        // and one failure never short-circuits the rest of the batch.
+        let cursor = 0;
+        const worker = async () => {
+            while (cursor < urls.length) {
+                const url = urls[cursor++];
+                try {
+                    const ok = await Image.prefetch(url, {
+                        cachePolicy: "memory-disk",
+                        headers: IMAGE_HEADERS,
+                    });
+                    if (!ok) {
+                        prefetchedUrlsRef.current.delete(url);
+                    }
+                } catch {
+                    prefetchedUrlsRef.current.delete(url);
+                }
+            }
+        };
+
+        await Promise.all(
+            Array.from(
+                { length: Math.min(PREFETCH_CONCURRENCY, urls.length) },
+                worker,
+            ),
+        );
+    }, []);
+
+    const fetchArticlesWithImages = useCallback(async () => {
+        const collected: any[] = [];
+        const seenIds = new Set<number>();
+
+        for (let attempt = 0; attempt < MAX_FETCH_ATTEMPTS; attempt++) {
+            const batch = await getRandomArticles(BATCH_SIZE);
+            for (const item of batch as any[]) {
+                if (
+                    hasThumbnail(item) &&
+                    hasExtract(item) &&
+                    !seenIds.has(item.pageid)
+                ) {
+                    seenIds.add(item.pageid);
+                    collected.push(item);
+                }
+            }
+            if (collected.length > 0) {
+                break;
+            }
+        }
+
+        return collected;
+    }, []);
 
     const loadInitial = useCallback(async () => {
+        if (!isConnectedRef.current) {
+            setLoading(false);
+            return;
+        }
+
         try {
-            const data = await getRandomArticles(BATCH_SIZE);
-            if (data && data.length > 0) {
-                await preloadImages(data);
+            const data = await fetchArticlesWithImages();
+            if (data.length > 0) {
+                // Only block initial skeleton on the first few cards; prefetch the rest in the background.
+                await preloadImages(data.slice(0, INITIAL_PREFETCH_COUNT));
+                void preloadImages(data.slice(INITIAL_PREFETCH_COUNT));
                 setArticles(data);
             }
         } catch (error) {
-            console.error("Failed to load flow articles:", error);
-            toast.error("Failed to Load", "Could not load articles right now.");
+            if (isConnectedRef.current) {
+                console.error("Failed to load flow articles:", error);
+                toast.error(
+                    "Failed to Load",
+                    "Could not load articles right now.",
+                );
+            }
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [fetchArticlesWithImages, preloadImages]);
 
-    const loadMore = async () => {
+    const loadMore = useCallback(async () => {
         if (loadingMore) return;
 
+        if (!isConnectedRef.current) {
+            setLoadMoreError(true);
+            return;
+        }
+
         setLoadingMore(true);
+        setLoadMoreError(false);
 
         try {
-            const more = await getRandomArticles(BATCH_SIZE);
-            if (more && more.length > 0) {
-                await preloadImages(more);
-                setArticles((prev) => [...prev, ...more]);
+            const more = await fetchArticlesWithImages();
+            if (more.length > 0) {
+                void preloadImages(more);
+                setArticles((prev) => {
+                    const existingIds = new Set(prev.map((a) => a.pageid));
+                    const unique = more.filter(
+                        (item) => !existingIds.has(item.pageid),
+                    );
+                    return unique.length > 0 ? [...prev, ...unique] : prev;
+                });
             }
         } catch (error) {
-            console.error("Failed to load more flow articles:", error);
-            toast.error("Failed to Load", "Could not load more articles.");
+            setLoadMoreError(true);
+            if (isConnectedRef.current) {
+                console.error("Failed to load more flow articles:", error);
+                toast.error("Failed to Load", "Could not load more articles.");
+            }
         } finally {
             setLoadingMore(false);
         }
-    };
+    }, [fetchArticlesWithImages, loadingMore, preloadImages]);
+
+    const loadMoreRef = useRef(loadMore);
+    loadMoreRef.current = loadMore;
+
+    const viewabilityConfig = useRef({
+        itemVisiblePercentThreshold: 60,
+    }).current;
+
+    const onViewableItemsChanged = useRef<
+        NonNullable<FlatListProps<any>["onViewableItemsChanged"]>
+    >(({ viewableItems }) => {
+        const maxIndex = viewableItems.reduce(
+            (max, entry) =>
+                typeof entry.index === "number" && entry.index > max
+                    ? entry.index
+                    : max,
+            -1,
+        );
+        if (maxIndex < 0) return;
+
+        if (maxIndex > 0) {
+            setHasSwiped(true);
+        }
+
+        const current = articlesRef.current;
+        const upcoming = current.slice(
+            maxIndex + 1,
+            maxIndex + 1 + PREFETCH_AHEAD,
+        );
+        if (upcoming.length > 0) {
+            void preloadImages(upcoming);
+        }
+
+        if (maxIndex >= current.length - PREFETCH_AHEAD) {
+            void loadMoreRef.current();
+        }
+    }).current;
 
     useEffect(() => {
         loadInitial();
@@ -179,11 +344,34 @@ const Flow = () => {
     // Refetch when internet arrives
     useEffect(() => {
         if (prevConnectedRef.current === false && isConnected === true) {
-            setLoading(true);
-            loadInitial();
+            if (articlesRef.current.length === 0) {
+                setLoading(true);
+                loadInitial();
+            } else if (loadMoreError) {
+                loadMore();
+            }
         }
         prevConnectedRef.current = isConnected;
-    }, [isConnected, loadInitial]);
+    }, [isConnected, loadInitial, loadMore, loadMoreError]);
+
+    const handleRetryInitial = useCallback(async () => {
+        const state = await NetInfo.fetch();
+        const online =
+            state.isConnected !== false && state.isInternetReachable !== false;
+        if (!online) return;
+
+        setLoading(true);
+        loadInitial();
+    }, [loadInitial]);
+
+    const handleRetryMore = useCallback(async () => {
+        const state = await NetInfo.fetch();
+        const online =
+            state.isConnected !== false && state.isInternetReachable !== false;
+        if (!online) return;
+
+        loadMore();
+    }, [loadMore]);
 
     const openArticle = useCallback((title: string) => {
         router.navigate({
@@ -192,7 +380,7 @@ const Flow = () => {
         });
     }, []);
 
-    const shareArticle = async (item: any) => {
+    const shareArticle = useCallback(async (item: any) => {
         try {
             await Share.share({
                 message: articleUrl(item),
@@ -202,34 +390,54 @@ const Flow = () => {
         } catch {
             // User dismissed the share sheet; nothing to do.
         }
-    };
+    }, []);
+
+    const bottomPadding = (tabBarHeight || 88) + 20;
 
     const renderItem = useCallback(
         ({ item, index }: any) => {
-            const thumbnail = item.thumbnail?.source;
+            const thumbnail = item.thumbnail.source;
 
             return (
                 <View style={styles.page}>
+                    {/* Full-bleed blurred backdrop so the masked top image dissolves smoothly */}
                     <Image
-                        source={
-                            thumbnail
-                                ? thumbnail
-                                : require("../../../assets/fallback.jpg")
-                        }
+                        source={{ uri: thumbnail, headers: IMAGE_HEADERS }}
                         style={styles.background}
                         contentFit="cover"
-                        blurRadius={100}
+                        cachePolicy="memory-disk"
+                        blurRadius={200}
                     />
 
                     {/* Flat dark overlay over every blurred backdrop so the
                         blur reads consistently regardless of the image. */}
                     <View style={styles.overlay} />
 
+                    {/* Top-half hero image masked from opaque black at top to transparent at bottom */}
+                    <MaskedView
+                        style={styles.heroMask}
+                        maskElement={
+                            <LinearGradient
+                                colors={["black", "black", "transparent"]}
+                                locations={[0, 0.45, 1]}
+                                style={StyleSheet.absoluteFill}
+                            />
+                        }
+                    >
+                        <Image
+                            source={{ uri: thumbnail, headers: IMAGE_HEADERS }}
+                            contentFit="cover"
+                            cachePolicy="memory-disk"
+                            style={StyleSheet.absoluteFill}
+                        />
+                    </MaskedView>
+
                     {/* Top scrim keeps the header/status bar legible; the
                         stronger bottom scrim anchors the text. */}
                     <LinearGradient
                         colors={["rgba(0,0,0,0.5)", "transparent"]}
                         style={styles.topScrim}
+                        pointerEvents="none"
                     />
                     <LinearGradient
                         colors={[
@@ -239,20 +447,16 @@ const Flow = () => {
                         ]}
                         locations={[0, 0.45, 1]}
                         style={styles.bottomScrim}
+                        pointerEvents="none"
                     />
 
-                    <View style={styles.content}>
-                        {thumbnail && (
-                            <View style={styles.imageCard}>
-                                <Image
-                                    source={{ uri: thumbnail }}
-                                    contentFit="cover"
-                                    style={styles.thumbnail}
-                                    transition={200}
-                                />
-                            </View>
-                        )}
-
+                    {/* Bottom-anchored content with single-row controls */}
+                    <View
+                        style={[
+                            styles.content,
+                            { paddingBottom: bottomPadding },
+                        ]}
+                    >
                         <Text
                             style={[fraunces, styles.title]}
                             numberOfLines={2}
@@ -278,7 +482,7 @@ const Flow = () => {
                                 <RemixIcon
                                     name="arrow-right-s-line"
                                     size={18}
-                                    color="#111827"
+                                    color={darkColors.textInverse}
                                     fallback={null}
                                 />
                             </Pressable>
@@ -292,39 +496,24 @@ const Flow = () => {
                         </View>
                     </View>
 
-                    {index === 0 && <SwipeHint />}
+                    {index === 0 && !hasSwiped && (
+                        <SwipeHint topOffset={insets.top + 64} />
+                    )}
                 </View>
             );
         },
-        [openArticle, shareArticle],
+        [bottomPadding, hasSwiped, insets.top, openArticle, shareArticle],
     );
 
     if (loading) {
-        return (
-            <View style={styles.loading}>
-                <Image
-                    source={require("../../../assets/fallback.jpg")}
-                    style={styles.background}
-                    contentFit="cover"
-                    transition={200}
-                    blurRadius={100}
-                />
-                <View style={styles.overlay} />
-                <Loader />
-            </View>
-        );
+        return <FlowSkeleton />;
     }
 
     if (!articles || articles.length === 0) {
         if (!isConnected) {
             return (
                 <View style={styles.container}>
-                    <NoInternetView
-                        onRetry={() => {
-                            setLoading(true);
-                            loadInitial();
-                        }}
-                    />
+                    <NoInternetView forceDark onRetry={handleRetryInitial} />
                 </View>
             );
         }
@@ -332,17 +521,47 @@ const Flow = () => {
         return (
             <View style={styles.container}>
                 <NoInternetView
+                    forceDark
                     iconName="refresh-line"
                     title="Couldn't Load Articles"
                     description="Something went wrong while fetching articles. Please try again."
-                    onRetry={() => {
-                        setLoading(true);
-                        loadInitial();
-                    }}
+                    onRetry={handleRetryInitial}
                 />
             </View>
         );
     }
+
+    const renderFooter = () => {
+        if (loadingMore) {
+            return <FlowSkeleton />;
+        }
+
+        if (!isConnected || loadMoreError) {
+            return (
+                <View style={styles.page}>
+                    <NoInternetView
+                        forceDark
+                        iconName={
+                            !isConnected ? "wifi-off-line" : "refresh-line"
+                        }
+                        title={
+                            !isConnected
+                                ? "No Internet Connection"
+                                : "Couldn't Load More"
+                        }
+                        description={
+                            !isConnected
+                                ? "Reconnect to Wi-Fi or mobile data to keep exploring."
+                                : "Something went wrong while loading more articles."
+                        }
+                        onRetry={handleRetryMore}
+                    />
+                </View>
+            );
+        }
+
+        return undefined;
+    };
 
     return (
         <FlatList
@@ -354,7 +573,9 @@ const Flow = () => {
             snapToAlignment="start"
             showsVerticalScrollIndicator={false}
             onEndReached={loadMore}
-            onEndReachedThreshold={0.5}
+            onEndReachedThreshold={2}
+            viewabilityConfig={viewabilityConfig}
+            onViewableItemsChanged={onViewableItemsChanged}
             initialNumToRender={3}
             maxToRenderPerBatch={2}
             windowSize={3}
@@ -364,21 +585,7 @@ const Flow = () => {
                 offset: height * index,
                 index,
             })}
-            ListFooterComponent={
-                loadingMore ? (
-                    <View style={styles.loading}>
-                        <Image
-                            source={require("../../../assets/fallback.jpg")}
-                            style={styles.background}
-                            contentFit="cover"
-                            transition={200}
-                            blurRadius={100}
-                        />
-                        <View style={styles.overlay} />
-                        <Loader />
-                    </View>
-                ) : undefined
-            }
+            ListFooterComponent={renderFooter()}
         />
     );
 };
@@ -388,20 +595,13 @@ export default Flow;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#000",
-    },
-
-    loading: {
-        flex: 1,
-        height,
-        justifyContent: "center",
-        alignItems: "center",
+        backgroundColor: darkColors.background,
     },
 
     page: {
         flex: 1,
         height,
-        justifyContent: "center",
+        backgroundColor: darkColors.background,
     },
 
     background: {
@@ -410,7 +610,15 @@ const styles = StyleSheet.create({
 
     overlay: {
         ...StyleSheet.absoluteFill,
-        backgroundColor: "rgba(0,0,0,.55)",
+        backgroundColor: "rgba(0,0,0,0.55)",
+    },
+
+    heroMask: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        height: height * 0.5,
     },
 
     topScrim: {
@@ -426,62 +634,16 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        height: "80%",
+        height: "65%",
     },
 
     content: {
+        position: "absolute",
+        left: 0,
+        right: 0,
+        bottom: 0,
         paddingHorizontal: 20,
         gap: 14,
-    },
-
-    imageCard: {
-        alignSelf: "flex-start",
-        width: "70%",
-        height: 260,
-        borderRadius: 20,
-        overflow: "hidden",
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.15)",
-        backgroundColor: "rgba(255,255,255,0.06)",
-    },
-
-    thumbnail: {
-        width: "100%",
-        height: "100%",
-    },
-
-    badge: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-        alignSelf: "flex-start",
-        backgroundColor: "rgba(255,255,255,0.18)",
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.3)",
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 999,
-    },
-
-    badgeText: {
-        textTransform: "uppercase",
-        fontSize: 11,
-        letterSpacing: 1,
-        fontFamily: "DMSans-Bold",
-        color: "#F8F9FA",
-    },
-
-    title: {
-        color: "#F8F9FA",
-        fontSize: 28,
-        letterSpacing: -0.5,
-    },
-
-    extract: {
-        color: "rgba(255,255,255,0.9)",
-        fontSize: 14,
-        lineHeight: 20,
-        fontFamily: "DMSans-Medium",
     },
 
     actions: {
@@ -489,6 +651,19 @@ const styles = StyleSheet.create({
         alignItems: "center",
         gap: 12,
         marginTop: 6,
+    },
+
+    title: {
+        color: darkColors.text,
+        fontSize: 28,
+        letterSpacing: -0.5,
+    },
+
+    extract: {
+        color: darkColors.textSecondary,
+        fontSize: 14,
+        lineHeight: 20,
+        fontFamily: "DMSans-Medium",
     },
 
     readButton: {
@@ -499,7 +674,7 @@ const styles = StyleSheet.create({
         gap: 6,
         paddingVertical: 14,
         borderRadius: 999,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: darkColors.primary,
     },
 
     readButtonPressed: {
@@ -510,7 +685,7 @@ const styles = StyleSheet.create({
     readButtonText: {
         fontFamily: "DMSans-SemiBold",
         fontSize: 15,
-        color: "#111827",
+        color: darkColors.textInverse,
     },
 
     circle: {
@@ -519,7 +694,9 @@ const styles = StyleSheet.create({
         borderRadius: 999,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "rgba(255,255,255,0.14)",
+        backgroundColor: darkColors.backgroundMuted,
+        borderWidth: 1,
+        borderColor: darkColors.border,
     },
 
     circlePressed: {
@@ -529,15 +706,20 @@ const styles = StyleSheet.create({
 
     hint: {
         position: "absolute",
-        top: "14%",
         alignSelf: "center",
         flexDirection: "row",
         alignItems: "center",
         gap: 6,
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: 999,
+        backgroundColor: darkColors.surface,
+        borderWidth: 1,
+        borderColor: darkColors.border,
     },
 
     hintText: {
-        color: "rgba(255,255,255,0.85)",
+        color: darkColors.text,
         fontSize: 13,
         fontFamily: "DMSans-SemiBold",
     },

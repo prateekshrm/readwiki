@@ -140,9 +140,8 @@ export const getFullArticle = async (
         // Hero image strictly from MediaWiki's page_image_free / page_image properties
         // (avoids promoting unrelated navbox logos, maintenance icons, etc.)
         const pageImageName: string | undefined =
-            properties.find((p: any) => p.name === "page_image_free")?.[
-                "*"
-            ] ?? properties.find((p: any) => p.name === "page_image")?.["*"];
+            properties.find((p: any) => p.name === "page_image_free")?.["*"] ??
+            properties.find((p: any) => p.name === "page_image")?.["*"];
 
         let heroImage: string | undefined;
         let heroWidth: number | undefined;
@@ -312,9 +311,9 @@ export const getRandomArticle = async () => {
     }
 };
 
-export async function getRandomArticles(limit = 20) {
+export async function getRandomArticles(limit = 50) {
     const response = await fetch(
-        `https://en.wikipedia.org/w/api.php?action=query&format=json&generator=random&grnnamespace=0&prop=extracts|info|pageimages&inprop=url|varianttitles&grnlimit=${limit}&exintro=1&exlimit=max&exsentences=5&explaintext=1&piprop=thumbnail&pithumbsize=800&origin=*`,
+        `https://en.wikipedia.org/w/api.php?action=query&format=json&generator=random&grnnamespace=0&prop=extracts|info|pageimages&inprop=url|varianttitles&grnlimit=${limit}&exintro=1&exlimit=max&exsentences=5&explaintext=1&piprop=thumbnail&pilimit=max&pithumbsize=800&origin=*`,
         {
             headers: {
                 "User-Agent": "ReadWiki/2.0.0",

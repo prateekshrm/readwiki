@@ -144,7 +144,7 @@ const SwipeHint = ({ topOffset }: { topOffset: number }) => {
                 color={darkColors.text}
                 fallback={null}
             />
-            <Text style={styles.hintText}>Swipe up for more</Text>
+            <Text style={styles.hintText}>Swipe for more</Text>
         </Animated.View>
     );
 };

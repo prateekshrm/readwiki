@@ -4,19 +4,62 @@ import { ThemeColors } from "@/constants/Colors";
 import { fraunces, frauncesItalic } from "@/constants/Typography";
 import useTheme from "@/hooks/useTheme";
 import * as Application from "expo-application";
-import { Image } from "expo-image";
+import { Image, ImageSource } from "expo-image";
 import * as Linking from "expo-linking";
 import { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
-import RemixIcon from "react-native-remix-icon";
+import RemixIcon, { IconName } from "react-native-remix-icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const AUTHOR_NAME = "Prateek Sharma";
 const AUTHOR_PORTFOLIO = "https://pratk.in";
 const AUTHOR_GITHUB = "https://github.com/prateekshrm";
+const AUTHOR_PLAY_STORE =
+    "https://play.google.com/store/apps/dev?id=5633039188314940657";
 const REPOSITORY_URL = "https://github.com/prateekshrm/readwiki";
 const AUTHOR_BIO = "Sofware Developer";
+
+const AUTHOR_LINKS: { label: string; url: string; icon: IconName }[] = [
+    {
+        label: AUTHOR_PORTFOLIO.replace(/^https?:\/\//, ""),
+        url: AUTHOR_PORTFOLIO,
+        icon: "global-line",
+    },
+    {
+        label: "@prateekshrm",
+        url: AUTHOR_GITHUB,
+        icon: "github-fill",
+    },
+    {
+        label: "Play Store",
+        url: AUTHOR_PLAY_STORE,
+        icon: "google-play-fill",
+    },
+];
+
+const WIKIPEDIA_LINKS: {
+    title: string;
+    subtitle: string;
+    url: string;
+    icon: ImageSource;
+    iconSize: number;
+}[] = [
+    {
+        title: "Wikipedia",
+        subtitle: "Visit the Wikipedia website",
+        url: "https://en.wikipedia.org",
+        icon: require("@/assets/wikipedia-icon.png"),
+        iconSize: 22,
+    },
+    {
+        title: "Support Wikipedia",
+        subtitle: "Donate or contribute to Wikipedia",
+        url: "https://wikimediafoundation.org/support",
+        icon: require("@/assets/wikimedia-icon.png"),
+        iconSize: 20,
+    },
+];
 
 export default function About() {
     const insets = useSafeAreaInsets();
@@ -75,121 +118,80 @@ export default function About() {
 
             <Text style={styles.sectionTitle}>Author</Text>
             <View style={styles.authorCard}>
-                <Image
-                    source={require("@/assets/profile.png")}
-                    style={styles.authorAvatar}
-                />
+                <View style={styles.authorHeader}>
+                    <Image
+                        source={require("@/assets/profile.png")}
+                        style={styles.authorAvatar}
+                    />
 
-                <View style={styles.authorCardContent}>
-                    <Text style={styles.authorName}>{AUTHOR_NAME}</Text>
-
-                    <Text style={styles.authorBio}>{AUTHOR_BIO}</Text>
-
-                    <View style={styles.authorLinks}>
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.authorLink,
-                                pressed && styles.authorLinkPressed,
-                            ]}
-                            onPress={() => Linking.openURL(AUTHOR_PORTFOLIO)}
-                        >
-                            <RemixIcon
-                                name="global-line"
-                                size={16}
-                                color={colors.text}
-                            />
-
-                            <Text style={styles.authorLinksText}>
-                                {AUTHOR_PORTFOLIO.replace(/^https?:\/\//, "")}
-                            </Text>
-                        </Pressable>
-
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.authorLink,
-                                pressed && styles.authorLinkPressed,
-                            ]}
-                            onPress={() => Linking.openURL(AUTHOR_GITHUB)}
-                        >
-                            <RemixIcon
-                                name="github-fill"
-                                size={16}
-                                color={colors.text}
-                            />
-
-                            <Text style={styles.authorLinksText}>
-                                @prateekshrm
-                            </Text>
-                        </Pressable>
+                    <View style={styles.linkTextWrapper}>
+                        <Text style={styles.linkTitle}>{AUTHOR_NAME}</Text>
+                        <Text style={styles.linkSubtitle}>{AUTHOR_BIO}</Text>
                     </View>
+                </View>
+
+                <View style={styles.authorLinks}>
+                    {AUTHOR_LINKS.map((link) => (
+                        <Pressable
+                            key={link.url}
+                            style={({ pressed }) => [
+                                styles.authorLink,
+                                pressed && styles.authorLinkPressed,
+                            ]}
+                            onPress={() => Linking.openURL(link.url)}
+                        >
+                            <RemixIcon
+                                name={link.icon}
+                                size={16}
+                                color={colors.text}
+                            />
+
+                            <Text style={styles.authorLinksText}>
+                                {link.label}
+                            </Text>
+                        </Pressable>
+                    ))}
                 </View>
             </View>
 
             <Text style={styles.sectionTitle}>WikiPedia</Text>
 
-            <Pressable
-                style={({ pressed }) => [
-                    styles.link,
-                    pressed && styles.linkPressed,
-                ]}
-                onPress={() => Linking.openURL("https://en.wikipedia.org")}
-            >
-                <View style={styles.linkLeft}>
-                    <View style={styles.linkIconContainer}>
-                        <Image
-                            source={require("@/assets/wikipedia-icon.png")}
-                            style={{ height: 22, width: 22 }}
-                        />
+            {WIKIPEDIA_LINKS.map((item) => (
+                <Pressable
+                    key={item.url}
+                    style={({ pressed }) => [
+                        styles.link,
+                        pressed && styles.linkPressed,
+                    ]}
+                    onPress={() => Linking.openURL(item.url)}
+                >
+                    <View style={styles.linkLeft}>
+                        <View style={styles.linkIconContainer}>
+                            <Image
+                                source={item.icon}
+                                style={{
+                                    height: item.iconSize,
+                                    width: item.iconSize,
+                                }}
+                            />
+                        </View>
+
+                        <View style={styles.linkTextWrapper}>
+                            <Text style={styles.linkTitle}>{item.title}</Text>
+                            <Text style={styles.linkSubtitle}>
+                                {item.subtitle}
+                            </Text>
+                        </View>
                     </View>
 
-                    <View style={styles.linkTextWrapper}>
-                        <Text style={styles.linkTitle}>Wikipedia</Text>
-                        <Text style={styles.linkSubtitle}>
-                            Visit the Wikipedia website
-                        </Text>
-                    </View>
-                </View>
-
-                <RemixIcon
-                    name="arrow-right-s-line"
-                    size={22}
-                    color={colors.textSecondary}
-                    fallback={null}
-                />
-            </Pressable>
-
-            <Pressable
-                style={({ pressed }) => [
-                    styles.link,
-                    pressed && styles.linkPressed,
-                ]}
-                onPress={() =>
-                    Linking.openURL("https://wikimediafoundation.org/support")
-                }
-            >
-                <View style={styles.linkLeft}>
-                    <View style={styles.linkIconContainer}>
-                        <Image
-                            source={require("@/assets/wikimedia-icon.png")}
-                            style={{ height: 20, width: 20 }}
-                        />
-                    </View>
-
-                    <View style={styles.linkTextWrapper}>
-                        <Text style={styles.linkTitle}>Support Wikipedia</Text>
-                        <Text style={styles.linkSubtitle}>
-                            Donate or contribute to Wikipedia
-                        </Text>
-                    </View>
-                </View>
-
-                <RemixIcon
-                    name="arrow-right-s-line"
-                    size={22}
-                    color={colors.textSecondary}
-                    fallback={null}
-                />
-            </Pressable>
+                    <RemixIcon
+                        name="arrow-right-s-line"
+                        size={22}
+                        color={colors.textSecondary}
+                        fallback={null}
+                    />
+                </Pressable>
+            ))}
 
             <View style={styles.footer}>
                 <Text style={styles.footerText}>
@@ -255,10 +257,13 @@ const createStyles = (colors: ThemeColors) =>
             marginLeft: 4,
         },
         authorCard: {
-            flexDirection: "row",
             backgroundColor: colors.surface,
             padding: 12,
             borderRadius: 20,
+        },
+        authorHeader: {
+            flexDirection: "row",
+            alignItems: "center",
         },
         authorAvatar: {
             width: 48,
@@ -266,39 +271,30 @@ const createStyles = (colors: ThemeColors) =>
             borderRadius: 999,
             marginRight: 12,
         },
-        authorCardContent: {
-            flex: 1,
-        },
-        authorName: {
-            fontSize: 18,
-            fontFamily: "DMSans-Bold",
-            color: colors.text,
-        },
-        authorBio: {
-            color: colors.textSecondary,
-            fontFamily: "DMSans-Regular",
-        },
         authorLinks: {
             flexDirection: "row",
             flexWrap: "wrap",
-            gap: 6,
-            marginTop: 8,
+            gap: 8,
+            marginTop: 12,
+            paddingTop: 12,
+            borderTopWidth: 1,
+            borderTopColor: colors.backgroundMuted,
         },
         authorLink: {
             flexDirection: "row",
             gap: 6,
             alignItems: "center",
-            paddingVertical: 6,
+            paddingVertical: 8,
             paddingHorizontal: 12,
-            borderRadius: 100,
+            borderRadius: 999,
             backgroundColor: colors.backgroundMuted,
         },
-
         authorLinkPressed: {
-            filter: "brightness(0.9)",
+            backgroundColor: colors.surfaceMuted,
             transform: [{ scale: 0.98 }],
         },
         authorLinksText: {
+            fontSize: 13,
             color: colors.text,
             fontFamily: "DMSans-Medium",
         },
